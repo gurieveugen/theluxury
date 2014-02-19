@@ -1,0 +1,8 @@
+﻿[##header##]
+
+Hallo,
+
+[##f_name##] [##l_name##] hat Artikel im Wert von [##amount##] [##currency##] bestellt.
+
+
+Um diese Bestellung zu bearbeiten, loggen Sie sich bitte in die Wordpress Adminarea ein und navigieren zu: [##url##]

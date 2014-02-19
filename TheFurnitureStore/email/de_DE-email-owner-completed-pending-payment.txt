@@ -1,0 +1,15 @@
+[##header##]
+
+Hallo, 
+das PayPal System hat ein Signal für den Erhalt einer offenen Zahlung versandt. Die Details:
+
+Zahlungsgegenstand: [##item_name##]
+Zahlungsstatus: [##payment_status##]
+Betrag: [##payment_amount##]
+Währung: [##payment_currency##]
+Txn ID: [##txn_id##]
+Email-Empfänger: [##receiver_email##]
+Email-Kunde: [##payer_email##]
+					 				
+
+Um diese Bestellung zu bearbeiten, loggen Sie sich bitte in die Wordpress Adminarea ein und navigieren zu: [##url##]

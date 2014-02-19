@@ -1,0 +1,5 @@
+[##header##]
+
+
+Hello,
+this is to notify you that a new customer has just been registered as a member of your shop with the username: [##username##] 

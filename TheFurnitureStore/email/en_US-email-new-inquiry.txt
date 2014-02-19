@@ -1,0 +1,35 @@
+[##biz##]
+
+Hello!
+You've received an enquiry with the following data: 
+
+
+Name:  [##name##]
+Address:  [##address##]
+E-Mail:  [##email##]
+Delivery by:  [##delivery##] 
+Payment by:  [##payment##] 
+
+
+
+--------------------------------------------------------
+[##order##]
+--------------------------------------------------------
+
+
+
+
+
+Remarks by customer: 
+
+´´[##remarks##]´´
+
+
+In order to manage this enquiry, login to Wordpress Admin Area and then go here:
+[##home-url##]/wp-admin/themes.php?page=functions.php&section=inquiries 
+
+Enquiry tracking id: [##tracking-id##] 
+
+
+Regards, 
+Your Webshop

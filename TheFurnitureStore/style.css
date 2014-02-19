@@ -1,0 +1,190 @@
+@import url('css/reset.css');
+@import url('css/basic.css');
+#mc_embed_signup{
+	position:fixed;
+	top:0;
+	left:0;
+	display:none;
+	z-index:1000000;
+	width:100%;
+	margin:0;
+	height:100%;
+}
+#mc_embed_signup_center{
+	margin:0 auto;
+	width:792px;
+}
+#mc_embed_signup_center_inner{
+	width:792px;
+	position:absolute;
+	top:5%;
+	background:#fff;
+}
+#mc_embed_signup .popup-banner{
+	margin:0 0 23px;
+}
+#mc_embed_signup .popup-banner img,
+#mc_embed_signup .bottom-image img{
+	display:block;
+	margin:0 auto;
+}
+#mc_embed_signup form{
+	text-align:center;
+	margin:0 0 20px;
+	position:relative;
+}
+#mc_embed_signup form:after{
+	content:'';
+	display:block;
+	clear:both;
+}
+#mc_embed_signup form .mc-field-group{
+	display:inline-block;
+	margin:0 35px 0 0;
+	position:relative;
+	vertical-align:top;
+}
+#mc_embed_signup label{
+	float:left;
+	width:auto;
+	margin:0 4px 0 0;
+	font:bold 18px/24px 'OpenSans', Arial, Helvetica, sans-serif;
+	color:#363535;
+}
+#mc_embed_signup .email{
+	float:left;
+	background:url(images/img/bg-text-input.gif) no-repeat;
+	border:none;
+	margin:0 3px 0 0;
+	padding:0 5px;
+	width:129px;
+	height:24px;
+	line-height:24px;
+}
+#mc_embed_signup .button{
+	float:left;
+	background:url(images/img/btn-signup.gif) no-repeat;
+	border:none;
+	margin:0;
+	padding:0;
+	width:70px;
+	height:24px;
+	text-indent:-9999px;
+	font-size:0;
+	line-height:0;
+	cursor:pointer;
+}
+div.mce_inline_error{
+	position:absolute;
+	left:70px;
+	top:27px;
+	color:#f00;
+	font-weight:bold;
+}
+#mc_embed_signup .facebook{
+	display:inline-block;
+	vertical-align:top;
+}
+#mc_embed_signup .facebook a{
+	display:block;
+	background:url(images/img/btn-facebook-signup.png) no-repeat;
+	width:211px;
+	height:24px;
+	text-indent:-9999px;
+	overflow:hidden;
+}
+#mce-responses{
+	position:absolute;
+	left:135px;
+	right:135px;
+	bottom:-24px;
+	font-weight:bold;
+}
+#mce-error-response{
+	color:#f00;
+}
+#mce-success-response{
+	color:#02fd0e;
+}
+#mc_embed_signup .mc_embed_close{
+	position:absolute;
+	right:9px;
+	top:9px;
+	background:url(images/img/btn-close.png) no-repeat;
+	width:13px;
+	height:13px;
+	text-indent:-9999px;
+	overflow:hidden;
+}
+.login-with-fb{
+	background-image:url(./images/log_fac.png);
+	height:32px;
+	overflow:hidden;
+	cursor:pointer;
+	width:184px;
+	float:left;
+	text-indent:-3000px;
+}
+.try-container{
+	float:left;
+	height:57px;
+	padding:15px;
+	position:relative;
+	width:343px;
+}
+#rotator.vimeo .btn-try{
+	background:none repeat scroll 0 0 transparent;
+	margin-left:38px;
+	padding:0;
+	height:57px;
+	margin:0 auto;
+	position:relative;
+	width:343px;
+}
+.try-container .btn-try a.normal{
+	background:url("./images/button-try.png") no-repeat scroll left top transparent;
+	display:block;
+	height:57px;
+	left:0;
+	position:absolute;
+	top:0;
+	width:343px;
+}
+.follow_brands_error{
+	font-size:11px;
+	color:#f00;
+}
+.follow_brands_message{
+	font-size:11px;
+	color:#060;
+}
+#follow_brands_subscribe{
+	font-size:12px;
+	color:#030;
+}
+#follow_brands_unsubscribe{
+	font-size:12px;
+	color:#900;
+	float:right;
+}
+.reg_head_img{
+	background:url(./images/register-form.png) no-repeat center top;
+	width:769px;
+	height:110px;
+	float:left;
+	margin-bottom:10px;
+}
+.log_head_img{
+	background:url(./images/register-VIP.png) no-repeat center top;
+	width:769px;
+	height:110px;
+	float:left;
+	margin-bottom:10px;
+}
+.editOrderWrap{
+	max-height:450px;
+	overflow:auto;
+}
+.widget .widget-title{
+	font-size:15px;
+}

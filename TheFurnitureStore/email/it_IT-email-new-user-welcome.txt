@@ -1,0 +1,12 @@
+[##header##]
+
+Siamo felici di accoglierlo favorevolmente come nuovo membro!
+
+
+Your username is: [##username##]
+La vostra parola d'accesso di inizio attività è: [##pw##]
+
+Naturalmente, potete cambiare la vostra parola d'accesso dalla vostra pagina di cliente dopo che 
+inizio attività dentro a qualcosa che possiate ricordarti facilmente.
+
+Per entrare segua questo collegamento: [##login_link##]

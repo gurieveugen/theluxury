@@ -1,0 +1,7 @@
+[##header##]
+
+Hello,
+[##f_name##] [##l_name##] ordered items in the value of [##amount##] [##shop_currency##].
+ATTENTION: THE PAYPAL PAYMENT STATUS is PENDING - so please wait for the transaction to be completed before shipping.
+
+In order to manage this order, login to Wordpress Admin Area and then go here: [##url##]

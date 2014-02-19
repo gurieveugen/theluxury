@@ -1,0 +1,8 @@
+[##header##]
+
+Bonjour,
+
+[##f_name##] [##l_name##] articles commandés dans la valeur de [##amount##] [##shop_currency##].
+ATTENTION: LE PAIEMENT PAYPAL ETAT est EN COURS - afin d'attendre une transaction avant l'expédition.
+
+Afin de gérer cet ordre, l'accès à Wordpress Administration et ensuite aller ici: [##url##]

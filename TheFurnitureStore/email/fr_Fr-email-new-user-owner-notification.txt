@@ -1,0 +1,6 @@
+[##header##]
+
+
+Bonjour,
+Ce mail vous est envoyé pour vous prévenir de l'inscription d'un nouvel utilisateur sur votre boutique en ligne.
+Son identifiant est : [##username##]

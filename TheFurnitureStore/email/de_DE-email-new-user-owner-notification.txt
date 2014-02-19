@@ -1,0 +1,7 @@
+[##header##]
+
+ 
+Hallo,
+es hat sich ein neuer Kunde im Shop registriert!
+
+Der Benutzername des Neukunden lautet: [##username##]

@@ -1,0 +1,3 @@
+[##header##]
+
+ATTENTION: The Stock amount of article-id: [##ID_item##] is running low.

@@ -1,0 +1,79 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html>
+<head>
+<style type="text/css">
+body {
+	font-size: 100.01%;
+	font-family: arial, verdana, sans-serif;
+}
+#header {
+	margin-bottom: 40px;
+}
+#header span { 
+	color:navy; 
+	font-size:48px; 
+}
+#footer {
+	font-size: 8px;
+	border-top: 1px solid black;
+}
+table {
+	width: 100%;
+	font-size: 0.8em;
+}
+th {
+	background-color: silver;
+}
+</style>
+</head>
+<body>
+<div id="header">
+<img src="[##Email-Logo##]" /> 
+<span>[##biz##]</span>
+</div>
+
+Hello!<br/>You've received an enquiry with the following data:
+<br/><br/><br/>
+<table border='1' cellspacing='0'>
+<tr><td>Name: </td><td>[##name##]</td></tr>
+<tr><td>Addresses: </td><td><u>Billing address:</u><br/>[##address##]<br/><br/><u>Delivery address:</u><br/>[##delivery_address##]</td></tr>
+<tr><td>E-Mail: </td><td>[##email##]</td></tr>
+<tr><td>Delivery by: </td><td>[##delivery##]</td></tr>
+<tr><td>Payment by: </td><td>[##payment##]</td></tr>
+</table>
+
+<br/><br/>
+Interested in:
+<br/><br/>
+<table border='1'>
+<tr>
+	<th>Item-No</th><th>Article</th><th>Qty</th><th>Unit price</th><th>Total</th>
+</tr>
+[##order##]
+</table>
+<br/><br/>
+Remarks by customer:
+<br/><br/>
+<i>"
+[##remarks##]
+"</i>
+
+
+<br/><br/><br/>
+In order to manage this enquiry, login to Wordpress Admin Area and then go here:<br/>
+<a href='http://[##home-url##]/wp-admin/themes.php?page=functions.php&amp;section=inquiries'>
+http://[##home-url##]/wp-admin/themes.php?page=functions.php&amp;section=inquiries</a>
+<br/><br/>
+Enquiry tracking id: <b>[##tracking-id##]</b> 
+<br/><br/><br/>
+Regards,
+<br/>
+Your Webshop
+<br/><br/><br/>
+
+
+<div id="footer">
+Footer
+</div>
+</body>
+<html>

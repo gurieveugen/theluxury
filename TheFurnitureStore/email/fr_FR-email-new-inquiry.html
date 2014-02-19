@@ -1,0 +1,79 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html>
+<head>
+<style type="text/css">
+body {
+	font-size: 100.01%;
+	font-family: arial, verdana, sans-serif;
+}
+#header {
+	margin-bottom: 40px;
+}
+#header span { 
+	color:navy; 
+	font-size:48px; 
+}
+#footer {
+	font-size: 8px;
+	border-top: 1px solid black;
+}
+table {
+	width: 100%;
+	font-size: 0.8em;
+}
+th {
+	background-color: silver;
+}
+</style>
+</head>
+<body>
+<div id="header">
+<img src="[##Email-Logo##]" /> 
+<span>[##biz##]</span>
+</div>
+
+Salut!<br/>Vous avez re&#231;u une enqu&#234;te avec les donn&#233;es suivantes:
+<br/><br/><br/>
+<table border='1' cellspacing='0'>
+<tr><td>Nom: </td><td>[##name##]</td></tr>
+<tr><td>Adresse: </td><td>[##address##]</td></tr>
+<tr><td>E-Mail: </td><td>[##email##]</td></tr>
+<tr><td>Livraison par: </td><td>[##delivery##]</td></tr>
+<tr><td>Paiement par: </td><td>[##payment##]</td></tr>
+</table>
+
+<br/><br/>
+Int&#233;ress&#233; par:
+<br/><br/>
+<table border='1'>
+<tr>
+	<th>Quantit&#233;</th><th>Nom du produit</th><th>Prix unitaire</th><th>Total</th>
+</tr>
+[##order##]
+</table>
+<br/><br/>
+Commentaires par le client:
+<br/><br/>
+<i>"
+[##remarks##]
+"</i>
+
+
+<br/><br/><br/>
+Afin de g&#233;rer cette demande, de connexion &#224; Wordpress Administration et ensuite aller ici:<br/>
+<a href='http://[##home-url##]/wp-admin/themes.php?page=functions.php&amp;section=inquiries'>
+http://[##home-url##]/wp-admin/themes.php?page=functions.php&amp;section=inquiries</a>
+<br/><br/>
+Enqu&#234;te de suivi id: <b>[##tracking-id##]</b> 
+<br/><br/><br/>
+Sinc&#232;res salutations,
+<br/>
+Votre boutique en ligne
+<br/><br/><br/>
+
+
+<div id="footer">
+Footer
+</div>
+</body>
+<html>

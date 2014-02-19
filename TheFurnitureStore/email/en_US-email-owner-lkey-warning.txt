@@ -1,0 +1,6 @@
+[##header##]
+				
+Hello,
+the number of license keys for the file [##fname##] is below the minimum number of [##minimum##] keys.
+								
+Login to your Wordpress Admin Area and then upload new Keys here: [##url##]

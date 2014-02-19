@@ -1,0 +1,88 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html>
+<head>
+<style type="text/css">
+body {
+	font-size: 100.01%;
+	font-family: arial, verdana, sans-serif;
+}
+#header {
+	margin-bottom: 40px;
+}
+#header span { 
+	color:navy; 
+	font-size:48px; 
+}
+#footer {
+	font-size: 8px;
+	border-top: 1px solid black;
+}
+table {
+	width: 100%;
+	font-size: 0.8em;
+}
+th {
+	background-color: silver;
+}
+</style>
+</head>
+<body>
+<div id="header">
+<img src="[##Email-Logo##]" /> 
+<span>[##biz##]</span>
+</div>
+
+Salve!<br/>
+Hai ricevuto una richiesta (inquiry) con i seguenti dati: <br/>
+<br/><br/>
+<table border='1' cellspacing='0'>
+<tr>
+    <td>Nome: </td>
+    <td>[##name##]</td></tr>
+<tr>
+    <td>Indirizzo: </td>
+    <td>[##address##]</td></tr>
+<tr><td>E-Mail: </td><td>[##email##]</td></tr>
+<tr>
+    <td>Metodo di Consegna: </td>
+    <td>[##delivery##]</td></tr>
+<tr>
+    <td>Metodo di pagamento: </td>
+    <td>[##payment##]</td></tr>
+</table>
+
+<br/><br/>
+Interessato in: <br/>
+<br/>
+<table border='1'>
+<tr>
+	<th>Ammontare</th><th>Articolo</th><th>Prezzo unitario</th><th>Totale</th>
+</tr>
+[##order##]
+</table>
+<br/><br/>
+Commenti da parte del Cliente:<br/>
+<br/>
+<i>"
+[##remarks##]
+"</i>
+
+
+<br/><br/><br/>
+Per eseguire questa richiesta (inquiry) fai il login a Wordpress ed entra nell'Area 
+Admin poi vai qui:<br/>
+<a href='http://[##home-url##]/wp-admin/themes.php?page=functions.php&amp;section=inquiries'>
+http://[##home-url##]/wp-admin/themes.php?page=functions.php&amp;section=inquiries</a>
+<br/><br/>
+Inquiry tracking id: <b>[##tracking-id##]</b> 
+<br/><br/><br/>
+Saluti, <br/>
+il tuo Webshop <br/>
+<br/><br/>
+
+
+<div id="footer">
+Footer
+</div>
+</body>
+<html>

@@ -1,0 +1,2 @@
+<?php $icon_fileType = $OPTION['wps_icons_file_type']; ?>
+<span class="backLink noprint"><a href="<?php echo get_category_link($category[0]->term_id);?>"><img src="<?php bloginfo('stylesheet_directory'); ?>/images/arrow_left.<?php echo $icon_fileType;?>" alt="<?php _e('Back to Product\'s Category','wpShop')?>" /> <?php echo $category[0]->name;?></a></span>

@@ -1,0 +1,6 @@
+[##header##]
+				
+Bonjour, 
+le nombre de clés de licence pour le fichier  [##fname##] est au-dessous de votre nombre minimum de [##minimum##] clés.
+								
+Connectez-vous à votre espace d'administration Wordpress, puis charger de nouvelles clés ici: [##url##]

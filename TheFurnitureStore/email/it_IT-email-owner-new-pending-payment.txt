@@ -1,0 +1,7 @@
+[##header##]
+
+Salve,
+[##f_name##] [##l_name##] articoli ordinati per un totale di [##amount##] [##shop_currency##].
+ATTENZIONE: IL PAGAMENTO TRAMITE PAYPAL NON E' ANCORA ARRIVATO - Aspetta che la transazione avvenga completamente prima di spedire l'ordine.
+
+Per lavorare questo ordine fai il login a Wordpress Admin Area poi vai qui: [##url##]

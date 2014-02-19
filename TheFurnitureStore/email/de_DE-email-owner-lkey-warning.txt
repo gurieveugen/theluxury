@@ -1,0 +1,8 @@
+[##header##]
+				
+Hallo,
+die Anzahl der Lizenzschlüssel für die Datei [##fname##] liegt unter dem erforderlichen Minimum von [##minimum##] Schlüsseln.
+
+
+								
+Loggen Sie sich in die WordPress Adminarea ein und laden Sie hier neue Lizenzschlüssel hoch: [##url##]

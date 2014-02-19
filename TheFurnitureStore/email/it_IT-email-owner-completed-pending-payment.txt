@@ -1,0 +1,15 @@
+[##header##]
+
+Salve, 
+Il sito di PayPal ci ha inviato un sollecito per completare un pagamento in sospeso. Ecco i dettagli ricevuti:
+
+Nome Articolo: [##item_name##]
+Status del pagamento: [##payment_status##]
+Somma da pagare: [##payment_amount##]
+Valuta: [##payment_currency##]
+Txn ID: [##txn_id##]
+Email del beneficiario: [##receiver_email##]
+Email del pagante: [##payer_email##]
+					 				
+
+Per lavorare questo ordine, fai il login a Wordpress ed entra nell'Area Admin poi vai qui: [##url##]

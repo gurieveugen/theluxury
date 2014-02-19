@@ -1,0 +1,51 @@
+/*
+* I give up with IE6!! 
+* This is how far a I get with fixing the most stupid browser on earth. Not all bugs are fixed and I will not fix any more than this.
+* Get yourselves a decent browser people!
+*/
+
+
+/*IE6 does recognize attribute selectors*/
+.input_image, .formbutton, .input_reset, .input_button, .input_submit, .input_checkbox, .input_radio {cursor: pointer;width:auto;float:left;margin-right:6px;}
+.input_image  {padding:0;}
+.widget_email_subscriptions .subscriptions form .input_text  {width:180px;margin-right:8px;}
+
+
+.headerAd {width:340px;}
+
+/* the prod boxes look funny - give has layout*/
+/*.theCats .contentWrap, .theProds .contentWrap, .theTags .contentWrap  {height:1%;}*/
+
+
+.theCats .teaser {background:#333;}
+
+/*too much vertical whitespace in lists and links in lists*/
+.pageCont .c_box li, .widget ul li, .subsubcatnavi li, .subsubcatnavi a {display:inline-block;}
+
+/*single page view*/
+/*the image tabs had too much white space below*/
+.tabsWrap li {display:inline-block;}
+#singleMainContent .contentWrap {height:1%;}
+#footnotes li {width:24%;}
+/*related*/
+.related .tabs {float:left;width:390px;}
+.related .tabs li a {width:175px;}
+.related .panes {height:1%;}
+
+
+.adjacentImg  {width:91px;}
+.previousProd .adjacentImg {left:0;}
+
+
+/*shopping cart*/
+.updateCartActionBtn {margin-left:268px;}
+
+/*no alpha transparency for IE6*/
+/*blog*/
+.blog_post .comments-link {background:url(images/comment_32_ie6.png) no-repeat top right;}
+
+/*the overlays*/
+.overlay {background:url(images/offwhite_ie6.png) no-repeat;}
+.mediumoverlay {background:url(images/offwhitemedium_ie6.png) no-repeat;}
+.largeoverlay {background:url(images/offwhitelarge_ie6.png) no-repeat;}
+.overlay .close {background:url(images/close_ie6.png) no-repeat;}

@@ -1,0 +1,37 @@
+<?php if(!is_page('invite-friends')) {
+$user_agent       = $_SERVER['HTTP_USER_AGENT'];
+if( !preg_match('/ipod/i',$user_agent) && !preg_match('/iphone/i',$user_agent) && !preg_match('/android/i',$user_agent) && !preg_match('/opera mini/i',$user_agent) &&  !preg_match('/blackberry/i',$user_agent) && !preg_match('/(iris|3g_t|windows ce|opera mobi|windows ce; smartphone;|windows ce; iemobile)/i',$user_agent))
+{
+?>
+<script src="<?php NWS_bloginfo('template_url','yes'); ?>Light/js/jquery_form.js" type="text/javascript"></script>
+<div id="mc_embed_signup" >
+	<div id="mc_embed_signup_center">
+    <div id="mc_embed_signup_center_inner">
+		<form action="http://theluxurycloset.us2.list-manage.com/subscribe/post?u=cb3d8356eafb18036e7cbc611&amp;id=d7112ff5c4" method="post" id="mc-embedded-subscribe-form" name="mc-embedded-subscribe-form" class="validate" target="_blank">
+			<div id="mc_embed_signup_main">
+				<h2>Sign up for VIP access and get exclusive look at reserved bags at up to 70% off</h2>
+				<div class="indicates-required"><span class="asterisk">*</span> indicates required</div>
+				<div class="mc-field-group">
+					<label for="mce-EMAIL">Email Address  <span class="asterisk">*</span></label>
+					<input type="email" value="" name="EMAIL" class="required email" id="mce-EMAIL">
+				</div>
+				<div id="mce-responses">
+					<div class="response" id="mce-error-response" style="display:none"></div>
+					<div class="response" id="mce-success-response" style="display:none"></div>
+				</div>	
+    				<input type="submit" value="Join" name="subscribe" id="mc-embedded-subscribe" class="button">
+    		</div>
+		</form>
+        <a href="#" id="mc_embed_close" class="mc_embed_close">Close</a>	
+   	</div>
+	</div>
+</div>
+<script src="<?php NWS_bloginfo('template_url','yes'); ?>Light/js/mc_embed.js" type="text/javascript"></script>
+<script type="text/javascript">
+jQuery(document).ready( function($) {	
+	if(!navigator.userAgent.match(/(iPhone|iPod|Android|BlackBerry)/i))
+	setTimeout('mce_preload_check();', 250);	
+});
+</script>
+<!--End mc_embed_signup-->		
+<?php } }?>

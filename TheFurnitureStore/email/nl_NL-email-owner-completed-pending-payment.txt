@@ -1,0 +1,16 @@
+[##header##]
+
+Hello, 
+
+PayPal has just send a notice that the following pending payment has been cleared. The details:
+
+Item Name: [##item_name##]
+Payment Status: [##payment_status##]
+Payment Amount: [##payment_amount##]
+Payment Currency: [##payment_currency##]
+Txn ID: [##txn_id##]
+Receiver Email: [##receiver_email##]
+Payer Email: [##payer_email##]
+					 				
+
+In order to manage this order, login to Wordpress Admin Area and then go here: [##url##]

@@ -1,0 +1,58 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html>
+<head>
+<style type="text/css">
+body {
+	font-size: 100.01%;
+	font-family: arial, verdana, sans-serif;
+}
+#header {
+	margin-bottom: 40px;
+}
+#header span { 
+	color:navy; 
+	font-size:48px; 
+}
+#footer {
+	font-size: 8px;
+	border-top: 1px solid black;
+}
+table {
+	width: 100%;
+	font-size: 0.8em;
+}
+th {
+	background-color: silver;
+}
+</style>
+</head>
+<body>
+<div id="header">
+<img src="[##Email-Logo##]" /> 
+<span>[##biz##]</span>
+</div>
+
+Salve [##name##], <br/>
+Abbiamo ricevuto il vostro ordine: <br/>
+<br/>
+<table border='1'>
+<tr>
+	<th>Item-No</th><th>Article</th><th>Qty</th><th>Unit price</th><th>Total</th>
+</tr>
+[##order##]
+</table>
+[##bank-transfer-info##]
+<br/><br/>
+Potete verificare lo &quot;STATUS&quot; del vostro ordine sul nostro sito usando 
+questo tracking id: <b>[##tracking-id##]</b> . <br/>
+<br/><br/>
+Grazie! <br/>
+[##biz##]
+<br/><br/><br/>
+
+
+<div id="footer">
+Footer
+</div>
+</body>
+<html>

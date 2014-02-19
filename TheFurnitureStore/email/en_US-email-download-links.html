@@ -1,0 +1,85 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html>
+<head>
+<style type="text/css">
+body {
+	font-size: 100.01%;
+	font-family: arial, verdana, sans-serif;
+}
+#header {
+	margin-bottom: 40px;
+}
+#header span { 
+	color:navy; 
+	font-size:48px; 
+}
+#instruction,#instruction_mac{ 
+	font-size: 0.72em;
+	width: 40%;
+	background: gainsboro;
+	padding: 5px;
+	min-height: 60px;
+}
+
+
+#instruction{ 
+	float: left;
+	margin-right: 40px;
+}
+
+#footer {
+	font-size: 8px;
+	border-top: 1px solid black;
+}
+table {
+	width: 100%;
+	font-size: 0.8em;
+	border: 1px solid #2E5B7A;
+}
+th {
+	background-color: silver;
+	color: white;
+	background: #2E5B7A;
+}
+</style>
+</head>
+<body>  
+<div id="header">
+<img src="[##Email-Logo##]" /> 
+<span>[##biz##]</span>
+</div>
+
+Hello [##name##],
+<br/><br/>
+thank you very much for your purchase - below you can find your download links.<br/><br/>
+Please keep in mind: the duration time for these download links is <u>[##duration##]</u> counted from the time you've received this email.
+<br/><br/>
+<div id='instruction'>
+<b>PC Users:</b><br/> 
+You must Right-Click the link below and choose "Save Link As..." or "Save Target As..." to save the file to a location on your computer.
+</div>
+<div id='instruction_mac'>
+<b>Mac Users:</b><br/>
+Simply click the link below to save the file to your computer. If you have problems, try Option + Click and the "Save to Disk" 
+command to save the file on your computer.
+</div>
+
+<br/><br/>
+<table>
+<tr>
+	<th>Product Name</th><th>Item Id</th><th>Download Link</th>
+</tr>
+[##links##]
+</table>
+<br/><br/><br/>
+Thank you!
+<br/>
+[##biz##]
+<br/><br/><br/>
+
+
+<div id="footer">
+Footer
+</div>
+</body>
+<html>

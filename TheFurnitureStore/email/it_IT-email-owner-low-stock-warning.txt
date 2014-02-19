@@ -1,0 +1,3 @@
+[##header##]
+
+ATTENZIONE: L'Ammontare dell'articolo con id: [##ID_item##] si stà esaurendo.

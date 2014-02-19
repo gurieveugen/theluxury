@@ -1,0 +1,16 @@
+[##header##]
+
+Bonjour, 
+le système PayPal a envoyé un signal pour la réalisation d'un paiement en attente.  Les détails:
+
+Nom de l'article: [##item_name##]
+Paiement État: [##payment_status##]
+Payment Montant: [##payment_amount##]
+Monnaie de paiement: [##payment_currency##]
+Txn ID: [##txn_id##]
+Email Récepteur: [##receiver_email##]
+Client e-mail: [##payer_email##]
+
+ 				
+
+Afin de gérer cet ordre, l'accès à Wordpress Administration et ensuite aller ici: [##url##]

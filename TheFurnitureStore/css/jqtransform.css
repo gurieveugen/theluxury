@@ -1,0 +1,81 @@
+/* -------------
+ * Selects
+ * ------------- */
+.jqTransformSelectWrapper {
+	position:relative;
+	height: 24px;
+	background:#fff;
+	border:1px solid #a5a5a5;
+}
+.widget_search_filter .jqTransformSelectWrapper,
+.shop_by_widget .jqTransformSelectWrapper{
+	width: 178px !important;
+	background:#fff;
+	z-index:inherit !important;
+}
+
+.jqTransformSelectWrapper div span {
+	float: none;
+	position: absolute;
+	white-space: nowrap;
+	height: 24px;
+	font-size: 12px;
+	line-height: 24px;
+	padding: 0 0 0 7px;
+	overflow: hidden;
+	cursor:pointer;
+	color:#979797;
+	/*border: 1px solid #CCCCCC;*/
+/*	border-right: none;*/
+}
+
+.jqTransformSelectWrapper  a.jqTransformSelectOpen {
+	position: absolute;
+	right:3px;
+	top:3px;
+	width:17px;
+	height:18px;
+	background: url(../images/img/btn-select.gif) no-repeat;
+}
+
+.jqTransformSelectWrapper ul {
+	position: absolute;
+	width: 43px;
+	top: 24px;
+	left: 0px;
+	list-style: none;
+	background-color: #FFF;
+	border: solid 1px #CCC;
+	display: none;
+	margin: 0px;
+	padding: 0px;
+	height: 150px;
+	overflow: auto;
+	overflow-y: auto;
+	z-index:10;
+}
+
+.jqTransformSelectWrapper ul a {
+	display: block;
+	padding: 5px !important;
+	text-decoration: none;
+	color:#333 !important;
+	background-color: #fff;
+	font-size: 12px;
+	line-height:15px;
+}
+
+.jqTransformSelectWrapper ul a.selected {
+	background: #EDEDED;
+}
+
+.jqTransformSelectWrapper ul a:hover, .jqTransformSelectWrapper ul a.selected:hover {
+	background:#3582c4;
+	color: #fff !important;
+	text-decoration:none !important;
+}
+
+/* -------------
+ * Hidden - used to hide the original form elements
+ * ------------- */
+.jqTransformHidden {display: none;}

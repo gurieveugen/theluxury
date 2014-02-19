@@ -1,0 +1,24 @@
+/*too much vertical whitespace between the featured area links*/
+.subcatnavi a {display:inline-block;padding:0;}
+
+/*opacity workaround*/
+.theCats .teaser {-ms-filter: "progid:DXImageTransform.Microsoft.Alpha(Opacity=0)";filter: progid:DXImageTransform.Microsoft.Alpha(Opacity=0);}
+
+
+/*single product page*/
+#footnotes li {float:left;width:24%;}
+#footnotes .print a {padding-top:1px;}
+#footnotes .share a {padding-top:5px;}
+#footnotes .subscribe a {padding-top:4px;}
+.prodDetails {display:inline-block;}
+.typeradioselect, .select {margin-bottom:18px;}
+#colorInput, #sizeInput {height:0;}/*fix the extra space that appears when selecting colour and size*/
+#createAccount #pt2 input, #createAccount #pt3 input {margin-left:-15px;}/*fix for IE inherited margin bug on input form elements*/
+/*view cart button has too much top padding*/
+#vCart {padding-top:0;}
+
+/*sidebar appears funny - needs hasLayout*/
+.widget_faq ul, .csw, .widgetPadding  {position:relative;}
+
+/*footer does not sit properly at bottom*/
+.footer_notes {padding:0;margin-top:9px;}

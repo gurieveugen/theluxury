@@ -1,0 +1,3 @@
+[##header##]
+
+ATTENTION: Quantité de l'article-id: [##ID_item##] est faible.

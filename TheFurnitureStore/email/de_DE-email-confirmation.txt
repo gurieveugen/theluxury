@@ -1,0 +1,17 @@
+[##biz##]
+
+
+Hallo [##name##],
+wir haben Ihre Bestellung erhalten:
+
+-----------------------------------------------------------------------------------------
+[##order##]
+-----------------------------------------------------------------------------------------
+
+[##bank-transfer-info##]
+
+Sie können den Stand Ihrer Bestellung nachverfolgen indem Sie auf der Webshop-Startseite Ihre Tracking-ID eingeben: [##tracking-id##]
+
+
+Vielen Dank!
+[##biz##]

@@ -1,0 +1,80 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html>
+<head>
+<style type="text/css">
+body {
+	font-size: 100.01%;
+	font-family: arial, verdana, sans-serif;
+}
+#header {
+	margin-bottom: 40px;
+}
+#header span { 
+	color:navy; 
+	font-size:48px; 
+}
+#footer {
+	font-size: 8px;
+	border-top: 1px solid black;
+}
+table {
+	width: 100%;
+	font-size: 0.8em;
+}
+th {
+	background-color: silver;
+}
+</style>
+</head>
+<body>
+<div id="header">
+<img src="[##Email-Logo##]" /> 
+<span>[##biz##]</span>
+</div>
+
+Hallo!<br/>Sie haben eine neue Anfrage mit den folgenden Daten erhalten:
+<br/><br/><br/>
+<table border='1' cellspacing='0'>
+<tr><td>Name: </td><td>[##name##]</td></tr>
+<tr><td>Adresse: </td><td>[##address##]</td></tr>
+<tr><td>E-Mail: </td><td>[##email##]</td></tr>
+<tr><td>Lieferart: </td><td>[##delivery##]</td></tr>
+<tr><td>Zahlart: </td><td>[##payment##]</td></tr>
+</table>
+
+<br/><br/>
+Interessiert an:
+<br/><br/>
+<table border='1'>
+<tr>
+	<th>Anzahl</th><th>Artikelname</th><th>Einzelpreis</th><th>Summe</th>
+</tr>
+[##order##]
+</table>
+<br/><br/>
+Bemerkungen des Kunden:
+<br/><br/>
+<i>"
+[##remarks##]
+"</i>
+
+
+<br/><br/><br/>
+Um diese Anfrage zu bearbeiten, loggen Sie sich bitte in die Wordpress Admin Area ein und navigieren Sie dann zu:
+<br/>
+<a href='http://[##home-url##]/wp-admin/themes.php?page=functions.php&amp;section=inquiries'>
+http://[##home-url##]/wp-admin/themes.php?page=functions.php&amp;section=inquiries</a>
+<br/><br/>
+Anfrage Tracking-Id: <b>[##tracking-id##]</b> 
+<br/><br/><br/>
+Gr&#252;&#223;e,
+<br/>
+Ihr Webshop
+<br/><br/><br/>
+
+
+<div id="footer">
+Footer
+</div>
+</body>
+<html>

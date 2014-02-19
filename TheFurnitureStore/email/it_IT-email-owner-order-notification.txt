@@ -1,0 +1,8 @@
+[##header##]
+
+Salve,
+
+[##f_name##] [##l_name##] articoli ordinati per un totale di [##amount##] [##currency##].
+
+
+Per lavorare questo ordine fai il login a Wordpress Admin Area e poi vai qui: [##url##]

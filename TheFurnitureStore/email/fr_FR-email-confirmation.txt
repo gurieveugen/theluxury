@@ -1,0 +1,17 @@
+[##biz##]
+
+
+Bonjour [##name##],
+nous avons reçu de votre commande:
+
+-----------------------------------------------------------------------------------------
+[##order##]
+-----------------------------------------------------------------------------------------
+
+[##bank-transfer-info##]
+
+Vous pouvez vérifier le statut de votre commande sur notre site de départ avec votre ID de suivi: [##tracking-id##]
+
+
+Merci beaucoup! 
+[##biz##]

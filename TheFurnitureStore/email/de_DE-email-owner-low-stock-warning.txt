@@ -1,0 +1,3 @@
+[##header##]
+
+ACHTUNG: Der Bestand von Artikel-Nr.: [##ID_item##] geht zur Neige.

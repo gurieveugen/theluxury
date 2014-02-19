@@ -1,0 +1,18 @@
+[##biz##]
+
+
+Salve [##name##],
+Abbiamo ricevuto il vostro ordine:
+
+-----------------------------------------------------------------------------------------
+[##order##]
+-----------------------------------------------------------------------------------------
+
+[##bank-transfer-info##]
+
+Potete verificare lo "STATUS" del vostro ordine sul nostro sito usando 
+questo tracking id: [##tracking-id##]
+
+
+Grazie!
+[##biz##]

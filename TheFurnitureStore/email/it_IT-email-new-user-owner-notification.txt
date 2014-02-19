@@ -1,0 +1,5 @@
+[##header##]
+
+
+Ciao,
+ciò è di informarlo che un nuovo cliente è stato registrato appena poichè un membro del vostro negozio con il nome di utente: [##username##]

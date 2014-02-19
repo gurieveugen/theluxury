@@ -1,0 +1,10 @@
+[31-Dec-2011 09:45:08] PHP Fatal error:  Call to undefined function  is_page() in /home6/theluxv0/public_html/wp-content/themes/TheFurnitureStoreLight/includes/headers/page-titles.php on line 4
+[31-Dec-2011 09:45:08] PHP Fatal error:  Call to undefined function  is_front_page() in /home6/theluxv0/public_html/wp-content/themes/TheFurnitureStoreLight/includes/headers/hybrid_drop_menu.php on line 16
+[31-Dec-2011 09:45:11] PHP Fatal error:  Call to undefined function  get_option() in /home6/theluxv0/public_html/wp-content/themes/TheFurnitureStoreLight/includes/headers/header_links.php on line 108
+[31-Dec-2011 09:45:25] PHP Fatal error:  Call to undefined function  get_page_by_title() in /home6/theluxv0/public_html/wp-content/themes/TheFurnitureStoreLight/includes/headers/header_contents.php on line 4
+[30-Jan-2012 09:44:23] PHP Fatal error:  Call to undefined function  is_page() in /home6/theluxv0/public_html/wp-content/themes/TheFurnitureStoreLight/includes/headers/page-titles.php on line 4
+[30-Jan-2012 09:44:23] PHP Fatal error:  Call to undefined function  is_page() in /home6/theluxv0/public_html/wp-content/themes/TheFurnitureStoreLight/includes/headers/page-titles.php on line 4
+[30-Jan-2012 09:44:25] PHP Fatal error:  Call to undefined function  get_page_by_title() in /home6/theluxv0/public_html/wp-content/themes/TheFurnitureStoreLight/includes/headers/header_contents.php on line 4
+[30-Jan-2012 09:44:25] PHP Fatal error:  Call to undefined function  get_page_by_title() in /home6/theluxv0/public_html/wp-content/themes/TheFurnitureStoreLight/includes/headers/header_contents.php on line 4
+[30-Jan-2012 09:44:26] PHP Fatal error:  Call to undefined function  is_front_page() in /home6/theluxv0/public_html/wp-content/themes/TheFurnitureStoreLight/includes/headers/hybrid_drop_menu.php on line 16
+[30-Jan-2012 09:44:26] PHP Fatal error:  Call to undefined function  get_option() in /home6/theluxv0/public_html/wp-content/themes/TheFurnitureStoreLight/includes/headers/header_links.php on line 108

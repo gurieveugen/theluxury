@@ -1,0 +1,10 @@
+[##header##]
+
+We are happy to welcome you as a new member!
+
+Your username is: [##username##]
+Your login password is: [##pw##]
+
+Of course, you may change your password from your account page after login in to something you can easily remember.
+
+To login follow this link: [##login_link##]

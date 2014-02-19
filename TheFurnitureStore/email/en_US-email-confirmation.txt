@@ -1,0 +1,19 @@
+[##biz##]
+
+
+Hello [##name##],
+we received your order:
+
+-----------------------------------------------------------------------------------------
+[##order##]
+-----------------------------------------------------------------------------------------
+
+[##bank-transfer-info##]
+
+If you are a registered member you can check the status of your order on your Account page using your tracking id: [##tracking-id##]
+
+If you don't have an account yet, go ahead and create one; it's free!
+
+
+Thank you!
+[##biz##]

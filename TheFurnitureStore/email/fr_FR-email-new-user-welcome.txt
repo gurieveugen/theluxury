@@ -1,0 +1,10 @@
+[##header##]
+
+Nous sommes heureux de vous compter parmi les membres d'Unique!
+
+Votre username est: [##username##]
+Votre mot de passe est : [##pw##]
+
+Vous pourrez changer votre mot de passe pour quelque chose de plus simple à retenir une fois connecté à votre espace client.
+
+Pour vous connecter cliquez ici : [##login_link##]

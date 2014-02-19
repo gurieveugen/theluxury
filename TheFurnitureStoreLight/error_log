@@ -1,0 +1,14 @@
+[01-Dec-2011 15:15:14] PHP Fatal error:  Call to undefined function  add_action() in /home6/theluxv0/public_html/wp-content/themes/TheFurnitureStoreLight/functions.php on line 5
+[01-Dec-2011 15:15:14] PHP Fatal error:  Call to undefined function  is_404() in /home6/theluxv0/public_html/wp-content/themes/TheFurnitureStoreLight/header.php on line 5
+[01-Dec-2011 15:15:16] PHP Fatal error:  Call to undefined function  get_header() in /home6/theluxv0/public_html/wp-content/themes/TheFurnitureStoreLight/products.php on line 8
+[01-Dec-2011 15:15:16] PHP Fatal error:  Call to undefined function  get_header() in /home6/theluxv0/public_html/wp-content/themes/TheFurnitureStoreLight/single.php on line 1
+[31-Dec-2011 09:43:37] PHP Fatal error:  Call to undefined function  get_header() in /home6/theluxv0/public_html/wp-content/themes/TheFurnitureStoreLight/single.php on line 1
+[31-Dec-2011 09:43:42] PHP Fatal error:  Call to undefined function  add_action() in /home6/theluxv0/public_html/wp-content/themes/TheFurnitureStoreLight/functions.php on line 5
+[31-Dec-2011 09:44:04] PHP Fatal error:  Call to undefined function  is_404() in /home6/theluxv0/public_html/wp-content/themes/TheFurnitureStoreLight/header.php on line 5
+[31-Dec-2011 09:49:16] PHP Fatal error:  Call to undefined function  get_header() in /home6/theluxv0/public_html/wp-content/themes/TheFurnitureStoreLight/products.php on line 8
+[30-Jan-2012 09:38:04] PHP Fatal error:  Call to undefined function  get_header() in /home6/theluxv0/public_html/wp-content/themes/TheFurnitureStoreLight/single.php on line 1
+[30-Jan-2012 09:38:04] PHP Fatal error:  Call to undefined function  get_header() in /home6/theluxv0/public_html/wp-content/themes/TheFurnitureStoreLight/single.php on line 1
+[30-Jan-2012 09:38:05] PHP Fatal error:  Call to undefined function  add_action() in /home6/theluxv0/public_html/wp-content/themes/TheFurnitureStoreLight/functions.php on line 5
+[30-Jan-2012 09:38:05] PHP Fatal error:  Call to undefined function  add_action() in /home6/theluxv0/public_html/wp-content/themes/TheFurnitureStoreLight/functions.php on line 5
+[30-Jan-2012 09:39:05] PHP Fatal error:  Call to undefined function  is_404() in /home6/theluxv0/public_html/wp-content/themes/TheFurnitureStoreLight/header.php on line 9
+[30-Jan-2012 09:39:05] PHP Fatal error:  Call to undefined function  is_404() in /home6/theluxv0/public_html/wp-content/themes/TheFurnitureStoreLight/header.php on line 9

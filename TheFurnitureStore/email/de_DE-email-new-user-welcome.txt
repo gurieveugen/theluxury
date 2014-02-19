@@ -1,0 +1,10 @@
+[##header##]
+
+Wir freuen uns Sie als neuen Kunden in unserem Shop willkommen zu heißen!
+
+Ihr Username lautet: [##username##]
+Ihr Login Passwort lautet: [##pw##]
+
+Wenn Sie möchten können Sie nach dem Einloggen auf der Seite "IHR KONTO" Ihr Passwort ändern.
+
+Um sich Einzuloggen folgen Sie bitte diesem LINK: [##login_link##]

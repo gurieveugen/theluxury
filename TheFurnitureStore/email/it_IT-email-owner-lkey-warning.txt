@@ -1,0 +1,6 @@
+[##header##]
+				
+Salve,
+il numero della chiave di licenza per il file [##fname##] è al di sotto del minimo stabilito di [##minimum##] chiavi.
+								
+Fai il Login a Wordpress Admin Area e poi fai l'upload di nuove chiavi qui: [##url##]

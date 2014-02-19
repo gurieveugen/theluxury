@@ -1,0 +1,8 @@
+[##header##]
+
+Bonjour,
+
+[##f_name##] [##l_name##] articles commandés dans la valeur de [##amount##] [##currency##].
+
+
+Afin de gérer cet ordre, l'accès à Wordpress Administration et ensuite aller ici: [##url##]

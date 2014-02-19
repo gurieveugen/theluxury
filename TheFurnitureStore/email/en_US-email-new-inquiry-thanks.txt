@@ -1,0 +1,11 @@
+[##biz##]
+
+Hello!
+Thank you very much for your enquiry - you will hear from us as soon as possible. 
+
+
+Your enquiry tracking-id for later reference is: [##tracking-id##] 
+
+
+Regards, 
+[##biz##]

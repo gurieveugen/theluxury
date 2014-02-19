@@ -1,0 +1,5 @@
+Move the wpay.php file into the root of your WordPress installation. 
+
+WorldPay imposes certain limitations to the response template so this is the reason why the confirmation page is different here than when using other payment gateways
+You will need to make design adjustments to make the page fit to your site.
+Be careful with adding html and css - after every change run a test transaction with worldpay. 
