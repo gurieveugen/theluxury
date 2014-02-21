@@ -123,6 +123,7 @@ jQuery(function()
   }
   
   // get_display_categories();
+  update_scroll();
 
   jQuery('.shop-by-category').addClass('open');  
 });

@@ -113,14 +113,14 @@ if(!isset($_GET['_escaped_fragment_']))
 
 	if (count($tax_query) > 0) 
 	{
-		$tax_query['relation'] = 'OR';
+		$tax_query['relation'] = 'AND';
 		$args['tax_query']     = $tax_query;
 	}
 }
 else
 {
 	parse_str($_GET['_escaped_fragment_'], $args);
-	$args['tax_query']['relation'] = "OR";
+	$args['tax_query']['relation'] = "AND";
 	$args['post_status']           = "publish";
 }
 
@@ -158,11 +158,6 @@ if($_GET['s'] != "")
 	$args['s']     = $_GET['s'];
 	$_SESSION["s"] = $_GET['s'];
 }
-// else
-// {
-// 	$args['s'] = $_SESSION["s"];
-// }
-
 
 
 if($_SESSION["get_default"])

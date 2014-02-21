@@ -4466,7 +4466,7 @@ class ShopSearchFilterWidget extends WP_Widget {
 
 		# Before the widget
 		//echo $before_widget;
-		var_dump($filter_subcat);
+		// var_dump($_SESSION['all_display_categories']); 
 		echo '<div class="widget widget-filter">';
 		# The title
 		if ($title) { echo '<h3>' . $title . '</h3>'; }
@@ -4508,7 +4508,7 @@ class ShopSearchFilterWidget extends WP_Widget {
 								<label<?php if ($filter_cat['child']) { echo ' class="has-drop"'; } ?>><strong><?php echo $filter_cat['info']['name']; ?></strong></label>
 								<?php if ($filter_cat['child']) { ?>
 									<div class="sub-category">
-									<?php foreach($filter_cat['child'] as $filter_subcat) { ?>
+									<?php foreach($filter_cat['child'] as $filter_subcat) {  ?>
 										<?php if ($filter_subcat['child']) { ?>
 											<div class="f-row subcat open">
 												<input data-block="shop-by-category" type="checkbox" name="filter-category[]" value="<?php echo $filter_subcat['info']['slug']; ?>" id="category-<?php echo $filter_subcat['info']['id']; ?>" rel="<?php echo $filter_subcat['info']['rel']; ?>"<?php if (is_category($filter_subcat['info']['slug']) || @in_array($filter_subcat['info']['slug'], $_GET['filter-category'])) { echo ' CHECKED'; $cat_selected = $filter_subcat['info']['slug']; } ?> />
