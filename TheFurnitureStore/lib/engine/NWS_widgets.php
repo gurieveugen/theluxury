@@ -4463,10 +4463,12 @@ class ShopSearchFilterWidget extends WP_Widget {
 		extract($args);
 		$title 		= apply_filters('widget_title', $instance['title'] );
 		$cat_selected = '';
+		global $wp_query;
 
+		
 		# Before the widget
 		//echo $before_widget;
-		// var_dump($_SESSION['all_display_categories']); 
+		//var_dump($_SESSION['all_display_categories']); 
 		echo '<div class="widget widget-filter">';
 		# The title
 		if ($title) { echo '<h3>' . $title . '</h3>'; }

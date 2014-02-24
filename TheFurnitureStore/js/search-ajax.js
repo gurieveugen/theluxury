@@ -133,6 +133,7 @@ jQuery(function()
  */
 function get_page(paged)
 {
+  jQuery("html, body").animate({ scrollTop: 0 }, "slow");
   jQuery.ajax(
     {
       type: "POST",
@@ -169,7 +170,7 @@ function change_ppp(ppp)
       data: {"ppp": ppp},                                     
       success: function(response)
       {
-        jQuery('#products-container').html(response);
+        jQuery('#products-container').html(response);        
       },
       beforeSend: function() {
         jQuery('#products-container').addClass('loading');
