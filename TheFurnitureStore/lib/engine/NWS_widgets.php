@@ -4479,19 +4479,26 @@ class ShopSearchFilterWidget extends WP_Widget {
 			if (strlen($instance['exclude-category'])) { $cargs = 'exclude='.$instance['exclude-category']; }
 			$cargs.= '&order=DESC';
 			$shop_cats = get_categories($cargs);			
-			if ($shop_cats) {
+			if ($shop_cats) 
+			{
 				$filter_cats = array();
-				foreach($shop_cats as $shop_cat) {					
-					if ($shop_cat->parent == 0 ) {
+				foreach($shop_cats as $shop_cat) 
+				{					
+					if ($shop_cat->parent == 0 ) 
+					{
 						$filter_cats[$shop_cat->term_id]['info'] = array('id' => $shop_cat->term_id, 'name' => $shop_cat->name, 'slug' => $shop_cat->slug);
-						foreach($shop_cats as $shop_subcat) {
-							if ($shop_subcat->parent == $shop_cat->term_id) {
+						foreach($shop_cats as $shop_subcat) 
+						{
+							if ($shop_subcat->parent == $shop_cat->term_id) 
+							{
 								$rel = '';
 								if (strpos(strtolower($shop_subcat->name), 'shoes') !== false) { $rel = 'shoes'; }
 								if (strpos(strtolower($shop_subcat->name), 'clothes') !== false) { $rel = 'clothes'; }
 								$filter_cats[$shop_cat->term_id]['child'][$shop_subcat->term_id]['info'] = array('id' => $shop_subcat->term_id, 'name' => $shop_subcat->name, 'slug' => $shop_subcat->slug, 'rel' => $rel);
-								foreach($shop_cats as $shop_subsubcat) {
-									if ($shop_subsubcat->parent == $shop_subcat->term_id) {
+								foreach($shop_cats as $shop_subsubcat) 
+								{
+									if ($shop_subsubcat->parent == $shop_subcat->term_id) 
+									{
 										if (strtolower($shop_subsubcat->name) == 'rings') { $rel = 'rings'; }
 										$filter_cats[$shop_cat->term_id]['child'][$shop_subcat->term_id]['child'][$shop_subsubcat->term_id] = array('id' => $shop_subsubcat->term_id, 'name' => $shop_subsubcat->name, 'slug' => $shop_subsubcat->slug, 'rel' => $rel);
 									}
@@ -4499,82 +4506,153 @@ class ShopSearchFilterWidget extends WP_Widget {
 							}
 						}
 					}
-				}
-			?>
-			<div class="f-block shop-by-category open">
-				<div class="holder">
-					<h4><span><?php echo $instance['title-category']; ?></span></h4>
-					<div class="f-container">
-						<?php foreach($filter_cats as $filter_cat) { ?>
-							<div class="f-row open">
-								<label<?php if ($filter_cat['child']) { echo ' class="has-drop"'; } ?>><strong><?php echo $filter_cat['info']['name']; ?></strong></label>
-								<?php if ($filter_cat['child']) { ?>
-									<div class="sub-category">
-									<?php foreach($filter_cat['child'] as $filter_subcat) {  ?>
-										<?php if ($filter_subcat['child']) { ?>
-											<div class="f-row subcat open">
-												<input data-block="shop-by-category" type="checkbox" name="filter-category[]" value="<?php echo $filter_subcat['info']['slug']; ?>" id="category-<?php echo $filter_subcat['info']['id']; ?>" rel="<?php echo $filter_subcat['info']['rel']; ?>"<?php if (is_category($filter_subcat['info']['slug']) || @in_array($filter_subcat['info']['slug'], $_GET['filter-category'])) { echo ' CHECKED'; $cat_selected = $filter_subcat['info']['slug']; } ?> />
-												<label<?php if ($filter_subcat['child']) { echo ' class="has-drop"'; } ?> data-input="category-<?php echo $filter_subcat['info']['id']; ?>" data-a="a-category-<?php echo $filter_subcat['info']['id']; ?>"><?php echo $filter_subcat['info']['name']; ?></label>
-												<div class="sub-category">
-												<?php foreach($filter_subcat['child'] as $filter_subsubcat) { ?>
-													<div class="f-row subsubcat">
-														<input data-block="shop-by-category" type="checkbox" name="filter-category[]" value="<?php echo $filter_subsubcat['slug']; ?>" id="category-<?php echo $filter_subsubcat['id']; ?>" rel="<?php echo $filter_subsubcat['rel']; ?>"<?php if (is_category($filter_subsubcat['slug']) || @in_array($filter_subsubcat['slug'], $_GET['filter-category'])) { echo ' CHECKED'; $cat_selected = $filter_subsubcat['slug']; } ?> />
-														<label id="label-<?php echo $filter_subsubcat['slug']; ?>" data-input="category-<?php echo $filter_subsubcat['id']; ?>" data-a="a-category-<?php echo $filter_subsubcat['id']; ?>"><?php echo $filter_subsubcat['name']; ?></label>
+				}?>
+				<div class="f-block shop-by-category open">
+					<div class="holder">
+						<h4><span><?php echo $instance['title-category']; ?></span></h4>
+						<div class="f-container">
+							<?php foreach($filter_cats as $filter_cat) 
+							{ ?>
+								<div class="f-row open">
+									<label<?php if ($filter_cat['child']) { echo ' class="has-drop"'; } ?>><strong><?php echo $filter_cat['info']['name']; ?></strong></label>
+									<?php if ($filter_cat['child']) 
+									{ ?>
+										<div class="sub-category">
+										<?php foreach($filter_cat['child'] as $filter_subcat) 
+										{  ?>
+											<?php if ($filter_subcat['child']) 
+											{ ?>
+												<div class="f-row subcat open">
+													<input data-block="shop-by-category" type="checkbox" name="filter-category[]" value="<?php echo $filter_subcat['info']['slug']; ?>" id="category-<?php echo $filter_subcat['info']['id']; ?>" rel="<?php echo $filter_subcat['info']['rel']; ?>"<?php if (is_category($filter_subcat['info']['slug']) || @in_array($filter_subcat['info']['slug'], $_GET['filter-category'])) { echo ' CHECKED'; $cat_selected = $filter_subcat['info']['slug']; } ?> />
+													<label<?php if ($filter_subcat['child']) { echo ' class="has-drop"'; } ?> data-input="category-<?php echo $filter_subcat['info']['id']; ?>" data-a="a-category-<?php echo $filter_subcat['info']['id']; ?>"><?php echo $filter_subcat['info']['name']; ?></label>
+													<div class="sub-category">
+													<?php foreach($filter_subcat['child'] as $filter_subsubcat) { ?>
+														<div class="f-row subsubcat">
+															<input data-block="shop-by-category" type="checkbox" name="filter-category[]" value="<?php echo $filter_subsubcat['slug']; ?>" id="category-<?php echo $filter_subsubcat['id']; ?>" rel="<?php echo $filter_subsubcat['rel']; ?>"<?php if (is_category($filter_subsubcat['slug']) || @in_array($filter_subsubcat['slug'], $_GET['filter-category'])) { echo ' CHECKED'; $cat_selected = $filter_subsubcat['slug']; } ?> />
+															<label id="label-<?php echo $filter_subsubcat['slug']; ?>" data-input="category-<?php echo $filter_subsubcat['id']; ?>" data-a="a-category-<?php echo $filter_subsubcat['id']; ?>"><?php echo $filter_subsubcat['name']; ?></label>
+														</div>
+													<?php } ?>
 													</div>
-												<?php } ?>
 												</div>
-											</div>
+											<?php } ?>
 										<?php } ?>
+										</div>
 									<?php } ?>
-									</div>
-								<?php } ?>
-							</div>
-						<?php } ?>
-					</div>
-				</div>
-			</div>
-			<?php } ?>
-			<?php foreach($this->custom_taxs as $custom_tax) {
-			if ($instance['include-'.$custom_tax] == '1') {
-				$cust_taxs = get_terms($custom_tax, 'orderby=name' );
-				if ($cust_taxs) {
-			?>
-			<div class="f-block shop-by-<?php echo $custom_tax; ?>">
-				<?php if (strpos($custom_tax, 'size') !== false) { ?><div class="size-guide-link"><a href="#size-guide" rel="<?php echo $custom_tax; ?>">Size guide</a></div><?php } ?>
-				<h4><span><?php echo $instance['title-'.$custom_tax]; ?></span></h4>
-				<div class="f-container">
-					<div class="f-holder">
-					<?php foreach($cust_taxs as $cust_tax) { ?>
-						<div class="f-row">
-							<?php if ($custom_tax == 'price') {
-								$currency_rate = $_SESSION["currency-rate"];
-								if (!$currency_rate) { $currency_rate = 1; }
-								$ctsarray = explode('-', $cust_tax->slug);
-								$ctname = $ctsarray[0] * $currency_rate;
-								if (count($ctsarray) > 1) {
-									$ctname .= ' - '.$ctsarray[1] * $currency_rate;
-								} else if (strpos($cust_tax->name, '+')) {
-									$ctname .= ' +';
-								}
-								?>
-								<input data-block="shop-by-<?php echo $custom_tax; ?>" type="checkbox" name="filter-<?php echo $custom_tax; ?>[]" value="<?php echo $cust_tax->slug; ?>" id="<?php echo $custom_tax; ?>-<?php echo $cust_tax->term_id; ?>"<?php if (is_tax($custom_tax, $cust_tax->slug) || @in_array($cust_tax->slug, $_GET['filter-'.$custom_tax])) { echo ' CHECKED'; } ?> />
-								<label id="label-<?php echo $cust_tax->slug; ?>" data-input="<?php echo $custom_tax; ?>-<?php echo $cust_tax->term_id; ?>" data-a="a-<?php echo $custom_tax; ?>-<?php echo $cust_tax->term_id; ?>"><?php echo $ctname.' '.$_SESSION["currency-code"]; ?></label>
-							<?php } else { ?>
-								<input data-block="shop-by-<?php echo $custom_tax; ?>" type="checkbox" name="filter-<?php echo $custom_tax; ?>[]" value="<?php echo $cust_tax->slug; ?>" id="<?php echo $custom_tax; ?>-<?php echo $cust_tax->term_id; ?>"<?php if (is_tax($custom_tax, $cust_tax->slug) || @in_array($cust_tax->slug, $_GET['filter-'.$custom_tax])) { echo ' CHECKED'; } ?> />
-								<label id="label-<?php echo $cust_tax->slug; ?>" data-input="<?php echo $custom_tax; ?>-<?php echo $cust_tax->term_id; ?>" data-a="a-<?php echo $custom_tax; ?>-<?php echo $cust_tax->term_id; ?>"><?php echo $cust_tax->name; ?></label>
+								</div>
 							<?php } ?>
 						</div>
-					<?php } ?>
 					</div>
 				</div>
-			</div>
-			<?php }}} ?>
-			<!--<input type="submit" value="<?php echo $instance['button_text']; ?>" />-->
+			<?php } ?>
+			<?php 
+			if($wp_query->query_vars['taxonomy'] == 'brand')
+			{
+				array_walk($this->getCustomTaxBlocks($this->custom_taxs, $instance, $_SESSION['all_display_categories']), array($this, 'displayCustomBlocks'));
+			}
+			else
+			{
+				array_walk($this->getCustomTaxBlocks($this->custom_taxs, $instance, NULL), array($this, 'displayCustomBlocks'));
+			}
+			?>
 		</form>
 		<?php
 		echo '</div>';
-		# After the widget
-		//echo $after_widget;
+	}
+
+	/**
+	 * Display category blocks
+	 * @param  string $value 
+	 * @param  string $key   
+	 */
+	function displayCustomBlocks($value, $key)
+	{
+		echo $value;
+	}
+
+	/**
+	 * Get blocks from taxonomies
+	 * @param  array $taxonomies 
+	 * @param  array $instance   
+	 * @return array             
+	 */
+	function getCustomTaxBlocks($taxonomies, $instance, $display_cats = NULL)
+	{
+		$blocks_arr = array();
+		$block      = '';
+
+		foreach($taxonomies as $custom_tax) 
+		{
+			if ($instance['include-'.$custom_tax] == '1') 
+			{
+				$cust_taxs = get_terms($custom_tax, 'orderby=name' );
+
+				if ($cust_taxs) 
+				{	
+					if(is_array($display_cats))
+					{
+						$new_cust_taxs = array();
+						foreach ($cust_taxs as $value) 
+						{
+							if(isset($display_cats[$custom_tax]))
+							{
+								foreach ($display_cats[$custom_tax] as $value2) 
+								{									
+									if($value->slug == $value2['slug'])
+									{
+										$new_cust_taxs[] = $value;
+									}
+								}	
+							}
+						}
+						$cust_taxs = $new_cust_taxs;						
+					}
+
+					$block = '<div class="f-block shop-by-'.$custom_tax.'">';					
+					if (strpos($custom_tax, 'size') !== false) $block.= '<div class="size-guide-link"><a href="#size-guide" rel="<?php echo $custom_tax; ?>">Size guide</a></div>';
+					$block.= '<h4><span>'.$instance['title-'.$custom_tax].'</span></h4>';
+					$block.= '<div class="f-container">';
+					$block.= '<div class="f-holder">';
+					foreach($cust_taxs as $cust_tax) 
+					{
+						$block.='<div class="f-row">';
+						if ($custom_tax == 'price')
+						{
+							$currency_rate = (!$_SESSION["currency-rate"]) ? $_SESSION["currency-rate"] : 1;
+							$ctsarray      = explode('-', $cust_tax->slug);
+							$ctname        = $ctsarray[0] * $currency_rate;
+							if (count($ctsarray) > 1) 
+							{
+								$ctname .= ' - '.$ctsarray[1] * $currency_rate;
+							} 
+							else if (strpos($cust_tax->name, '+')) 
+							{
+								$ctname .= ' +';
+							}
+							if (is_tax($custom_tax, $cust_tax->slug) || @in_array($cust_tax->slug, $_GET['filter-'.$custom_tax])) $checked = ' CHECKED'; 
+							else $checked = '';
+
+							$block.= '<input data-block="shop-by-'.$custom_tax.'" type="checkbox" name="filter-'.$custom_tax.'[]" value="'.$cust_tax->slug.'" id="'.$custom_tax.'-'.$cust_tax->term_id.'"'.$checked.' />';
+							$block.= '<label id="label-'.$cust_tax->slug.'" data-input="'.$custom_tax.'-'.$cust_tax->term_id.'" data-a="a-'.$custom_tax.'-'.$cust_tax->term_id.'">'.$ctname.' '.$_SESSION["currency-code"].'</label>';	
+						}
+						else
+						{
+							if (is_tax($custom_tax, $cust_tax->slug) || @in_array($cust_tax->slug, $_GET['filter-'.$custom_tax])) $checked = ' CHECKED'; 
+							else $checked = '';
+
+							$block.= '<input data-block="shop-by-'.$custom_tax.'" type="checkbox" name="filter-'.$custom_tax.'[]" value="'.$cust_tax->slug.'" id="'.$custom_tax.'-'.$cust_tax->term_id.'"'.$checked.'/>';
+							$block.= '<label id="label-'.$cust_tax->slug.'" data-input="'.$custom_tax.'-'.$cust_tax->term_id.'" data-a="a-'.$custom_tax.'-'.$cust_tax->term_id.'">'.$cust_tax->name.'</label>';	
+						}
+						$block.='</div><!-- f-row -->';
+					}
+
+					$block.= '</div><!-- f-container -->';
+					$block.= '</div><!-- f-holder -->';
+					$block.= '</div><!-- f-block -->';
+					$blocks_arr[$custom_tax] = $block;
+				}
+			}
+		} 
+		return $blocks_arr;
 	}
 	
 	function update($new_instance, $old_instance){
