@@ -4475,6 +4475,12 @@ class ShopSearchFilterWidget extends WP_Widget {
 		?>
 		<form class="search-filter-form" action="<?php echo get_permalink($instance['search_page']); ?>">
 			<?php
+			$custom_tax_blocks = $this->getCustomTaxBlocks($this->custom_taxs, $instance, $_SESSION['all_display_categories']);
+			if($wp_query->query_vars['taxonomy'] == 'brand')
+			{
+				echo $custom_tax_blocks['brand'];
+				$custom_tax_blocks['brand'] = '';
+			}
 			$cargs = '';
 			if (strlen($instance['exclude-category'])) { $cargs = 'exclude='.$instance['exclude-category']; }
 			$cargs.= '&order=DESC';
@@ -4547,7 +4553,7 @@ class ShopSearchFilterWidget extends WP_Widget {
 			<?php 
 			if($wp_query->query_vars['taxonomy'] == 'brand')
 			{
-				array_walk($this->getCustomTaxBlocks($this->custom_taxs, $instance, $_SESSION['all_display_categories']), array($this, 'displayCustomBlocks'));
+				array_walk($custom_tax_blocks, array($this, 'displayCustomBlocks'));
 			}
 			else
 			{
