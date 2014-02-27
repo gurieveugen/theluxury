@@ -11013,3 +11013,5 @@ input[type="submit"].btn-grey{
 	display:table;
 	clear:both;
 }
+
+.hide{ display: none; }

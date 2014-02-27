@@ -4475,12 +4475,6 @@ class ShopSearchFilterWidget extends WP_Widget {
 		?>
 		<form class="search-filter-form" action="<?php echo get_permalink($instance['search_page']); ?>">
 			<?php
-			$custom_tax_blocks = $this->getCustomTaxBlocks($this->custom_taxs, $instance, $_SESSION['all_display_categories']);
-			if($wp_query->query_vars['taxonomy'] == 'brand')
-			{
-				echo $custom_tax_blocks['brand'];
-				$custom_tax_blocks['brand'] = '';
-			}
 			$cargs = '';
 			if (strlen($instance['exclude-category'])) { $cargs = 'exclude='.$instance['exclude-category']; }
 			$cargs.= '&order=DESC';
@@ -4551,6 +4545,7 @@ class ShopSearchFilterWidget extends WP_Widget {
 				</div>
 			<?php } ?>
 			<?php 
+			$custom_tax_blocks = $this->getCustomTaxBlocks($this->custom_taxs, $instance, $_SESSION['all_display_categories']);			
 			if($wp_query->query_vars['taxonomy'] == 'brand')
 			{
 				array_walk($custom_tax_blocks, array($this, 'displayCustomBlocks'));
@@ -4591,26 +4586,16 @@ class ShopSearchFilterWidget extends WP_Widget {
 			if ($instance['include-'.$custom_tax] == '1') 
 			{
 				$cust_taxs = get_terms($custom_tax, 'orderby=name' );
-
 				if ($cust_taxs) 
 				{	
 					if(is_array($display_cats))
 					{
-						$new_cust_taxs = array();
-						foreach ($cust_taxs as $value) 
+						$only_slugs    = $this->getSlugs($display_cats);				
+						foreach ($cust_taxs as &$value) 
 						{
-							if(isset($display_cats[$custom_tax]))
-							{
-								foreach ($display_cats[$custom_tax] as $value2) 
-								{									
-									if($value->slug == $value2['slug'])
-									{
-										$new_cust_taxs[] = $value;
-									}
-								}	
-							}
-						}
-						$cust_taxs = $new_cust_taxs;						
+							if(isset($only_slugs[$custom_tax][$value->slug])) $value->visible = true;								
+							else $value->visible = false;
+						}						
 					}
 
 					$block = '<div class="f-block shop-by-'.$custom_tax.'">';					
@@ -4620,7 +4605,7 @@ class ShopSearchFilterWidget extends WP_Widget {
 					$block.= '<div class="f-holder">';
 					foreach($cust_taxs as $cust_tax) 
 					{
-						$block.='<div class="f-row">';
+						$block.='<div class="f-row '.$this->hide(!$cust_tax->visible).'">';
 						if ($custom_tax == 'price')
 						{
 							$currency_rate = (!$_SESSION["currency-rate"]) ? $_SESSION["currency-rate"] : 1;
@@ -4659,6 +4644,38 @@ class ShopSearchFilterWidget extends WP_Widget {
 			}
 		} 
 		return $blocks_arr;
+	}
+
+	/**
+	 * Get only slug's from display categories
+	 * @param  array $display_cats 
+	 * @return array               
+	 */
+	function getSlugs($display_cats)
+	{
+		foreach ($display_cats as $key => &$value) 
+		{
+			if(is_array($value))
+			{
+				foreach ($value as $key2 => &$value2) 
+				{
+					$slug               = $value2['slug'];
+					$slugs[$key][$slug] = $key2;
+				}
+			}
+		}
+		return $slugs;
+	}
+
+	/**
+	 * Get hide CSS class
+	 * @param  boolean $bool 
+	 * @return string       
+	 */
+	function hide($bool)
+	{
+		if($bool) return 'hide';
+		return '';
 	}
 	
 	function update($new_instance, $old_instance){
