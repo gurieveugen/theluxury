@@ -4491,7 +4491,6 @@ class ShopSearchFilterWidget extends WP_Widget {
 					</div><!-- f-container -->
 				</div><!-- holder -->
 			</div><!-- shop-by-category -->
-
 			<?php
 			if ($shop_cats) 
 			{				
@@ -4519,7 +4518,8 @@ class ShopSearchFilterWidget extends WP_Widget {
 							}
 						}
 					}
-				}?>
+				}
+				?>
 				<div class="f-block shop-by-category open">
 					<div class="holder">
 						<h4><span><?php echo $instance['title-category']; ?></span></h4>
@@ -4533,24 +4533,23 @@ class ShopSearchFilterWidget extends WP_Widget {
 										<div class="sub-category">
 										<?php foreach($filter_cat['child'] as $filter_subcat) 
 										{  ?>
-											<?php if ($filter_subcat['child']) 
-											{ ?>
-												<div class="f-row subcat open">
-													<input data-block="shop-by-category" type="checkbox" name="filter-category[]" value="<?php echo $filter_subcat['info']['slug']; ?>" id="category-<?php echo $filter_subcat['info']['id']; ?>" rel="<?php echo $filter_subcat['info']['rel']; ?>"<?php if (is_category($filter_subcat['info']['slug']) || @in_array($filter_subcat['info']['slug'], $_GET['filter-category'])) { echo ' CHECKED'; $cat_selected = $filter_subcat['info']['slug']; } ?> />
-													<label<?php if ($filter_subcat['child']) { echo ' class="has-drop"'; } ?> data-input="category-<?php echo $filter_subcat['info']['id']; ?>" data-a="a-category-<?php echo $filter_subcat['info']['id']; ?>"><?php echo $filter_subcat['info']['name']; ?></label>
+											<div class="f-row subcat open">
+												<input data-block="shop-by-category" type="checkbox" name="filter-category[]" value="<?php echo $filter_subcat['info']['slug']; ?>" id="category-<?php echo $filter_subcat['info']['id']; ?>" rel="<?php echo $filter_subcat['info']['rel']; ?>"<?php if (is_category($filter_subcat['info']['slug']) || @in_array($filter_subcat['info']['slug'], $_GET['filter-category'])) { echo ' CHECKED'; $cat_selected = $filter_subcat['info']['slug']; } ?> />
+												<label<?php if ($filter_subcat['child']) { echo ' class="has-drop"'; } ?> data-input="category-<?php echo $filter_subcat['info']['id']; ?>" data-a="a-category-<?php echo $filter_subcat['info']['id']; ?>" title="<?php echo $filter_subcat['info']['name']; ?>"><?php echo $this->clear_cname($filter_subcat['info']['name']); ?></label>
+												<?php if ($filter_subcat['child']) { ?>
 													<div class="sub-category">
 													<?php foreach($filter_subcat['child'] as $filter_subsubcat) 
 													{ ?>
 														<div class="f-row subsubcat">
 															<input data-block="shop-by-category" type="checkbox" name="filter-category[]" value="<?php echo $filter_subsubcat['slug']; ?>" id="category-<?php echo $filter_subsubcat['id']; ?>" rel="<?php echo $filter_subsubcat['rel']; ?>"<?php if (is_category($filter_subsubcat['slug']) || @in_array($filter_subsubcat['slug'], $_GET['filter-category'])) { echo ' CHECKED'; $cat_selected = $filter_subsubcat['slug']; } ?> />
-															<label id="label-<?php echo $filter_subsubcat['slug']; ?>" data-input="category-<?php echo $filter_subsubcat['id']; ?>" data-a="a-category-<?php echo $filter_subsubcat['id']; ?>"><?php echo $filter_subsubcat['name']; ?></label>
+															<label id="label-<?php echo $filter_subsubcat['slug']; ?>" data-input="category-<?php echo $filter_subsubcat['id']; ?>" data-a="a-category-<?php echo $filter_subsubcat['id']; ?>" title="<?php echo $filter_subsubcat['name']; ?>"><?php echo $this->clear_cname($filter_subsubcat['name']); ?></label>
 														</div>
 													<?php 
 													} ?>
 													</div>
-												</div>
-											<?php 
-											} ?>
+												<?php 
+												} ?>
+											</div>
 										<?php 
 										} ?>
 										</div>
@@ -4579,6 +4578,11 @@ class ShopSearchFilterWidget extends WP_Widget {
 		echo '</div>';
 	}
 
+	function clear_cname($name) {
+		$repl = array("Women's", "Women", "Men's", "Men");
+		return trim(str_replace($repl, '', $name));
+	}
+
 	/**
 	 * Display all child nodes from Adjacency List
 	 * @param  array $data          - MySQL data
@@ -4590,7 +4594,7 @@ class ShopSearchFilterWidget extends WP_Widget {
 	 * @param  string $after_node   - After Node HTML
 	 * @return string               - HTML
 	 */
-	function dispalyAllNodes($child_nodes, $parent_id, $depth = 0, $before_nodes = '<div class="sub-category">', $after_nodes = "</div>", $before_node = '<div class="f-row open">', $after_node = "</div>")
+	function dispalyAllNodes($child_nodes, $parent_id, $before_nodes = '<div class="sub-category">', $after_nodes = "</div>", $before_node = '<div class="f-row open">', $after_node = "</div>")
 	{
 		$str       = "";		
 		$parent_id = $parent_id === NULL ? "NULL" : $parent_id;

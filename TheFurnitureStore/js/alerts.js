@@ -321,7 +321,7 @@ jQuery(document).ready(function(){
 	}
 	jQuery('.search-filter-form .f-block .jqTransformCheckbox').click(function(){
 		var sfid = jQuery(this).parent().find('input').attr('id');
-		var sfname = jQuery(this).parent().parent().find('label').html();
+		var sfname = jQuery(this).parent().parent().find('label').attr('title');
 		if (jQuery(this).hasClass('jqTransformChecked')) {
 			create_alert_action(sfid, sfname);
 		} else {
@@ -371,7 +371,7 @@ jQuery(document).ready(function(){
 function init_alerts_action() {
 	jQuery('.search-filter-form .f-block .jqTransformCheckbox').each(function(){
 		var sfid = jQuery(this).parent().find('input').attr('id');
-		var sfname = jQuery(this).parent().parent().find('label').html();
+		var sfname = jQuery(this).parent().parent().find('label').attr('title');
 		if (jQuery(this).hasClass('jqTransformChecked')) {
 			create_alert_action(sfid, sfname);
 		}

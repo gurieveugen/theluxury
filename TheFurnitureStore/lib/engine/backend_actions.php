@@ -502,7 +502,7 @@
 				<tr>
 					<td id='item_qty'><?php echo $order_item->item_amount; ?>x</td>
 					<td id='item_id'><?php echo $order_item->item_id; ?></td>
-					<td id='item_name'><a href="post.php?post=<?php echo $order_item->postID; ?>&action=edit" target="_blank"><b><?php echo $order_item->item_name; ?></b></a></td>
+					<td id='item_name'><a href="<?php echo get_permalink($order_item->postID); ?>" target="_blank"><b><?php echo $order_item->item_name; ?></b></a></td>
 					<td>$<?php echo format_price($order_item->item_price); ?></td>
 					<td>$<?php echo format_price($order_item->item_amount * $order_item->item_price); ?></td>
 					<td><?php if (strlen($item_seller)) { ?><a href="<?php echo $summary_page_url.$order_item->post_author; ?>"><?php echo $order_item->user_login; ?></a><?php } else { echo '&nbsp;'; } ?></td>

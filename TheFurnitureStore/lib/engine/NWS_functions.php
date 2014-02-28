@@ -1643,7 +1643,7 @@ function shop_get_currency_codes() {
 function product_prices_list($price) {
 	global $currency_options, $currency_rates;
 	if ($price) { ?>
-		<span class="price-USD">$<?php echo format_price($price); ?></span>
+		<span class="currency-price price-USD">$<?php echo format_price($price); ?></span>
 		<?php if (count($currency_options)) {
 			foreach($currency_options as $actc) { ?>
 				<span class="currency-price price-<?php echo strtoupper($actc); ?>"><?php echo format_price($price * $currency_rates[$actc]); ?> <?php echo strtoupper($actc); ?></span>
@@ -2997,6 +2997,7 @@ function sellers_actions_init() {
 						update_post_meta($post_id, 'item_suggested_price', 'completed');
 
 						delete_post_meta($post_id, 'item_suggested_your_quotation_price');
+						delete_post_meta($post_id, '_change_price_email');
 
 						// send notification
 						$subject = "Change Price Request (Individual Sellers)";
@@ -3014,6 +3015,7 @@ function sellers_actions_init() {
 					if ($post_data && $post_data->post_author == $current_user->ID) {
 						delete_post_meta($post_id, 'item_suggested_price');
 						delete_post_meta($post_id, 'item_suggested_your_quotation_price');
+						delete_post_meta($post_id, '_change_price_email');
 					}
 				}
 			break;
@@ -3083,8 +3085,11 @@ function sellers_actions_init() {
 					update_post_meta($post_id, 'item_suggested_price', 'true');
 					update_post_meta($post_id, 'item_suggested_price_date', date("d.m.Y"));
 
+					// custom field for sending change price email
+					update_post_meta($post_id, '_change_price_email', 'true');
+
 					// send email to seller
-					sellers_send_change_price_email($post_id, $item_your_quotation_price, $item_suggested_your_quotation_price);
+					//sellers_send_change_price_email($post_id, $item_your_quotation_price, $item_suggested_your_quotation_price);
 				}
 			break;
 			case "summary_prof_change_item_price":
@@ -3096,9 +3101,6 @@ function sellers_actions_init() {
 					$item_new_your_price = sellers_to_usd_price($item_new_your_price);
 					update_post_meta($post_id, 'item_your_price', $item_new_your_price);
 					update_post_meta($post_id, '_item_your_price', $item_your_price);
-
-					// send email to seller
-					sellers_send_change_price_email($post_id, $item_your_price, $item_new_your_price);
 				}
 			break;
 			case "summary_update_seller_info":
@@ -3142,10 +3144,6 @@ function sellers_actions_init() {
 				$post_id = $_POST['post_id'];
 				$post_data = get_post($post_id);
 				if ($post_data) {
-					$item_your_quotation_price = get_post_meta($post_id, 'item_your_quotation_price', true);
-					$item_new_your_quotation_price = get_post_meta($post_id, 'item_new_your_quotation_price', true);
-					update_post_meta($post_id, 'item_your_quotation_price', $item_new_your_quotation_price);
-					update_post_meta($post_id, 'item_your_price', $item_your_quotation_price);
 					update_post_meta($post_id, 'item_request_price', 'completed');
 					delete_post_meta($post_id, 'item_new_your_quotation_price');
 				}
@@ -3548,7 +3546,7 @@ function sellers_get_post_pictures($post_id) {
 function sellers_get_email_format($format_id) {
 	$email_format = get_post($format_id);
 	if ($email_format) {
-		return $email_format->post_content;
+		return wpautop($email_format->post_content);
 	}
 }
 
@@ -3574,30 +3572,67 @@ function sellers_send_order_email($post_id, $item_id) {
 	}
 }
 
-function sellers_send_change_price_email($post_id, $payout, $new_payout) {
+// cron job for send changed price emails
+add_action('wp', 'sellers_change_price_email_cron');
+add_action('sellers_change_price_email_cron_action', 'sellers_send_change_price_email');
+function sellers_change_price_email_cron() {
+	if (!wp_next_scheduled('sellers_change_price_email_cron_action')) {
+		wp_schedule_event(mktime(21, 0, 0, date("m"), date("d"), date("Y")), 'daily', 'sellers_change_price_email_cron_action');
+	}
+}
+
+function sellers_send_change_price_email() {
 	global $wpdb, $OPTION;
-	$post_data = get_post($post_id);
-	if ($post_data) {
-		$seller_id = $post_data->post_author;
-		$subject = stripcslashes($OPTION['wps_sellers_change_price_email_subject']);
-		$message = sellers_get_email_format($OPTION['wps_sellers_change_price_email_format']);
-		$message = nl2br($message);
 
-		$ID_item = get_post_meta($post_id, 'ID_item', true);
-		$user_data = get_userdata($seller_id);
-		$user_fname = get_user_meta($seller_id, 'first_name', true);
-		$user_lname = get_user_meta($seller_id, 'last_name', true);
-		$seller_name = $user_data->data->user_login;
-		if (strlen($user_fname) && strlen($user_lname)) {
-			$seller_name = $user_fname.' '.$user_lname;
+	$cpnotifications = array();
+	$cpncd = date("Y-m-d H:i:s", mktime(0, 0, 0, date("m"), date("d"), date("Y")));
+	$sellers_send_change_price_cron_date = get_option("sellers_send_change_price_cron_date");
+
+	if ($sellers_send_change_price_cron_date != $ancd || $_GET['cpnotify'] == 'send') {
+		$cp_posts = $wpdb->get_results(sprintf("SELECT p.* FROM %sposts p LEFT JOIN %spostmeta pm ON pm.post_id = p.ID WHERE p.post_type = 'post' AND pm.meta_key = '_change_price_email' AND pm.meta_value = 'true'", $wpdb->prefix, $wpdb->prefix));
+		if ($cp_posts) {
+			foreach($cp_posts as $cp_post) {
+				$cpnotifications[$cp_post->post_author][] = $cp_post;
+			}
 		}
-
-		$message = str_replace('{SELLER_NAME}', $seller_name, $message);
-		$message = str_replace('{ITEM_NAME}', '<a href="'.get_permalink($post_id).'">'.$post_data->post_title.'</a>', $message);
-		$message = str_replace('{OLD_PAYOUT}', format_price($payout * $OPTION['wps_exr_aed']), $message);
-		$message = str_replace('{NEW_PAYOUT}', format_price($new_payout * $OPTION['wps_exr_aed']), $message);
-		$message = str_replace('{MY_ITEMS_PAGE}', '<a href="'.get_permalink($OPTION['wps_indvseller_my_items_page']).'">My Items</a>', $message);
-		NWS_send_email($user_data->data->user_email, $subject, $message, '', '', $OPTION['wps_sellers_cc_email']);
+		if (count($cpnotifications)) {
+			$subject = stripcslashes($OPTION['wps_sellers_change_price_email_subject']);
+			foreach($cpnotifications as $user_id => $cpnposts) {
+				$user_data = get_userdata($user_id);
+				if ($user_data) {
+					$user_email = $user_data->user_email;
+					$seller_name = $user_data->display_name;
+					if (strlen($user_data->first_name) || strlen($user_data->last_name)) {
+						$seller_name = $user_data->first_name.' '.$user_data->last_name;
+					}
+					if (count($cpnposts) > 1) {
+						$message = sellers_get_email_format($OPTION['wps_sellers_change_price_multiple_email_format']);
+						$items_list = '';
+						foreach($cpnposts as $cpnpost) {
+							$new_payout = get_post_meta($cpnpost->ID, 'item_suggested_your_quotation_price', true);
+							$old_payout = get_post_meta($cpnpost->ID, 'item_your_quotation_price', true);
+							if (strlen($items_list)) { $items_list .= '<br /><br />'; }
+							$items_list .= '<a href="'.get_permalink($cpnpost->ID).'">'.$cpnpost->post_title.'</a><br />';
+							$items_list .= format_price($new_payout * $OPTION['wps_exr_aed']).' AED instead of '.format_price($old_payout * $OPTION['wps_exr_aed']).' AED';
+						}
+						$message = str_replace('{ITEMS_LIST}', $items_list, $message);
+					} else {
+						$message = sellers_get_email_format($OPTION['wps_sellers_change_price_email_format']);
+						foreach($cpnposts as $cpnpost) {
+							$new_payout = get_post_meta($cpnpost->ID, 'item_suggested_your_quotation_price', true);
+							$old_payout = get_post_meta($cpnpost->ID, 'item_your_quotation_price', true);
+							$message = str_replace('{ITEM_NAME}', '<a href="'.get_permalink($cpnpost->ID).'">'.$cpnpost->post_title.'</a>', $message);
+							$message = str_replace('{OLD_PAYOUT}', format_price($old_payout * $OPTION['wps_exr_aed']), $message);
+							$message = str_replace('{NEW_PAYOUT}', format_price($new_payout * $OPTION['wps_exr_aed']), $message);
+						}
+					}
+					$message = str_replace('{SELLER_NAME}', $seller_name, $message);
+					NWS_send_email($user_email, $subject, $message, '', '', $OPTION['wps_sellers_cc_email']);
+					echo 'Sent '.count($cpnposts).' item(s) to '.$user_email.'<br>';
+				}
+			}
+		}
+		update_option("sellers_send_change_price_cron_date", $cpncd);
 	}
 }
 
@@ -4282,7 +4317,6 @@ function alerts_send_notifications() { // Alerts Notifications
 					}
 				}
 				$insert = array(
-						'ct' => $post_categories[0]->term_id,
 						'br' => $post_brands[0]->term_id,
 						'cl' => $post_colours[0]->term_id,
 						'pr' => $post_prices[0]->term_id,
@@ -4293,6 +4327,15 @@ function alerts_send_notifications() { // Alerts Notifications
 						'post_id' => $added_post->ID,
 						'post' => serialize($added_post)
 					);
+				if ($post_categories) {
+					$cnmb = 1;
+					foreach($post_categories as $pcategory) {
+						if ($cnmb < 6) {
+							$insert['ct'.$cnmb] = $pcategory->term_id;
+						}
+						$cnmb++;
+					}
+				}
 				$wpdb->insert($wpdb->prefix.'wps_user_alerts_temp', $insert);
 				delete_post_meta($added_post->ID, 'alert_send');
 			}
@@ -4338,7 +4381,16 @@ function alerts_get_notification_where2($params) {
 	}
 	foreach($grouped as $gk => $gvals) {
 		if (strlen($where)) { $where .= " AND "; }
-		$where .= $gk." IN (".implode(',', $gvals).")";
+		if ($gk == 'ct') {
+			$where .= "(";
+			for($c=1; $c<=5; $c++) {
+				$where .= $or."ct".$c." IN (".implode(',', $gvals).")";
+				$or = " OR ";
+			}
+			$where .= ")";
+		} else {
+			$where .= $gk." IN (".implode(',', $gvals).")";
+		}
 	}
 	return $where;
 }
@@ -5032,8 +5084,8 @@ function nws_save_post_actions($post_id) {
 		return $post_id;
 	}
 	$post = get_post($post_id);
+	// post custom images attributes save
 	if ($post->post_type == 'post') {
-		// post custom images attributes save
 		if ($_POST['post_cia'] == 'true') {
 			update_post_meta($post_id, 'general_images_title', trim($_POST['general_images_title']));
 			update_post_meta($post_id, 'general_images_alt', trim($_POST['general_images_alt']));
@@ -5048,6 +5100,7 @@ function nws_save_post_actions($post_id) {
 		// set Prices taxonomy
 		nws_update_post_prices_tax($post_id);
 	}
+	// page seo meta title save
 	if ($post->post_type == 'page') {
 		if ($_POST['page_smt'] == 'true') {
 			update_post_meta($post_id, '_page_seo_meta_title', trim($_POST['page_seo_meta_title']));
@@ -5127,7 +5180,7 @@ function nws_subscribe_action($type, $data) {
 	}
 
 	// Infusionsoft
-	require_once("infusionsoft/isdk.php");
+	/*require_once("infusionsoft/isdk.php");
 	$app = new iSDK;
 	if ($app->cfgCon()) {
 		// select tags
@@ -5177,7 +5230,7 @@ function nws_subscribe_action($type, $data) {
 		if ($type == 'register') {
 			$app->grpAssign($cid, 116);
 		}
-	}
+	}*/
 }
 
 // show single post (draft, iseller_draft...)
@@ -5191,28 +5244,36 @@ function nws_show_all_statuses_posts($posts) {
 	return $posts;
 }
 
+// checking staff users
+function is_spec_staff_user() {
+	global $current_user;
+	$spec_staffs = array(
+		17441, // hivista staff
+		41448  // sally.l
+	);
+	if (in_array($current_user->ID, $spec_staffs)) {
+		return true;
+	}
+	return false;
+}
+
 // hivista init
 add_action('init', 'nws_additional_init');
 function nws_additional_init() {
 	global $wpdb, $current_user;
 	if ($_GET['notify'] == 'send') {
-		echo 'Notify notifications:<br>';
+		echo 'Notify notifications:<br><br>';
 		alerts_send_notifications();
 		exit;
 	}
+	if ($_GET['cpnotify'] == 'send') {
+		echo 'Change price notifications:<br><br>';
+		sellers_send_change_price_email();
+		exit;
+	}
 	if ($_GET['hivista'] == 'test') {
-		require_once("infusionsoft/isdk.php");
-		$app = new iSDK;
-		if ($app->cfgCon()) {
-			// select tags
-			$gid = 12; // 01. Current Status
-			$tags = array();
-			$itags = $app->dsQuery("ContactGroup", 100, 0, array('GroupCategoryId' => $gid), array('Id', 'GroupName'));
-			var_dump($itags);
-			exit;
-		}
-		//alerts_send_notifications();
-		//exit;
+		sellers_send_completed_quotation_email(19907);
+		exit;
 	}
 }
 ?>

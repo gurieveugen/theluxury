@@ -24,7 +24,7 @@ $table = is_dbtable_there('wishlist');
 	<?php the_content(); ?>
 	<table class="my-wishlist-table" border="0">
 		<?php
-		$wishlist_items = $wpdb->get_results(sprintf("SELECT * FROM %s WHERE uid = %s", $table, $current_user->ID));
+		$wishlist_items = $wpdb->get_results(sprintf("SELECT * FROM %s WHERE uid = %s ORDER BY wid DESC", $table, $current_user->ID));
 		if ($wishlist_items) {
 			foreach($wishlist_items as $wishlist_item) {
 				$wid = $wishlist_item->wid;

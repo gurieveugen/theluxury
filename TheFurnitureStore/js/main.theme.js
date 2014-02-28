@@ -155,10 +155,13 @@ jQuery(document).ready(function(){
 			function(data){
 				jQuery(trel+' .popup-login-login .action-loading').hide();
 				if (data == 'success') {
-					setTimeout(function(){ window.location.href = callpg; }, 500);
 					hide_login_popup();
 					mcEvilPopupCookie();
-					check_reload_action(callpg);
+					if (callpg.indexOf('%26alertslogin') > 0) {
+						location.reload();
+					} else {
+						setTimeout(function(){ window.location.href = callpg; }, 500);
+					}
 				} else {
 					alert(data);
 				}
@@ -187,10 +190,13 @@ jQuery(document).ready(function(){
 			function(data){
 				jQuery(trel+' .popup-login-register .action-loading').hide();
 				if (data == 'success') {
-					setTimeout(function(){ window.location.href = callpg; }, 500);
 					hide_login_popup();
 					mcEvilPopupCookie();
-					check_reload_action(callpg);
+					if (callpg.indexOf('%26alertslogin') > 0) {
+						location.reload();
+					} else {
+						setTimeout(function(){ window.location.href = callpg; }, 500);
+					}
 				} else {
 					alert(data);
 				}

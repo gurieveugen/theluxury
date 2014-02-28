@@ -3877,11 +3877,16 @@ array ( 	"name" 	=> __('Shop','wpShop'),
 								"type" 	=> "text",
 								"std" 	=> ""),
 						
-					array(    	"name" 	=> __('Change Price Email Format','wpShop'),
+					array(    	"name" 	=> __('Change Price Email Format (single)','wpShop'),
 								"id" 	=> $CONFIG_WPS['shortname']."_sellers_change_price_email_format",
 								"type" 	=> "pages",
 								"vals"  => $email_formats,
-								"desc" 	=> __('{ITEM_NAME}, {ITEM_ID}, {PRICE}','wpShop'),
+								"std" 	=> "Select a Format"),
+
+					array(    	"name" 	=> __('Change Price Email Format (multiple)','wpShop'),
+								"id" 	=> $CONFIG_WPS['shortname']."_sellers_change_price_multiple_email_format",
+								"type" 	=> "pages",
+								"vals"  => $email_formats,
 								"std" 	=> "Select a Format"),
 
 					array(  	"name" 	=> __('Completed Quotations Email Subject','wpShop'),
@@ -4344,8 +4349,9 @@ function NWS_theme_admin()
 					// = means: are all the articles with all possible attr. combos saved?					
 				inventory_article_check();	
 			}
+			$items_on_sale = $wpdb->get_var(sprintf("SELECT COUNT(iid) FROM %swps_inventory WHERE amount > 0", $wpdb->prefix));
 			echo make_section_header('inventory'); ?>
-			<div class="tablenav">
+			<div class="tablenav" style="margin-bottom:25px;">
 				<div class="alignleft actions">
 					<?php
 						echo "
@@ -4361,8 +4367,8 @@ function NWS_theme_admin()
 						";
 					?>	
 				</div>
-				<div class='tablenav-pages' style="float:left;">
-					<?php NWS_inventory_pagination(20); ?>	
+				<div class="alignright" style="padding-top:10px;">
+					<strong>Total Items on sale: <?php echo $items_on_sale; ?>&nbsp;</strong>
 				</div>
 			</div>
 			<?php 
@@ -4417,7 +4423,13 @@ function NWS_theme_admin()
 						";
 					}
 				}
-			echo "</div>";
+			echo "</div>"; ?>
+			<div class="tablenav">
+				<div class="tablenav-pages" style="float:none;">
+					<?php NWS_inventory_pagination(20); ?>	
+				</div>
+			</div>
+			<?php
 			if ($current_user->ID == 1 || $current_user->ID == 6871) { echo '<div class="export-csv" style="padding:10px 0px 0px;"><a href="admin.php?page=functions.php&section=inventory&csvexport=inventory">Export CSV</a></div>'; }
 			echo make_section_footer();	
 		break;
@@ -5834,10 +5846,10 @@ function NWS_theme_staff()
 						<label><?php _e('Bulk Actions:','wpShop'); ?></label> 
 						<select name='status' size='1' class="order-status-act" onchange="status_act()">									
 							<option value='4'><?php _e('Newly Received','wpShop'); ?></option>
-							<option value='5'><?php _e('In Process','wpShop'); ?></option>
-							<option value='6'><?php _e('Shipped','wpShop'); ?></option>
+							<option value='5'><?php _e('Shipped Orders','wpShop'); ?></option>
+							<option value='6'><?php _e('Payment Received','wpShop'); ?></option>
 							<option value='7'><?php _e('Completed','wpShop'); ?></option>
-							<?php if ($current_user->user_email == 'vip@theluxurycloset.com') { ?><option value='0'><?php _e('Cancelled Orders','wpShop'); ?></option><?php } ?>
+							<option value='0'><?php _e('Cancelled Orders','wpShop'); ?></option>
 						</select>
 						<?php $order_cancel_reasons = get_order_cancel_reasons(); ?>
 						<select name="cancel_reason" class="order-cancel-reason" style="width:175px; display:none;">

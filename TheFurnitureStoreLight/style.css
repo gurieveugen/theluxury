@@ -3149,11 +3149,13 @@ form.order_now .shopform_btn,form.inquire_now .shopform_btn{
 	background: none;
 	border: none;
 	margin: 0;
-	padding:2px 5px;
+	padding:3px 5px;
+	height: 22px;
 	width:253px;
 	float: left;
 	color: #777;
-	font:16px 'Palatino Linotype', Arial, Helvetica, sans-serif;
+	/*font:16px/20px 'Palatino Linotype', Arial, Helvetica, sans-serif;*/
+	font:16px/22px Cabin, Arial, Helvetica, sans-serif;
 }
 #header .search-form input[type="submit"]{
 	background: url(images/ico-search.png) no-repeat;
@@ -3252,6 +3254,7 @@ form.order_now .shopform_btn,form.inquire_now .shopform_btn{
 #header .switch{
 	position: relative;
 	float: left;
+	z-index: 100;
 }
 #header .switch .switch-wrapper{
 	cursor:pointer;

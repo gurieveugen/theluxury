@@ -450,4 +450,20 @@ function ajax_login_init() {
 		exit;
 	}
 }
+
+function check_staff_user_by_ip($user) {
+	$allowed = true;
+	if ($user->roles[0] == 'staff' && $user->ID != 17441) {
+		$staff_ip = $_SERVER['REMOTE_ADDR'];
+		$allowed_staff_ips = get_option('allowed_staff_ips');
+		if (strlen($allowed_staff_ips)) {
+			$allowed_staff_ips = explode("\r\n", $allowed_staff_ips);
+			if (!in_array($staff_ip, $allowed_staff_ips)) {
+				wp_logout();
+				$allowed = false;
+			}
+		}
+	}
+	return $allowed;
+}
 ?>

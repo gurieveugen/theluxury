@@ -64,7 +64,7 @@ if (strlen($iscat)) {
 	}
 }
 if (strlen($pscat)) {
-	$term_taxonomies = $wpdb->get_results(sprintf("SELECT term_taxonomy_id FROM %sterm_taxonomy WHERE term_id IN (%s)", $wpdb->prefix, implode(",", $split_categories[$pscat])));
+	$term_taxonomies = $wpdb->get_results(sprintf("SELECT term_taxonomy_id FROM %sterm_taxonomy WHERE taxonomy = 'seller-category' AND term_id IN (%s)", $wpdb->prefix, implode(",", $split_categories[$pscat])));
 	if ($term_taxonomies) {
 		$tt_ids = array();
 		foreach($term_taxonomies as $term_taxonomy) {
@@ -316,11 +316,9 @@ if ($all_draft_posts) {
 								$spost_username = $spost->user_login;
 								$spost_item_your_price = get_post_meta($spost->ID, 'item_your_price', true);
 								$spost_item_your_quotation_price = get_post_meta($spost->ID, 'item_your_quotation_price', true);
-								$spost_item_new_your_quotation_price = get_post_meta($spost->ID, 'item_new_your_quotation_price', true);
 
 								$spost_item_your_price = sellers_currency_price($spost_item_your_price);
 								$spost_item_your_quotation_price = sellers_currency_price($spost_item_your_quotation_price);
-								$spost_item_new_your_quotation_price = sellers_currency_price($spost_item_new_your_quotation_price);
 								?>
 								<div class="product-item table">
 									<?php if ($spost_picture) { ?><a href="<?php echo get_post_thumb($spost_picture, 800, 800); ?>" class="pic-zoom"><img src="<?php echo get_post_thumb($spost_picture, 91, 91, true); ?>" class="thumbnail" alt="" /></a><?php } ?>
@@ -329,8 +327,8 @@ if ($all_draft_posts) {
 										<h4 class="item-title"><a href="<?php echo get_permalink($spost->ID); ?>"><?php echo $spost->post_title; ?></a></h4>
 										<p><?php echo get_post_meta($spost->ID, 'ID_item', true); ?></p>
 										<div class="price-row">
-											<span class="price"><strong>Seller Old Payout:</strong> <?php echo format_price($spost_item_your_quotation_price, true); ?></span>
-											<span class="price"><strong>Seller New Payout:</strong> <?php echo format_price($spost_item_new_your_quotation_price, true); ?></span>
+											<span class="price"><strong>Seller Old Payout:</strong> <?php echo format_price($spost_item_your_price, true); ?></span>
+											<span class="price"><strong>Seller New Payout:</strong> <?php echo format_price($spost_item_your_quotation_price, true); ?></span>
 										</div>
 									</div>
 									<div class="btn-column v-middle">
@@ -610,11 +608,19 @@ if ($all_draft_posts) {
 			<div id="tab-sold-items-is" class="tab-content">
 				<div class="sellers-other-tabs">
 					<?php
-					$sold_start = mktime(date("H"), date("i"), date("s"), date("m"), date("d") - 7, date("Y"));
+					$olevel_vals = array(
+						0 => 'Cancelled',
+						3 => 'Layaway',
+						4 => 'New',
+						5 => 'Shipped',
+						6 => 'Received',
+						7 => 'Completed',
+						8 => 'Pending'
+					);
 					$pg = $_GET['issoipg']; if (!$pg) { $pg = 1; }
 					$limit = ' LIMIT '.(($pg - 1) * $admin_items_per_page).', '.$admin_items_per_page;
 
-					$sold_user_posts = $wpdb->get_results(sprintf("SELECT SQL_CALC_FOUND_ROWS p.*, u.user_login FROM %sposts p LEFT JOIN %spostmeta pmi ON pmi.post_id = p.ID LEFT JOIN %susers u ON u.ID = p.post_author LEFT JOIN %sterm_relationships tr ON tr.object_id = p.ID LEFT JOIN %spostmeta pm ON pm.post_id = p.ID AND pm.meta_key = 'ID_item' LEFT JOIN %swps_shopping_cart sc ON sc.postID = p.ID LEFT JOIN %swps_orders o ON o.who = sc.who WHERE p.post_type = 'post' AND p.post_status = 'publish' AND p.inventory = 0 AND pmi.meta_key = 'item_seller' AND pmi.meta_value = 'i' AND o.level IN ('3','4','5','6','7','8','9') %s %s GROUP BY p.ID ORDER BY p.ID DESC %s", $wpdb->prefix, $wpdb->prefix, $wpdb->prefix, $wpdb->prefix, $wpdb->prefix, $wpdb->prefix, $wpdb->prefix, $sWhere, $iseller_where, $limit));
+					$sold_user_posts = $wpdb->get_results(sprintf("SELECT SQL_CALC_FOUND_ROWS p.*, u.user_login, o.level FROM %sposts p LEFT JOIN %spostmeta pmi ON pmi.post_id = p.ID LEFT JOIN %susers u ON u.ID = p.post_author LEFT JOIN %sterm_relationships tr ON tr.object_id = p.ID LEFT JOIN %spostmeta pm ON pm.post_id = p.ID AND pm.meta_key = 'ID_item' LEFT JOIN %swps_shopping_cart sc ON sc.postID = p.ID LEFT JOIN %swps_orders o ON o.oid = sc.order_id WHERE p.post_type = 'post' AND p.post_status = 'publish' AND p.inventory = 0 AND pmi.meta_key = 'item_seller' AND pmi.meta_value = 'i' %s %s GROUP BY p.ID ORDER BY p.ID DESC %s", $wpdb->prefix, $wpdb->prefix, $wpdb->prefix, $wpdb->prefix, $wpdb->prefix, $wpdb->prefix, $wpdb->prefix, $sWhere, $iseller_where, $limit));
 					$total_posts = $wpdb->get_var("SELECT FOUND_ROWS()");
 					if ($sold_user_posts) {
 						foreach($sold_user_posts as $spost) { $spost_picture = nws_get_item_thumb($spost->ID);
@@ -624,6 +630,11 @@ if ($all_draft_posts) {
 						$spost_new_price = get_post_meta($spost->ID, 'new_price', true);
 						$item_seller = $spost->meta_value;
 						if (!$spost_new_price) { $spost_new_price = $spost_price; }
+
+						$order_level = '';
+						if (!empty($spost->level)) {
+							$order_level = $olevel_vals[$spost->level];
+						}
 
 						$spost_new_price = sellers_currency_price($spost_new_price);
 						$spost_item_your_quotation_price = sellers_currency_price($spost_item_your_quotation_price);
@@ -638,6 +649,9 @@ if ($all_draft_posts) {
 									<span class="price"><strong>Seller Payout:</strong> <?php echo format_price($spost_item_your_quotation_price, true); ?></span>
 									<span class="price"><strong>The Luxury Closet Selling Price:</strong> <?php echo format_price($spost_new_price, true); ?></span>
 								</div>
+								<?php if (strlen($order_level)) { ?>
+								<?php echo $order_level; ?> Order
+								<?php } ?>
 							</div>
 						</div>
 					<?php }

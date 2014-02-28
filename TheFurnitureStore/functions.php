@@ -211,7 +211,7 @@ if(is_admin())
 
 			add_submenu_page(basename(__FILE__), $CONFIG_WPS['themename'],__('Statistics','wpShop'), $currrole, basename(__FILE__),'NWS_theme_staff');
 			add_submenu_page(basename(__FILE__), $CONFIG_WPS['themename'],__('Manage Orders','wpShop'), $currrole, basename(__FILE__).'&section=orders','NWS_theme_staff');
-			if($currrole == 'buyer') {
+			if($currrole == 'buyer' || is_spec_staff_user()) {
 				add_submenu_page(basename(__FILE__), $CONFIG_WPS['themename'],__('Manage Inventory','wpShop'), $currrole, basename(__FILE__).'&section=inventory','NWS_theme_staff');
 			}
 			add_submenu_page(basename(__FILE__), $CONFIG_WPS['themename'],__('Pricing','wpShop'), $currrole, basename(__FILE__).'&section=pricing','NWS_theme_staff');

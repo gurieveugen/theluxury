@@ -43,9 +43,8 @@ jQuery(document).ready(function() {
 
 <div class="main-product">
 	<?php if($_GET['added'] == 'OK' && $_GET['l'] == 'wl') {
-		$customerArea = get_page_by_title($OPTION['wps_customerAreaPg']);
-		$wishlist_url = get_permalink($customerArea->ID)."?myaccount=1&action=3"; ?>
-		<div class="success-message"><?php printf(__ ('Your item has been successfully added to your %s!','wpShop'), $OPTION['wps_wishListLink_option'])?><a href="<?php echo $wishlist_url;?>"><?php printf(__ (' View %s','wpShop'), $OPTION['wps_wishListLink_option'])?></a> | <a href="<?php the_permalink(); ?>"><?php _e('Continue Shopping','wpShop');?></a></div>
+		$customerArea = get_page_by_title($OPTION['wps_customerAreaPg']); ?>
+		<div class="success-message"><?php printf(__ ('Your item has been successfully added to your %s!','wpShop'), $OPTION['wps_wishListLink_option'])?> <a href="<?php echo get_permalink($OPTION['wps_account_my_wishlist_page']); ?>"><?php printf(__ (' View %s','wpShop'), $OPTION['wps_wishListLink_option'])?></a> | <a href="<?php the_permalink(); ?>"><?php _e('Continue Shopping','wpShop');?></a></div>
 	<?php } ?>
 	<h1><?php the_title(); ?></h1>
 	<div class="product-holder">

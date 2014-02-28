@@ -124,6 +124,5 @@ function _kms(u){
 _kms('//i.kissmetrics.com/i.js');
 _kms('//doug1izaerwt3.cloudfront.net/' + _kmk + '.1.js');
 </script>
-<script type="text/javascript" src="https://zx157.infusionsoft.com/app/webTracking/getTrackingCode?trackingId=f64be57f4e91eb9ad9e42aca637f9489"></script>
 </body>
 </html>
