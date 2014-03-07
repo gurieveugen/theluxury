@@ -36,7 +36,15 @@ function search_products()
 
 function search_products_ajax()
 {
-	get_template_part('loop', 'products');	
+	unset($_SESSION["last_args"]['tax_query']['relation']);
+	unset($_SESSION["last_args"]['post_status']);
+
+	$json['loop']       = load_template_part('loop', 'products');
+	$json['args']       = rawurlencode(http_build_query($_SESSION["last_args"]));
+	$json['categories'] = (isset($_SESSION['all_display_categories'])) ? $_SESSION['all_display_categories'] : '';
+
+	echo json_encode($json);
+
 	die();
 }
 
@@ -74,7 +82,16 @@ function change_sort_ajax()
 function get_default_content_ajax()
 {
 	$_SESSION["get_default"] = true;
-	get_template_part('loop', 'products');
+
+	unset($_SESSION["last_args"]['tax_query']['relation']);
+	unset($_SESSION["last_args"]['post_status']);
+
+	$json['loop']       = load_template_part('loop', 'products');
+	$json['args']       = rawurlencode(http_build_query($_SESSION["last_args"]));
+	$json['categories'] = (isset($_SESSION['all_display_categories'])) ? $_SESSION['all_display_categories'] : '';
+
+	echo json_encode($json);
+	
 	die();	
 }
 
@@ -125,4 +142,19 @@ function get_cat_parent($id, $tax = 'category')
   	}
   } 
   else get_cat_parent($parent->parent, $tax);
+}
+
+/**
+ * Get tamplate part to variable
+ * @param  string $template_name
+ * @param  string $part_name    
+ * @return string               
+ */
+function load_template_part($template_name, $part_name = null) 
+{
+    ob_start();
+    get_template_part($template_name, $part_name);
+    $var = ob_get_contents();
+    ob_end_clean();
+    return $var;
 }

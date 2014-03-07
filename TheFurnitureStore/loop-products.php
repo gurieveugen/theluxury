@@ -184,7 +184,6 @@ else
 
 query_posts($args);
 
-
 $_SESSION["last_args"] = $args;
 $_SESSION["old_args"]  = $args;
 
@@ -195,6 +194,20 @@ if(!$_SESSION["ajax"])
 }
 
 $_SESSION['all_display_categories'] = get_all_categories_from_posts($args);
+
+// =========================================================
+// Save default filters
+// =========================================================
+
+$queried_object     = get_queried_object();
+$json['taxonomy']   = $queried_object->taxonomy;
+$json['categories'] = (isset($_SESSION['all_display_categories'])) ? $_SESSION['all_display_categories'] : '{}';
+?>
+<script>
+	var default_categories = <?php echo json_encode($json); ?>;
+</script>
+
+<?php
 
 if(have_posts())
 {

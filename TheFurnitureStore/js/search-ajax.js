@@ -1,4 +1,6 @@
-var last_check_box_block = "";
+var last_check_box_block        = "";
+var default_widget_filter       = '';
+var default_products_containter = '';
 
 function update_scroll()
 {
@@ -19,27 +21,93 @@ function update_scroll()
   });
 }
 
+function hideAllRows(dont_hide_tax)
+{
+  if(!dont_hide_tax) dont_hide_tax = '';
+  jQuery('.f-row').each(function(){
+    tax = jQuery(this).attr('data-tax');
+
+    if(typeof(tax) != 'undefined' && tax != dont_hide_tax)
+    {
+      jQuery(this).addClass('hide');
+      jQuery(this).find('input:checkbox:checked').each(function(){
+        jQuery(this).attr('checked', false);         
+        jQuery(this).parent().find('a').removeClass('jqTransformChecked');
+      });
+    }
+  });
+}
+
+/**
+ * Display not null rows
+ * @param  json
+ */
+function displayRows(rows)
+{
+  if(jQuery('#row-266').hasClass('hide')) jQuery('#row-266').removeClass('hide');
+  if(jQuery('#row-156').hasClass('hide')) jQuery('#row-156').removeClass('hide');
+  
+  for(var i in rows)
+  {
+    for(var x in rows[i])
+    {
+      if(jQuery('#row-' + x).hasClass('hide'))
+      {
+        jQuery('#row-' + x).removeClass('hide');
+      }
+    }
+  }
+}
+
+function showBlock(block)
+{
+  jQuery('.f-row').each(function(){
+    if(jQuery(this).attr('data-tax') == block)
+    {
+      if(jQuery(this).hasClass('hide'))
+      {
+        jQuery(this).removeClass('hide');
+      }
+    }
+  });
+}
+
 jQuery(function()
 {
+  default_products_containter = jQuery('#products-container').html();
+  displayRows(default_categories.categories);  
+  showBlock(default_categories.taxonomy);
+
   jQuery('.search-filter-form input[type=checkbox]').change(function(e) 
   {
-    last_check_box_block = jQuery(this).data('block'); 
-
+    last_check_box_block = jQuery(this).data('block');     
     if(typeof(e.originalEvent) !== "undefined")
     {
-      var v = [];
-      if(jQuery('.search-filter-form').find("input:checkbox:checked").length > 0)
+      var v                 = [];  
+      var dont_remove_names = [];    
+
+      if(jQuery(this).parent().parent().parent().find('input:checkbox:checked').length > 0)
       {
-        jQuery('.search-filter-form').find("input:checkbox:checked").each(function()
-        {
-          v.push([jQuery(this).attr("name").replace('[]', ''), jQuery(this).val()]);
+        jQuery(this).parent().parent().parent().find('input:checkbox:checked').each(function(){
+           v.push([jQuery(this).attr("name").replace('[]', ''), jQuery(this).val()]);        
+           dont_remove_names.push(jQuery(this).attr("id"));
         });
-        search_ajax(v);        
+        search_ajax(v, jQuery(this).parent().parent().attr('data-tax')); 
       }
       else
       {
         get_default_content();
       }
+      
+      
+      jQuery('.search-filter-form').find('input:checkbox:checked').each(function(){
+        if(dont_remove_names.indexOf(jQuery(this).attr('id')) < 0 )
+        {          
+          jQuery(this).attr('checked', false);         
+          jQuery(this).parent().find('a').removeClass('jqTransformChecked');
+        }
+      });      
+
       return false;   
     } 
   });
@@ -122,10 +190,9 @@ jQuery(function()
     jQuery('.shop-by-brand').addClass('open');
   }
   
-  // get_display_categories();
   update_scroll();
 
-  jQuery('.shop-by-category').addClass('open');  
+  jQuery('.shop-by-category').addClass('open'); 
 });
 
 /**
@@ -153,7 +220,7 @@ function get_page(paged)
         jQuery('#products-container').removeClass('loading');
         jQuery('.cancel-all-actions').remove();
 
-        get_last_arg();   
+          
         update_scroll();
         change_currency();
       }
@@ -180,7 +247,7 @@ function change_ppp(ppp)
       {
         jQuery('#products-container').removeClass('loading');
         jQuery('.cancel-all-actions').remove();
-        get_last_arg();     
+            
         update_scroll();
         change_currency();   
       }
@@ -188,41 +255,14 @@ function change_ppp(ppp)
 }
 
 function get_default_content()
-{
-  jQuery.ajax(
-    {
-      type: "POST",
-      dataType: 'html',
-      url: "/wp-admin/admin-ajax.php?action=get_default_content",
-      success: function(response)
-      {
-        jQuery('#products-container').html(response);
-      },
-      beforeSend: function() {
-        jQuery('#products-container').addClass('loading');
-        jQuery('body').append("<div class='cancel-all-actions'></div>");
-      },
-      complete: function()
-      {
-        jQuery('#products-container').removeClass('loading');
-        jQuery('.cancel-all-actions').remove();
-        get_last_arg();       
+{  
+  jQuery('#products-container').html(default_products_containter);
+  hideAllRows(default_categories.taxonomy);
+  displayRows(default_categories.categories);
+  update_scroll();
+  change_currency();   
+  location.hash = '';
 
-        jQuery('.disabled-jqTransformCheckbox').each(function(){
-          jQuery(this).removeClass('disabled-jqTransformCheckbox');
-        });
-
-        jQuery('.disabled').each(function(){
-          jQuery(this).removeClass('disabled');
-        });
-
-        jQuery('.search-filter-form').find("input").each(function(){
-          jQuery(this).removeAttr('disabled');
-        });
-        update_scroll();
-        change_currency();
-      }
-    });
 }
 
 function change_sort(psort)
@@ -245,7 +285,7 @@ function change_sort(psort)
       {
         jQuery('#products-container').removeClass('loading');
         jQuery('.cancel-all-actions').remove();
-        get_last_arg();     
+            
         update_scroll();
         change_currency();   
       }
@@ -270,7 +310,7 @@ function get_latest_products()
     {
       jQuery('#products-container').removeClass('loading');
       jQuery('.cancel-all-actions').remove();
-      get_last_arg();      
+           
       update_scroll();
       change_currency();
     }
@@ -279,19 +319,20 @@ function get_latest_products()
 /**
  * AJAX search
  */
-function search_ajax(search)
-{
-  var articles = "";
-  var x        = 0;
+function search_ajax(search, checked_block)
+{  
   jQuery.ajax(
   {
     type: "POST",
-    dataType: 'html',
+    dataType: 'json',
     url: "/wp-admin/admin-ajax.php?action=search_products",
     data: {"search": search},                                     
     success: function(response)
-    {
-      jQuery('#products-container').html(response);
+    {      
+      jQuery('#products-container').html(response.loop);
+      setLocation(response.args);
+      hideAllRows(checked_block);
+      displayRows(response.categories);
     },
     beforeSend: function() {
       jQuery('#products-container').addClass('loading');
@@ -300,9 +341,7 @@ function search_ajax(search)
     complete: function()
     {
       jQuery('#products-container').removeClass('loading');
-      jQuery('.cancel-all-actions').remove();
-      get_last_arg();
-      get_display_categories();
+      jQuery('.cancel-all-actions').remove();      
       update_scroll();
       change_currency();
     }
@@ -334,181 +373,12 @@ function search_ajax_by_hash(search)
     {
       jQuery('#products-container').removeClass('loading');
       jQuery('.cancel-all-actions').remove();
-      get_last_arg();
-      get_display_categories();      
+            get_display_categories();      
       update_scroll();
       change_currency();
     }
   });
 }
-
-/**
- * JUST FOR DEBUGING..
- * This function is equivalent to the exact same in PHP ( var_dump )
- */
-function dump(obj) {
-    var out = "";
-    if(obj && typeof(obj) == "object"){
-        for (var i in obj) {
-            out += i + ": " + obj[i] + "\n";
-        }
-    } else {
-        out = obj;
-    }
-    alert(out);
-}
-
-
-function get_last_arg()
-{
-  jQuery.ajax(
-  {
-    type: "POST",
-    dataType: 'html',
-    url: "/wp-admin/admin-ajax.php?action=last_args",              
-    success: function(response)
-    {
-      setLocation(response);  
-      update_scroll();
-      change_currency();    
-    }
-  });
-}
-
-function get_display_categories()
-{
-  var str = "";
-  jQuery.ajax(
-  {
-    type: "POST",
-    dataType: 'json',
-    url: "/wp-admin/admin-ajax.php?action=display_categories", 
-    beforeSend: function() {
-      jQuery('.widget-filter').addClass('search-filter-form-loading'); 
-      str = '<style id="temp-styles">.search-filter-form-loading:after { height:' + jQuery('.widget-filter').height() + 'px; }</style>';
-      jQuery('head').append(str);     
-    },
-    complete: function()
-    {
-      jQuery('.widget-filter').removeClass('search-filter-form-loading');
-      jQuery('#temp-styles').remove(); 
-      change_currency();       
-    },             
-    success: function(response) 
-    {   
-      update_scroll();
-        
-      if(response === null) 
-      {
-        jQuery('.widget-filter').removeClass('search-filter-form-loading');
-        jQuery('#temp-styles').remove();
-        return;
-      }
-
-      var filtered_blocks_disabled_arr = new Array();
-      var blocks_disabled_arr          = ['.shop-by-category', '.shop-by-brand', '.shop-by-colour', '.shop-by-price', '.shop-by-selection', '.shop-by-size', '.shop-by-ring-size', '.shop-by-clothes-size'];
-      var blocks_disabled              = "";
-      var count_checked                = 0;
-      var last_checked_block           = "";
-      var cheched_filtered_block       = 0;
-      var last_data_block              = "";
-
-      blocks_disabled                  = blocks_disabled_arr.join(", ");     
-      count_checked                    = jQuery(blocks_disabled).find('input:checked').length;
-      last_checked_block               = jQuery(blocks_disabled).find('input:checked').data('block');
-      if(typeof(last_checked_block) != 'undefined' && last_check_box_block != "")
-      {
-        if(jQuery("." + last_check_box_block).find('input:checked').length > 0)
-        {
-          last_checked_block = last_check_box_block; 
-        }    
-        else
-        {
-          last_checked_block = jQuery(blocks_disabled).find('input:checked').data('block');
-        }
-      }
-
-      
-
-
-      jQuery.each(blocks_disabled_arr, function( index, value ) {
-        if(value != "." + last_checked_block)
-        { 
-          filtered_blocks_disabled_arr.push(blocks_disabled_arr[index]);
-        }          
-      });
-
-      
-      if(jQuery(blocks_disabled).find('input:checked').length > 0)
-      {
-        jQuery(blocks_disabled).find('input:checked').each(function(){
-
-          if(last_data_block == "")
-          {
-            last_data_block = jQuery(this).data('block');
-          }
-          else
-          {
-            if(last_data_block != jQuery(this).data('block'))
-            {
-              last_data_block = jQuery(this).data('block'); 
-              cheched_filtered_block++;
-            }
-          }        
-        });
-      }
-
-      blocks_disabled = filtered_blocks_disabled_arr.join(", ");
-      // ========================================================
-      // Clear all
-      // ========================================================      
-      jQuery(blocks_disabled).find('label').each(function(){
-       if(!jQuery(this).hasClass('has-drop'))
-       {
-         jQuery(this).removeClass('disabled');  
-         jQuery("#" + jQuery(this).data('input')).removeAttr('disabled');
-         jQuery("#" + jQuery(this).data('a')).removeClass('disabled-jqTransformCheckbox');
-       }
-      });
-
-      jQuery(blocks_disabled).find('label').each(function()
-      {
-        if(!jQuery(this).hasClass('has-drop') && !jQuery(this).parent().find('span a.jqTransformCheckbox').hasClass('jqTransformChecked') && !jQuery(this).parent().find('div div span a.jqTransformCheckbox').hasClass('jqTransformChecked'))
-        {
-          jQuery(this).addClass('disabled');  
-          jQuery("#" + jQuery(this).data('input')).attr('disabled', 'disabled');
-          jQuery("#" + jQuery(this).data('a')).addClass('disabled-jqTransformCheckbox');
-        }
-      });  
-
-      if(cheched_filtered_block == 0 && jQuery(blocks_disabled).find('input:checked').length > 0)
-      {        
-        jQuery("." + last_data_block).find('label').each(function(){
-         if(!jQuery(this).hasClass('has-drop'))
-         {
-           jQuery(this).removeClass('disabled');  
-           jQuery("#" + jQuery(this).data('input')).removeAttr('disabled');
-           jQuery("#" + jQuery(this).data('a')).removeClass('disabled-jqTransformCheckbox');
-         }
-        });
-      }
-
-      jQuery.each(response, function(i, item){
-        jQuery.each(response[i], function(y){          
-          jQuery('#label-' + response[i][y].slug).removeClass('disabled'); 
-          jQuery("#" + jQuery('#label-' + response[i][y].slug).data('input')).removeAttr('disabled');
-          jQuery("#" + jQuery('#label-' + response[i][y].slug).data('a')).removeClass('disabled-jqTransformCheckbox');
-          
-        });
-      });
-      jQuery('.widget-filter').removeClass('search-filter-form-loading');
-      jQuery('#temp-styles').remove();
-
-    }
-  });
-}
-
-
 
 function setLocation(curLoc)
 { 
