@@ -81,34 +81,10 @@ jQuery(function()
   showBlock(default_categories.taxonomy);
 
   jQuery('.search-filter-form input[type=checkbox]').change(function(e) 
-  {
-    last_check_box_block = jQuery(this).data('block');     
+  {    
     if(typeof(e.originalEvent) !== "undefined")
     {
-      var v                 = [];  
-      var dont_remove_names = [];    
-
-      if(jQuery(this).parent().parent().parent().find('input:checkbox:checked').length > 0)
-      {
-        jQuery(this).parent().parent().parent().find('input:checkbox:checked').each(function(){
-           v.push([jQuery(this).attr("name").replace('[]', ''), jQuery(this).val()]);        
-           dont_remove_names.push(jQuery(this).attr("id"));
-        });
-        search_ajax(v, jQuery(this).parent().parent().attr('data-tax')); 
-      }
-      else
-      {
-        get_default_content();
-      }
-      
-      
-      jQuery('.search-filter-form').find('input:checkbox:checked').each(function(){
-        if(dont_remove_names.indexOf(jQuery(this).attr('id')) < 0 )
-        {          
-          jQuery(this).attr('checked', false);         
-          jQuery(this).parent().find('a').removeClass('jqTransformChecked');
-        }
-      }); 
+      launchFilter(this);
     } 
   });
 
@@ -194,6 +170,37 @@ jQuery(function()
 
   jQuery('.shop-by-category').addClass('open'); 
 });
+
+function launchFilter(obj)
+{
+  obj                   = jQuery(obj);
+  last_check_box_block  = obj.data('block');     
+  var v                 = [];  
+  var dont_remove_names = [];    
+
+  if(obj.parent().parent().parent().find('input:checkbox:checked').length > 0)
+  {
+    obj.parent().parent().parent().find('input:checkbox:checked').each(function(){
+       v.push([obj.attr("name").replace('[]', ''), obj.val()]);        
+       dont_remove_names.push(obj.attr("id"));
+    });
+    search_ajax(v, obj.parent().parent().attr('data-tax')); 
+  }
+  else
+  {
+    get_default_content();
+  }
+  
+  
+  jQuery('.search-filter-form').find('input:checkbox:checked').each(function(){
+    if(dont_remove_names.indexOf(obj.attr('id')) < 0 )
+    {          
+      obj.attr('checked', false);         
+      obj.parent().find('a').removeClass('jqTransformChecked');
+    }
+  }); 
+  
+}
 
 /**
  * Get ajax page

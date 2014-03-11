@@ -1836,7 +1836,7 @@ function product_sort_select() {
 		$is_cats = array( 'all-handbags', 'all-clothes', 'all-jewelry', 'all-shoes', 'all-watches', 'all-accessories'); 
 		$is_cats = array_flip($is_cats);
 		?>		
-		<?php if (!is_page($OPTION['wps_reserved_bags_page']) && !is_category() && !isset($is_cats[$post->post_name])) { ?><a href="<?php echo get_permalink($OPTION['wps_reserved_bags_page']); ?>" onclick="get_latest_products(); return false;" class="items-list-see-latest">See the latest products</a><?php } ?>
+		<?php if (!is_page($OPTION['wps_reserved_bags_page']) && !is_category() && !isset($is_cats[$post->post_name]) && !is_user_logged_in()) { ?><a href="<?php echo get_permalink($OPTION['wps_reserved_bags_page']); ?>" onclick="get_latest_products(); return false;" class="items-list-see-latest">See the latest products</a><?php } ?>
 	</div>
 <?php
 }

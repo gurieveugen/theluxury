@@ -453,10 +453,7 @@ wp_reset_query();
 
 function get_all_categories_from_posts($args)
 {
-
-
-	// $args['posts_per_page'] = -1;
-	
+	$args['posts_per_page']	= 1000;
 	$posts                  = get_posts($args);
 	$all_categories         = array();
 	$taxonomies             = array('brand' => 0, 'price' => 0, 'colour' => 0, 'selection' => 0, 'category' => 0, 'clothes-size' => 0, 'size' => 0, 'ring-size' => 0);
