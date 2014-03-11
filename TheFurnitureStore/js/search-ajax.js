@@ -57,6 +57,7 @@ function displayRows(rows)
       }
     }
   }
+  check_unchecked_alerts();
 }
 
 function showBlock(block)
@@ -67,6 +68,7 @@ function showBlock(block)
       if(jQuery(this).hasClass('hide'))
       {
         jQuery(this).removeClass('hide');
+        jQuery('.search-filter-form input[type=checkbox]').change();
       }
     }
   });
@@ -106,9 +108,7 @@ jQuery(function()
           jQuery(this).attr('checked', false);         
           jQuery(this).parent().find('a').removeClass('jqTransformChecked');
         }
-      });      
-
-      return false;   
+      }); 
     } 
   });
 

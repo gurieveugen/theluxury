@@ -632,9 +632,7 @@ if ($all_draft_posts) {
 						if (!$spost_new_price) { $spost_new_price = $spost_price; }
 
 						$order_level = '';
-						if (!empty($spost->level)) {
-							$order_level = $olevel_vals[$spost->level];
-						}
+						if (!empty($spost->level)) { $order_level = $olevel_vals[$spost->level]; }
 
 						$spost_new_price = sellers_currency_price($spost_new_price);
 						$spost_item_your_quotation_price = sellers_currency_price($spost_item_your_quotation_price);
@@ -650,7 +648,7 @@ if ($all_draft_posts) {
 									<span class="price"><strong>The Luxury Closet Selling Price:</strong> <?php echo format_price($spost_new_price, true); ?></span>
 								</div>
 								<?php if (strlen($order_level)) { ?>
-								<?php echo $order_level; ?> Order
+									<?php echo $order_level; ?> Order
 								<?php } ?>
 							</div>
 						</div>

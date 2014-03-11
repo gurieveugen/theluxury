@@ -2990,21 +2990,31 @@ function sellers_actions_init() {
 					if ($post_data && $post_data->post_author == $current_user->ID) {
 						$item_your_quotation_price = get_post_meta($post_id, 'item_your_quotation_price', true);
 						$item_suggested_your_quotation_price = get_post_meta($post_id, 'item_suggested_your_quotation_price', true);
+						if ($item_suggested_your_quotation_price) {
+							$adate = mktime(23, 59, 59, 11, 7, 2013); // 7th November 2013
+							$pdate = strtotime($post_data->post_date);
+							if ($pdate <= $adate) {
+								$item_new_price = sellers_get_old_selling_price($item_suggested_your_quotation_price);
+							} else {
+								$item_new_price = sellers_get_selling_price($item_suggested_your_quotation_price);
+							}
 
-						update_post_meta($post_id, 'item_your_quotation_price', $item_suggested_your_quotation_price);
-						update_post_meta($post_id, 'item_your_price', $item_your_quotation_price);
-						update_post_meta($post_id, 'item_request_price', 'completed');
-						update_post_meta($post_id, 'item_suggested_price', 'completed');
+							update_post_meta($post_id, 'item_your_quotation_price', $item_suggested_your_quotation_price);
+							update_post_meta($post_id, 'item_your_price', $item_your_quotation_price);
+							update_post_meta($post_id, 'item_request_price', 'completed');
+							update_post_meta($post_id, 'item_suggested_price', 'completed');
+							update_post_meta($post_id, 'new_price', $item_new_price);
 
-						delete_post_meta($post_id, 'item_suggested_your_quotation_price');
-						delete_post_meta($post_id, '_change_price_email');
+							delete_post_meta($post_id, 'item_suggested_your_quotation_price');
+							delete_post_meta($post_id, '_change_price_email');
 
-						// send notification
-						$subject = "Change Price Request (Individual Sellers)";
-						$message = "Username: ".$current_user->data->user_login."\r\n";
-						$message .= "Item: (".get_post_meta($post_id, 'ID_item', true).") ".$post_data->post_title."\r\n";
-						$message .= "Price: ".$item_suggested_your_quotation_price." USD";
-						sellers_send_notification($subject, $message);
+							// send notification
+							$subject = "Change Price Request (Individual Sellers)";
+							$message = "Username: ".$current_user->data->user_login."\r\n";
+							$message .= "Item: (".get_post_meta($post_id, 'ID_item', true).") ".$post_data->post_title."\r\n";
+							$message .= "Price: ".$item_suggested_your_quotation_price." USD";
+							sellers_send_notification($subject, $message);
+						}
 					}
 				}
 			break;

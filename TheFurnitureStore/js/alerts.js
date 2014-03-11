@@ -396,3 +396,6 @@ function delete_alert_action(sfid) {
 	jQuery('.widget-selection .holder').mCustomScrollbar('update');
 	setTimeout(function(){ jQuery('.create-alert-widget .mCSB_container').css('top', '0px'); }, 500);
 }
+
+function check_unchecked_alerts() {
+}

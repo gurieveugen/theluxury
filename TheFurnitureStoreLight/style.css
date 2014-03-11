@@ -3149,13 +3149,12 @@ form.order_now .shopform_btn,form.inquire_now .shopform_btn{
 	background: none;
 	border: none;
 	margin: 0;
-	padding:3px 5px;
-	height: 22px;
+	padding:4px 5px;
+	height: 20px;
 	width:253px;
 	float: left;
 	color: #777;
-	/*font:16px/20px 'Palatino Linotype', Arial, Helvetica, sans-serif;*/
-	font:16px/22px Cabin, Arial, Helvetica, sans-serif;
+	font:16px/20px 'Cabin', Arial, Helvetica, sans-serif;
 }
 #header .search-form input[type="submit"]{
 	background: url(images/ico-search.png) no-repeat;
@@ -9480,6 +9479,7 @@ table.sellers-summary-info td p{
 .popup-login .buttons a:hover{
 	background: url(images/popup-sprite.png) repeat-x;
 	color: #fff;
+	text-decoration: none;
 }
 .popup-login .buttons a:hover:before{
 	background-position: 0 -45px;

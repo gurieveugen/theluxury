@@ -247,6 +247,7 @@ function set_currency_cookie(currname) {
 	document.cookie = 'theluxcurrency='+currname+';expires=' + expires_date.toGMTString()+';path=/';
 }
 
+var ccurrency = 'USD';
 var lcurrency = 'USD';
 function change_currency() {
 	var sitecookies = document.cookie.split(';');
@@ -262,7 +263,6 @@ function change_currency() {
 		});
 		return false;
 	}
-	// alert(ccurrency + "|" + lcurrency);
 	if (ccurrency == '') { ccurrency = 'USD'; }
 	if (ccurrency != lcurrency) {
 		jQuery('#currencySelect strong').attr('class', 'current currency-'+ccurrency);
@@ -323,4 +323,65 @@ function get_utm_param(param) {
 		return utm_param;
 	}
 	return '';
+}
+
+function get_utm_param2(param) {
+	var utm_params = get_utm_from_cookie();
+	eval("var utm_param = utm_params."+param+";");
+	if (utm_param != undefined) {
+		return utm_param;
+	}
+	return '';
+}
+
+function get_utm_from_cookie() {
+	var gc = '';
+	var c_name = "__utmz";
+	var ga_utm_params = {
+		'utm_source':'',
+		'utm_medium':'',
+		'utm_campaign':'',
+		'utm_content':'',
+		'utm_term':''
+	};
+	if (document.cookie.length > 0) {
+		c_start=document.cookie.indexOf(c_name + "=");
+		if (c_start!=-1) {
+			c_start = c_start + c_name.length + 1;
+			c_end = document.cookie.indexOf(";", c_start);
+			if (c_end == -1) { c_end = document.cookie.length; }
+			gc = unescape(document.cookie.substring(c_start, c_end));
+		}
+	}
+	if(gc != "") {
+		var z = gc.split('.'); 
+		if(z.length >= 4) {
+			var y = z[4].split('|');
+			for(i=0; i<y.length; i++){
+				if(y[i].indexOf('utmcsr=') >= 0) { ga_utm_params.utm_source = y[i].substring(y[i].indexOf('=')+1); }
+				if(y[i].indexOf('utmccn=') >= 0) { ga_utm_params.utm_campaign = y[i].substring(y[i].indexOf('=')+1); }
+				if(y[i].indexOf('utmcmd=') >= 0) { ga_utm_params.utm_medium = y[i].substring(y[i].indexOf('=')+1); }
+				if(y[i].indexOf('utmctr=') >= 0) { ga_utm_params.utm_term = y[i].substring(y[i].indexOf('=')+1); }
+				if(y[i].indexOf('utmcct=') >= 0) { ga_utm_params.utm_content = y[i].substring(y[i].indexOf('=')+1); }
+			}
+		}
+	}
+	return ga_utm_params;
+}
+
+function test1() {
+	var str = 'utm_source='+get_utm_param('utm_source')+'\n';
+	str += 'utm_medium='+get_utm_param('utm_medium')+'\n';
+	str += 'utm_campaign='+get_utm_param('utm_campaign')+'\n';
+	str += 'utm_content='+get_utm_param('utm_content')+'\n';
+	str += 'utm_term='+get_utm_param('utm_term')+'\n';
+	alert(str);
+}
+function test2() {
+	var str = 'utm_source='+get_utm_param2('utm_source')+'\n';
+	str += 'utm_medium='+get_utm_param2('utm_medium')+'\n';
+	str += 'utm_campaign='+get_utm_param2('utm_campaign')+'\n';
+	str += 'utm_content='+get_utm_param2('utm_content')+'\n';
+	str += 'utm_term='+get_utm_param2('utm_term')+'\n';
+	alert(str);
 }

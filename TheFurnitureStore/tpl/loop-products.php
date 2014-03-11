@@ -184,9 +184,7 @@ else
 {
 	unset($_SESSION['show_latest_products']);
 }
-
-// unset($_SESSION['s']);
-// var_dump($args);
+var_dump($args);
 query_posts($args);
 
 
@@ -361,7 +359,7 @@ if(have_posts())
 							if ($new_price && $price > 0) 
 							{ 
 								?>
-								<span class="was price">Was: <span class="price-USD"> <?php echo format_price($price)?> USD</span><?php get_product_prices_list($price) ?></span>
+								<span class="was price">Was: <?php product_prices_list($price) ?></span>
 								<?php
 							}
 							?>					
@@ -385,7 +383,7 @@ if(have_posts())
 						}
 						?>
 						<h3>
-							Now: <strong><span class="price-USD"><?php echo format_price($new_price)?> USD</span><?php echo get_product_prices_list($new_price)?></strong>
+							Now: <?php product_prices_list($new_price)?></strong>
 						</h3>
 					</div><!-- price-box end -->
 				<?php
@@ -395,7 +393,7 @@ if(have_posts())
 				?>
 					<div class="price-box">
 						<h3>
-							<strong><span class="price-USD"><?php echo format_price($price) ?> USD</span><?php echo get_product_prices_list($price) ?></strong>
+							<strong><?php product_prices_list($price) ?></strong>
 						</h3>
 					</div><!-- price-box end -->
 					<?php
