@@ -29,11 +29,7 @@ function hideAllRows(dont_hide_tax)
 
     if(typeof(tax) != 'undefined' && tax != dont_hide_tax)
     {
-      jQuery(this).addClass('hide');
-      jQuery(this).find('input:checkbox:checked').each(function(){
-        jQuery(this).attr('checked', false);         
-        jQuery(this).parent().find('a').removeClass('jqTransformChecked');
-      });
+      jQuery(this).addClass('hide');      
     }
   });
 }
@@ -44,6 +40,7 @@ function hideAllRows(dont_hide_tax)
  */
 function displayRows(rows)
 {
+  if(typeof(rows) == 'undefined') return false;
   if(jQuery('#row-266').hasClass('hide')) jQuery('#row-266').removeClass('hide');
   if(jQuery('#row-156').hasClass('hide')) jQuery('#row-156').removeClass('hide');
   
@@ -62,6 +59,7 @@ function displayRows(rows)
 
 function showBlock(block)
 {
+  if(typeof(block) == 'undefined') return false;
   jQuery('.f-row').each(function(){
     if(jQuery(this).attr('data-tax') == block)
     {
@@ -77,8 +75,11 @@ function showBlock(block)
 jQuery(function()
 {
   default_products_containter = jQuery('#products-container').html();
-  displayRows(default_categories.categories);  
-  showBlock(default_categories.taxonomy);
+  if(typeof(default_categories) != 'undefined')
+  {
+    displayRows(default_categories.categories);  
+    showBlock(default_categories.taxonomy);  
+  }
 
   jQuery('.search-filter-form input[type=checkbox]').change(function(e) 
   {    
@@ -181,25 +182,26 @@ function launchFilter(obj)
   if(obj.parent().parent().parent().find('input:checkbox:checked').length > 0)
   {
     obj.parent().parent().parent().find('input:checkbox:checked').each(function(){
-       v.push([obj.attr("name").replace('[]', ''), obj.val()]);        
-       dont_remove_names.push(obj.attr("id"));
+      if(!jQuery(this).parent().parent().hasClass('hide'))
+      {
+        v.push([jQuery(this).attr("name").replace('[]', ''), jQuery(this).val()]);        
+        dont_remove_names.push(jQuery(this).attr("id"));  
+      }
     });
     search_ajax(v, obj.parent().parent().attr('data-tax')); 
+
+    jQuery('.' + last_check_box_block).find('input:checkbox:checked').each(function(){
+      if(dont_remove_names.indexOf(jQuery(this).attr("id")) < 0)
+      {
+        jQuery(this).attr('checked', false);
+        jQuery(this).parent().find('a').removeClass('jqTransformChecked');
+      }
+    });
   }
   else
   {
     get_default_content();
   }
-  
-  
-  jQuery('.search-filter-form').find('input:checkbox:checked').each(function(){
-    if(dont_remove_names.indexOf(obj.attr('id')) < 0 )
-    {          
-      obj.attr('checked', false);         
-      obj.parent().find('a').removeClass('jqTransformChecked');
-    }
-  }); 
-  
 }
 
 /**
