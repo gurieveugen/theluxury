@@ -177,10 +177,20 @@ function launchFilter(obj)
   obj                   = jQuery(obj);
   last_check_box_block  = obj.data('block');     
   var v                 = [];  
-  var dont_remove_names = [];    
+  var dont_remove_names = [];  
 
   if(obj.parent().parent().parent().find('input:checkbox:checked').length > 0)
   {
+    jQuery('.search-filter-form input:checkbox:checked').each(function(){
+      if(jQuery(this).data('block') != last_check_box_block)
+      {
+        if(!jQuery(this).parent().parent().hasClass('hide'))
+        {
+          v.push([jQuery(this).attr("name").replace('[]', ''), jQuery(this).val()]);    
+        }
+      }
+    });
+
     obj.parent().parent().parent().find('input:checkbox:checked').each(function(){
       if(!jQuery(this).parent().parent().hasClass('hide'))
       {

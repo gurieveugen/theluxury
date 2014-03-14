@@ -22,6 +22,8 @@ $inventory		= "";
 $img_str 		= "";
 $the_div_class  = "";
 
+
+
 switch($OPTION['wps_sidebar_option'])
 {
 	case 'alignRight':
@@ -124,6 +126,7 @@ else
 	$args['post_status']           = "publish";
 }
 
+
 if($_SESSION["ppp"] != "") 
 {
 	$args                   = $_SESSION["old_args"];
@@ -193,7 +196,9 @@ if(!$_SESSION["ajax"])
 	$_SESSION["first_args"] = $args;	
 }
 
+
 $_SESSION['all_display_categories'] = get_all_categories_from_posts($args);
+
 
 // =========================================================
 // Save default filters
@@ -451,24 +456,21 @@ wp_reset_query();
 
 
 
+
+
 function get_all_categories_from_posts($args)
 {
-	$args['posts_per_page']	= 1000;
-	$posts                  = get_posts($args);
+	$args['posts_per_page'] = 1000;
+	$args['fields']         = 'ids';	
+	$ids                    = get_posts($args);		
 	$all_categories         = array();
-	$taxonomies             = array('brand' => 0, 'price' => 0, 'colour' => 0, 'selection' => 0, 'category' => 0, 'clothes-size' => 0, 'size' => 0, 'ring-size' => 0);
-
-	foreach ($posts as $key2 => $post) 
-	{		
-		foreach ($taxonomies as $tax => $k) 
-		{			
-			$categories = wp_get_post_terms( $post->ID, $tax);	
-			foreach($categories as $key => $value)
-			{
-				$all_categories[$tax][$value->term_id]['name'] = $value->name;
-				$all_categories[$tax][$value->term_id]['slug'] = $value->slug;
-			}
-		}	
+	$taxonomies             = array('brand', 'price', 'colour', 'selection', 'category', 'clothes-size', 'size', 'ring-size');	
+	$categories             = wp_get_object_terms($ids, $taxonomies);	
+			
+	foreach($categories as &$value)
+	{
+		$all_categories[$value->taxonomy][$value->term_id]['name'] = $value->name;
+		$all_categories[$value->taxonomy][$value->term_id]['slug'] = $value->slug;
 	}
 	return $all_categories;
 }
@@ -482,4 +484,3 @@ function filter_where( $where = '' )
     $where .= " AND wp_posts.post_date <= '" . date('Y-m-d',strtotime($today) - (24*3600*$week)) . "'"; 
     return $where;
 }
-
