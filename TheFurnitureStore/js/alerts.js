@@ -327,6 +327,7 @@ jQuery(document).ready(function(){
 		} else {
 			delete_alert_action(sfid);
 		}
+		check_unchecked_alerts();
 		jQuery('.widget-selection .holder').mCustomScrollbar('update');
 	});
 	jQuery('.popup-notification a.close').click(function(){
@@ -393,9 +394,19 @@ function create_alert_action(sfid, sfname) {
 }
 function delete_alert_action(sfid) {
 	jQuery('.alert-requests-list li.'+sfid).remove();
+	jQuery('#'+sfid).attr('checked', false).parent().find('a.jqTransformCheckbox').removeClass('jqTransformChecked');
+	launchFilter('#'+sfid);
 	jQuery('.widget-selection .holder').mCustomScrollbar('update');
 	setTimeout(function(){ jQuery('.create-alert-widget .mCSB_container').css('top', '0px'); }, 500);
 }
 
 function check_unchecked_alerts() {
+	if (jQuery('.alert-requests-list li').size()) {
+		jQuery('.alert-requests-list li').each(function(){
+			var oid = jQuery(this).attr('class');
+			if (!jQuery('#'+oid).parent().find('a.jqTransformCheckbox').hasClass('jqTransformChecked')) {
+				delete_alert_action(oid);
+			}
+		});
+	}
 }

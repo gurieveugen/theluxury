@@ -58,12 +58,12 @@ function login_header($title = 'Log In', $message = '', $wp_error = '')
 		remove_action('login_head','dd_loginPageCss',10);
 		do_action('login_head'); ?>
 	<link rel="stylesheet" type="text/css" media="all" href="<?=get_option('siteurl')."/prelaunch/"?>css/styles.css" />	
-	<div id="<?php echo $the_div_id;?>" class="<?php echo $the_div_class;?>">
+	
 	<?php if($title == 'Log In') { ?><a href="<?php echo rtrim(get_my_theme_register_link(),"?"); echo (!empty( $_REQUEST['redirect_to'] ))?  '?redirect_to='.$_REQUEST['redirect_to']:''; ?>"><div class="log_head_img"></div></a><?php }?>
 	<div id="login">
 		<div class="login">
-			<h1><?php echo $title; ?></h1>
-			<div class="arw_corn"></div>
+			<h2 class="form-title"><?php echo $title; ?></h2>
+			<!--<div class="arw_corn"></div>-->
 	<?php
 	$message = apply_filters('login_message', $message);
 	if ( !empty( $message ) ) echo '<div class="clear"></div><p class="message" style="border:1px solid #C1C1C1; background:#FFFFCC; padding:5px 10px;">'.$message.'</p>' . "\n";
@@ -178,7 +178,7 @@ case 'retrievepassword' :
 		<div class="fiel_row">
 		<input type="hidden" name="redirect_to" value="<?php echo esc_attr( $redirect_to ); ?>" />
 		<input type="hidden" name="action" value="lostpassword" />
-		<p class="submit"><input type="submit" name="wp-submit" id="wp-submit" class="button" value="<?php esc_attr_e('Reset Password'); ?>" tabindex="100" />
+		<p class="submit"><input type="submit" name="wp-submit" id="wp-submit" class="btn-orange" value="<?php esc_attr_e('Reset Password'); ?>" tabindex="100" />
 		</p>
 		</div>
 	</form>
@@ -189,7 +189,7 @@ case 'retrievepassword' :
 			<a href="<?= rtrim(get_my_theme_login_link(),"?").(!empty( $_REQUEST['redirect_to'] ))?  '?redirect_to='.$_REQUEST['redirect_to']:''; ?>"><?php _e('Log in') ?></a>
 		<?php endif; ?>
 	</div>
-	</div></div></div>
+	</div></div>
 	<?php if ($OPTION['wps_front_sidebar_disable'] != TRUE) 
 	{
 
@@ -239,32 +239,32 @@ case 'resetpass' :
 
 	<?php if ($show_form) { ?>
 	<form name="lostpasswordform" id="lostpasswordform" action="" method="post">
-		<div class="fiel_row">
-			<div class="fiel_nam"><?php _e('New Password:') ?></div>
+		<div class="row">
+			<label><?php _e('New Password:') ?></label>
 			<input type="password" name="new_pass" id="new_pass" class="fiel_in" value="<?php echo $_POST['new_pass']; ?>" size="20" tabindex="10" />
 		</div>
-		<div class="fiel_row">
-			<div class="fiel_nam"><?php _e('Confirm Password:') ?></div>
+		<div class="row">
+			<label><?php _e('Confirm Password:') ?></label>
 			<input type="password" name="new_pass2" id="new_pass2" class="fiel_in" value="" size="20" tabindex="10" />
 		</div>
-		<div class="fiel_row">
+		<div class="cf">
 			<input type="hidden" name="action" value="resetpass" />
 			<input type="hidden" name="newpass" value="true" />
 			<input type="hidden" name="key" value="<?php echo $key; ?>" />
 			<input type="hidden" name="login" value="<?php echo $login; ?>" />
-			<p class="submit"><input type="submit" name="wp-submit" id="wp-submit" class="button" value="<?php esc_attr_e('Submit'); ?>" tabindex="100" /></p>
+			<p class="submit"><input type="submit" name="wp-submit" id="wp-submit" class="btn-orange" value="<?php esc_attr_e('Submit'); ?>" tabindex="100" /></p>
 		</div>
 	</form>
 	<?php } ?>
-	<div class="fiel_row">
+	<!--<div class="text-right">
 		<?php if (get_option('users_can_register')) : ?>
 			<a href="<?php echo rtrim(get_my_theme_login_link(),"?"); echo (!empty( $_REQUEST['redirect_to'] ))?  '?redirect_to='.$_REQUEST['redirect_to']:''; ?>"><?php _e('Log in') ?></a>&nbsp;|&nbsp;<a href="<?php echo rtrim(get_my_theme_register_link(),"?"); echo (!empty( $_REQUEST['redirect_to'] ))?  '?redirect_to='.$_REQUEST['redirect_to']:''; ?>"><?php _e('Register') ?></a>
 		<?php else : ?>
 			<a href="<?= rtrim(get_my_theme_login_link(),"?").(!empty( $_REQUEST['redirect_to'] ))?  '?redirect_to='.$_REQUEST['redirect_to']:''; ?>"><?php _e('Log in') ?></a>
 		<?php endif; ?>
-	</div>
+	</div>-->
 	</div></div></div>
-	<?php if ($OPTION['wps_front_sidebar_disable'] != TRUE) 
+	<?php /* if ($OPTION['wps_front_sidebar_disable'] != TRUE) 
 	{
 
 		switch($OPTION['wps_sidebar_option']){
@@ -280,7 +280,7 @@ case 'resetpass' :
 			</div><!-- padding -->
 		</div><!-- frontPage_sidebar -->
 		
-	<?php  }  ?>
+	<?php  } */ ?>
 	<script type="text/javascript">
 	try{document.getElementById('user_login').focus();}catch(e){}
 	if(typeof wpOnload=='function')wpOnload();
@@ -476,7 +476,7 @@ default:
 				<input name="rememberme" type="checkbox" id="rememberme" value="forever" tabindex="90"<?php checked( $rememberme ); ?> /> <?php esc_attr_e('Remember Me'); ?>
 			</div>
 		
-			<input type="submit" name="wp-submit" id="wp-submit" class="button" value="<?php esc_attr_e('Log In'); ?>" tabindex="100" />
+			<input type="submit" name="wp-submit" id="wp-submit" class="btn-orange" value="<?php esc_attr_e('Log In'); ?>" tabindex="100" />
 			<input type="hidden" name="redirect_to" id="redirect_to" value="<?php echo esc_attr($redirect_to); ?>" />
 	<?php	if ( $interim_login ) { ?>
 			<input type="hidden" name="interim-login" value="1" />

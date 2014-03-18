@@ -45,10 +45,7 @@ $DIGITALGOODS->delete_dlink();							//change.9.10
 		<input type="hidden" name="checkuser_id" value="<?php echo $user_ID ?>" />
 		<input type="hidden" name="dashboard_url" value="" />
 		<input type="hidden" name="user_id" id="user_id" value="<?php echo $user_ID; ?>" />
-		<div class="row">
-			<label>Username</label>
-			<input name="user_login" type="text" id="user_login" value="<?php echo $userdata->user_login; ?>" disabled />
-		</div>	
+		<input type="hidden" name="user_login" value="<?php echo $userdata->user_login; ?>" />
 		<div class="row">
 			<label>First Name<em>*</em></label>
 			<input name="first_name" type="text" id="first_name" value="<?php echo $userdata->first_name; ?>" maxlength="100" />

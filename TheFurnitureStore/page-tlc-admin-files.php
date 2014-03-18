@@ -620,7 +620,7 @@ if ($all_draft_posts) {
 					$pg = $_GET['issoipg']; if (!$pg) { $pg = 1; }
 					$limit = ' LIMIT '.(($pg - 1) * $admin_items_per_page).', '.$admin_items_per_page;
 
-					$sold_user_posts = $wpdb->get_results(sprintf("SELECT SQL_CALC_FOUND_ROWS p.*, u.user_login, o.level FROM %sposts p LEFT JOIN %spostmeta pmi ON pmi.post_id = p.ID LEFT JOIN %susers u ON u.ID = p.post_author LEFT JOIN %sterm_relationships tr ON tr.object_id = p.ID LEFT JOIN %spostmeta pm ON pm.post_id = p.ID AND pm.meta_key = 'ID_item' LEFT JOIN %swps_shopping_cart sc ON sc.postID = p.ID LEFT JOIN %swps_orders o ON o.oid = sc.order_id WHERE p.post_type = 'post' AND p.post_status = 'publish' AND p.inventory = 0 AND pmi.meta_key = 'item_seller' AND pmi.meta_value = 'i' %s %s GROUP BY p.ID ORDER BY p.ID DESC %s", $wpdb->prefix, $wpdb->prefix, $wpdb->prefix, $wpdb->prefix, $wpdb->prefix, $wpdb->prefix, $wpdb->prefix, $sWhere, $iseller_where, $limit));
+					$sold_user_posts = $wpdb->get_results(sprintf("SELECT SQL_CALC_FOUND_ROWS p.*, u.user_login, o.level, o.layaway_order FROM %sposts p LEFT JOIN %spostmeta pmi ON pmi.post_id = p.ID LEFT JOIN %susers u ON u.ID = p.post_author LEFT JOIN %sterm_relationships tr ON tr.object_id = p.ID LEFT JOIN %spostmeta pm ON pm.post_id = p.ID AND pm.meta_key = 'ID_item' LEFT JOIN %swps_shopping_cart sc ON sc.postID = p.ID LEFT JOIN %swps_orders o ON o.oid = sc.order_id WHERE p.post_type = 'post' AND p.post_status = 'publish' AND p.inventory = 0 AND pmi.meta_key = 'item_seller' AND pmi.meta_value = 'i' %s %s GROUP BY p.ID ORDER BY p.ID DESC %s", $wpdb->prefix, $wpdb->prefix, $wpdb->prefix, $wpdb->prefix, $wpdb->prefix, $wpdb->prefix, $wpdb->prefix, $sWhere, $iseller_where, $limit));
 					$total_posts = $wpdb->get_var("SELECT FOUND_ROWS()");
 					if ($sold_user_posts) {
 						foreach($sold_user_posts as $spost) { $spost_picture = nws_get_item_thumb($spost->ID);
@@ -632,7 +632,11 @@ if ($all_draft_posts) {
 						if (!$spost_new_price) { $spost_new_price = $spost_price; }
 
 						$order_level = '';
-						if (!empty($spost->level)) { $order_level = $olevel_vals[$spost->level]; }
+						$olevel = $spost->level;
+						if ($spost->layaway_order > 0) {
+							$olevel = $wpdb->get_var(sprintf("SELECT level FROM %swps_orders WHERE oid = %s", $wpdb->prefix, $spost->layaway_order));
+						}
+						if ($olevel) { $order_level = $olevel_vals[$olevel]; }
 
 						$spost_new_price = sellers_currency_price($spost_new_price);
 						$spost_item_your_quotation_price = sellers_currency_price($spost_item_your_quotation_price);

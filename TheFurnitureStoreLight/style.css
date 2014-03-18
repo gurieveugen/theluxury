@@ -10942,6 +10942,61 @@ input[type="submit"].btn-grey{
 	float: left;
 	margin: 0 8px 0 0;
 }
+#login .login{
+	background: #f7f3e7;
+	border: none;
+	padding: 20px;
+	width: 615px;
+	-webkit-border-radius:7px;
+	border-radius:7px;
+}
+.login .row{
+	padding: 0 0 14px;
+	margin: 0;
+	float: none;
+	width: auto;
+}
+.login label{
+	float: left;
+	width: 300px;
+	margin: 3px 15px 0 0;
+	font-size: 14px;
+}
+.login input[type="text"],
+.login input[type="email"],
+.login input[type="password"]{
+	float:left;
+	background: #fdfdfd;
+	border:1px solid #a5a5a5;
+	margin:0;
+	padding:3px 10px;
+	width:278px;
+	height: 18px;
+}
+.login p{
+	padding: 0;
+}
+.login p.submit{
+	float: right;
+}
+.fiel_row a:active, .fiel_row a:hover, .referrals a:hover{
+	color: #000;
+}
+.login #lostpasswordform{
+	float: none;
+	clear: both;
+	width: 100%;
+}
+.login .text-right{
+	text-align: right;
+}
+.login .form-title{
+	padding: 0 0 3px;
+	margin: 0 0 15px;
+	font-size: 19px;
+	line-height: 23px;
+	border-bottom: 1px solid #a5a5a5;
+}
 
 .cf:after,
 .center-content:after,
@@ -11011,7 +11066,8 @@ input[type="submit"].btn-grey{
 .popup-forms:after,
 .my-profile-form .row:after,
 .my-profile-form .submit-row:after,
-.socials:after{
+.socials:after,
+.login .row:after{
 	content:'';
 	display:table;
 	clear:both;

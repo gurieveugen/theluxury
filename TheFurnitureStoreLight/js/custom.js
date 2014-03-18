@@ -326,6 +326,49 @@ function get_utm_param(param) {
 }
 
 function get_utm_param2(param) {
+	var utm_params = utm_from_cookie();
+	eval("var utm_param = utm_params."+param+";");
+	if (utm_param != undefined) {
+		return utm_param;
+	}
+	return '';
+}
+
+function utm_from_cookie() {
+	var z = _uGC(document.cookie, '__utmz=', ';');
+	var source  = _uGC(z, 'utmcsr=', '|'); 
+	var medium  = _uGC(z, 'utmcmd=', '|'); 
+	var campaign = _uGC(z, 'utmccn=', '|'); 
+	var content = _uGC(z, 'utmcct=', '|'); 
+	var term    = _uGC(z, 'utmctr=', '|'); 
+	var gclid   = _uGC(z, 'utmgclid=', '|'); 
+	if (gclid != "-") {
+		source = 'google';
+		medium = 'cpc';
+	}
+	return {
+		'utm_source': source,
+		'utm_medium': medium,
+		'utm_campaign': campaign,
+		'utm_content': content,
+		'utm_term': term
+	};
+}
+
+function _uGC(l,n,s) {
+	if (!l || l == "" || !n || n == "" || !s || s == "") return "-";
+	var i,i2,i3,c="-";
+	i = l.indexOf(n);
+	i3 = n.indexOf("=") + 1;
+	if (i > -1) {
+		i2 = l.indexOf(s,i);
+		if (i2 < 0) { i2 = l.length; }
+		c = l.substring((i+i3),i2);
+	}
+	return c;
+}
+
+function get_utm_param3(param) {
 	var utm_params = get_utm_from_cookie();
 	eval("var utm_param = utm_params."+param+";");
 	if (utm_param != undefined) {

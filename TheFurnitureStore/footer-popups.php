@@ -82,7 +82,7 @@
 							<div class="action-loading"><img src="<?php echo TEMPLURL; ?>/images/loading-ajax.gif"></div>
 						</div>
 						<div style="text-align:center;">
-							<a href="#change-email" class="change-email">Change Email</a>
+							<a href="#change-email" class="change-email" rel="basic">Change Email</a>
 						</div>
 					</div>
 					<div><a href="#facebook" class="btn-social btn-facebook">Connect with Facebook</a></div>
