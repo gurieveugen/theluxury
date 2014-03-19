@@ -179,7 +179,7 @@ function launchFilter(obj)
   var v                 = [];  
   var dont_remove_names = [];  
 
-  if(obj.parent().parent().parent().find('input:checkbox:checked').length > 0)
+  if(jQuery('.search-filter-form input:checkbox:checked').length > 0)
   {
     jQuery('.search-filter-form input:checkbox:checked').each(function(){
       if(jQuery(this).data('block') != last_check_box_block)
@@ -194,19 +194,12 @@ function launchFilter(obj)
     obj.parent().parent().parent().find('input:checkbox:checked').each(function(){
       if(!jQuery(this).parent().parent().hasClass('hide'))
       {
-        v.push([jQuery(this).attr("name").replace('[]', ''), jQuery(this).val()]);        
-        dont_remove_names.push(jQuery(this).attr("id"));  
+        v.push([jQuery(this).attr("name").replace('[]', ''), jQuery(this).val()]);
       }
     });
     search_ajax(v, obj.parent().parent().attr('data-tax')); 
 
-    jQuery('.' + last_check_box_block).find('input:checkbox:checked').each(function(){
-      if(dont_remove_names.indexOf(jQuery(this).attr("id")) < 0)
-      {
-        jQuery(this).attr('checked', false);
-        jQuery(this).parent().find('a').removeClass('jqTransformChecked');
-      }
-    });
+   
   }
   else
   {
@@ -339,7 +332,12 @@ function get_latest_products()
  * AJAX search
  */
 function search_ajax(search, checked_block)
-{  
+{ 
+  var not_hide = [];
+  jQuery('.search-filter-form').find('input:checkbox:checked').each(function(){
+    not_hide.push(jQuery(this).attr("id")); 
+  });
+
   jQuery.ajax(
   {
     type: "POST",
@@ -354,6 +352,7 @@ function search_ajax(search, checked_block)
       displayRows(response.categories);
     },
     beforeSend: function() {
+      removeDisables();
       jQuery('#products-container').addClass('loading');
       jQuery('body').append("<div class='cancel-all-actions'></div>");
     },
@@ -363,8 +362,26 @@ function search_ajax(search, checked_block)
       jQuery('.cancel-all-actions').remove();      
       update_scroll();
       change_currency();
+
+      for (var i = 0; i < not_hide.length; i++) 
+      {
+        if(jQuery('#' + not_hide[i]).parent().parent().hasClass('hide'))
+        {
+          jQuery('#' + not_hide[i]).parent().parent().removeClass('hide');  
+          jQuery('#' + not_hide[i]).parent().parent().find('input').attr('disabled', true);
+          jQuery('#' + not_hide[i]).parent().parent().find('a').addClass('disabled-jqTransformCheckbox');
+          jQuery('#' + not_hide[i]).parent().parent().find('label').addClass('disabled');
+        }
+      }
     }
   });
+}
+
+function removeDisables()
+{
+  jQuery('.search-filter-form').find('.disabled').each(function(){ jQuery(this).removeClass('disabled'); });
+  jQuery('.search-filter-form').find('.disabled-jqTransformCheckbox').each(function(){ jQuery(this).removeClass('disabled-jqTransformCheckbox'); });
+  jQuery('.search-filter-form').find('input:checkbox:disabled').each(function(){ jQuery(this).attr('disabled', false); });
 }
 
 /**

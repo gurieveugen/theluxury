@@ -471,8 +471,26 @@ function get_all_categories_from_posts($args)
 	{
 		$all_categories[$value->taxonomy][$value->term_id]['name'] = $value->name;
 		$all_categories[$value->taxonomy][$value->term_id]['slug'] = $value->slug;
+		if($value->parent != 0)
+		{
+			$arr = getParents($value->parent, $value->taxonomy);			
+			foreach ($arr as $key2 => $value2) 
+			{
+				$all_categories[$value2->taxonomy][$value2->term_id]['name'] = $value2->name;
+				$all_categories[$value2->taxonomy][$value2->term_id]['slug'] = $value2->slug;
+			}
+		}
 	}
 	return $all_categories;
+}
+
+function getParents($id, $tax)
+{
+	$term  = get_term_by('id', $id, $tax);	
+	$arr[] = $term;
+	
+	if($term->parent != 0) $arr = array_merge($arr, getParents($term->parent, $term->taxonomy));
+	return $arr;
 }
 
 function filter_where( $where = '' ) 
