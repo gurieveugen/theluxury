@@ -1819,7 +1819,7 @@ function product_sort_select() {
 			<?php } ?>
 			<input type="hidden" name="psort" value="<?php echo $psort; ?>" class="psort-val">
 			<fieldset>
-				<label>Sort by</label>
+				<label class="sort-by-label">Sort by</label>
 				<div class="sort-by-current"><?php echo $options[$psort]; ?></div>
 				<ul class="solt-by-values">
 					<?php foreach($options as $ov => $on) { ?>
@@ -1830,13 +1830,13 @@ function product_sort_select() {
 		</form>
 	</div>
 	<div class="see-latest">
-
+	
 		<?php 
 		global $post;
 		$is_cats = array( 'all-handbags', 'all-clothes', 'all-jewelry', 'all-shoes', 'all-watches', 'all-accessories'); 
 		$is_cats = array_flip($is_cats);
 		?>		
-		<?php if (!is_page($OPTION['wps_reserved_bags_page']) && !is_category() && !isset($is_cats[$post->post_name]) && !is_user_logged_in()) { ?><a href="<?php echo get_permalink($OPTION['wps_reserved_bags_page']); ?>" onclick="get_latest_products(); return false;" class="items-list-see-latest">See the latest products</a><?php } ?>
+		<?php if (!is_page($OPTION['wps_reserved_bags_page']) && !is_category() && !isset($is_cats[$post->post_name]) && !is_user_logged_in()) { ?><a href="<?php echo get_permalink($OPTION['wps_reserved_bags_page']); ?>" onclick="get_latest_products(this); return false;" class="items-list-see-latest">See the latest products</a><?php } ?>
 	</div>
 <?php
 }
@@ -2137,6 +2137,7 @@ $seller_statuses = array(
 	'iseller_approved' => 'Indiv Seller Approved',
 	'iseller_pickup' => 'Indiv Seller Pickup',
 	'iseller_received' => 'Indiv Seller Received',
+	'iseller_authed' => 'Indiv Seller Authenticated',
 	'seller_deleted' => 'Seller Deleted'
 );
 
@@ -2772,36 +2773,38 @@ function sellers_actions_init() {
 
 							if (!is_array($item_includes)) { $item_includes = array(); }
 
-							$new_post = array();
-							$new_post['post_title'] = $item_name;
-							$new_post['post_name'] = sanitize_title($item_name);
-							$new_post['post_status'] = $item_status;
-							$new_post['post_author'] = $user_id;
-							$new_post['post_created'] = current_time('mysql');
-							$new_post_id = wp_insert_post($new_post);
+							if (strlen($item_pictures)) {
+								$new_post = array();
+								$new_post['post_title'] = $item_name;
+								$new_post['post_name'] = sanitize_title($item_name);
+								$new_post['post_status'] = $item_status;
+								$new_post['post_author'] = $user_id;
+								$new_post['post_created'] = current_time('mysql');
+								$new_post_id = wp_insert_post($new_post);
 
-							$item_your_price = sellers_to_usd_price($item_your_price);
+								$item_your_price = sellers_to_usd_price($item_your_price);
 
-							$item_id = sellers_assign_item_id($new_post_id, $user_id, 'i');
+								$item_id = sellers_assign_item_id($new_post_id, $user_id, 'i');
 
-							update_post_meta($new_post_id, 'item_seller', $item_seller);
-							update_post_meta($new_post_id, 'price', $item_your_price);
-							update_post_meta($new_post_id, 'item_your_price', $item_your_price);
-							if (count($item_includes)) {
-								update_post_meta($new_post_id, 'item_includes', implode("|", $item_includes));
+								update_post_meta($new_post_id, 'item_seller', $item_seller);
+								update_post_meta($new_post_id, 'price', $item_your_price);
+								update_post_meta($new_post_id, 'item_your_price', $item_your_price);
+								if (count($item_includes)) {
+									update_post_meta($new_post_id, 'item_includes', implode("|", $item_includes));
+								}
+
+								sellers_set_post_to_taxonomy($new_post_id, $item_category, 'seller-category');
+								sellers_set_post_to_taxonomy($new_post_id, $item_selection, 'selection');
+								nws_update_post_prices_tax($new_post_id);
+
+								if ($item_brand != 'other') {
+									sellers_set_post_to_taxonomy($new_post_id, $item_brand, 'brand');
+								}
+
+								sellers_insert_post_pictures($new_post_id, $item_pictures);
+
+								update_utm_params('posts', $new_post_id);
 							}
-
-							sellers_set_post_to_taxonomy($new_post_id, $item_category, 'seller-category');
-							sellers_set_post_to_taxonomy($new_post_id, $item_selection, 'selection');
-							nws_update_post_prices_tax($new_post_id);
-
-							if ($item_brand != 'other') {
-								sellers_set_post_to_taxonomy($new_post_id, $item_brand, 'brand');
-							}
-
-							sellers_insert_post_pictures($new_post_id, $item_pictures);
-
-							update_utm_params('posts', $new_post_id);
 						}
 					}
 					if (strlen($user_phone)) {
@@ -2809,10 +2812,10 @@ function sellers_actions_init() {
 					}
 
 					// subscribe user
-					$udata = get_userdata($user_id);
-					nws_subscribe_action('submissionform', array('email' => $udata->data->user_email));
+					/*$udata = get_userdata($user_id);
+					nws_subscribe_action('submissionform', array('email' => $udata->data->user_email));*/
 
-					$redirect = get_permalink($OPTION['wps_indvseller_my_items_page']).'?success';
+					$redirect = get_permalink($OPTION['wps_what_happens_next_page']);
 					if (strlen($item_user) && $uid > 0) {
 						$redirect = get_permalink($OPTION['wps_tlc_admin_files_page']);
 					}
@@ -2880,7 +2883,9 @@ function sellers_actions_init() {
 							sellers_set_post_to_taxonomy($post_id, $item_brand, 'brand');
 						}
 
-						sellers_update_post_pictures($post_id, $item_pictures);
+						if (strlen($item_pictures)) {
+							sellers_update_post_pictures($post_id, $item_pictures);
+						}
 
 						header("Location: ".get_permalink($OPTION['wps_indvseller_my_items_page']));
 						exit;
@@ -2917,9 +2922,12 @@ function sellers_actions_init() {
 						$update['post_status'] = 'iseller_approved';
 						$wpdb->update($wpdb->prefix."posts", $update, array("ID" => $post_id));
 						update_post_meta($post_id, 'item_your_quotation_price', $item_your_quotation_price);
-						update_post_meta($post_id, 'new_price', $item_new_price);
+						if (get_post_meta($post_id, 'new_price', true)) {
+							update_post_meta($post_id, 'new_price', $item_new_price);
+						} else {
+							update_post_meta($post_id, 'price', $item_new_price);
+						}
 						update_post_meta($post_id, '_item_quotation_price', $item_your_quotation_price);
-						update_post_meta($post_id, '_new_price', $item_new_price);
 						update_post_meta($post_id, '_item_quotation_currency_code', $_SESSION["currency-code"]);
 						update_post_meta($post_id, '_item_quotation_currency_rate', $_SESSION["currency-rate"]);
 						nws_update_post_prices_tax($post_id);
@@ -2954,7 +2962,11 @@ function sellers_actions_init() {
 
 							update_post_meta($post_id, 'item_your_price', $item_your_quotation_price);
 							update_post_meta($post_id, 'item_your_quotation_price', $item_your_price);
-							update_post_meta($post_id, 'new_price', $item_new_price);
+							if (get_post_meta($post_id, 'new_price', true)) {
+								update_post_meta($post_id, 'new_price', $item_new_price);
+							} else {
+								update_post_meta($post_id, 'price', $item_new_price);
+							}
 							update_post_meta($post_id, 'item_request_price', 'completed');
 							nws_update_post_prices_tax($post_id);
 							if (!$old_price) {
@@ -3003,8 +3015,11 @@ function sellers_actions_init() {
 							update_post_meta($post_id, 'item_your_price', $item_your_quotation_price);
 							update_post_meta($post_id, 'item_request_price', 'completed');
 							update_post_meta($post_id, 'item_suggested_price', 'completed');
-							update_post_meta($post_id, 'new_price', $item_new_price);
-
+							if (get_post_meta($post_id, 'new_price', true)) {
+								update_post_meta($post_id, 'new_price', $item_new_price);
+							} else {
+								update_post_meta($post_id, 'price', $item_new_price);
+							}
 							delete_post_meta($post_id, 'item_suggested_your_quotation_price');
 							delete_post_meta($post_id, '_change_price_email');
 
@@ -3013,7 +3028,7 @@ function sellers_actions_init() {
 							$message = "Username: ".$current_user->data->user_login."\r\n";
 							$message .= "Item: (".get_post_meta($post_id, 'ID_item', true).") ".$post_data->post_title."\r\n";
 							$message .= "Price: ".$item_suggested_your_quotation_price." USD";
-							sellers_send_notification($subject, $message);
+							sellers_send_notification($subject, $message, $OPTION['wps_shop_questions_email']);
 						}
 					}
 				}
@@ -3177,6 +3192,7 @@ function sellers_actions_init() {
 						$update['ID'] = $post_id;
 						$update['post_status'] = 'iseller_received';
 						wp_update_post($update);
+						update_post_meta($post_id, '_post_received', current_time('mysql'));
 					}
 				}
 			break;
@@ -3216,6 +3232,17 @@ function sellers_actions_init() {
 					}
 				}
 			break;
+			case "tlc_authenticated_items":
+				$postid = $_POST['postid'];
+				if ($postid) {
+					foreach($postid as $post_id) {
+						$update = array();
+						$update['ID'] = $post_id;
+						$update['post_status'] = 'iseller_authed';
+						wp_update_post($update);
+					}
+				}
+			break;
 			case "tlc_item_view":
 				$post_id = $_POST['post_id'];
 				if ($post_id) {
@@ -3241,6 +3268,7 @@ function sellers_actions_init() {
 					update_post_meta($post_id, 'item_tlc_quotation_currency_rate', $_SESSION["currency-rate"]);
 					update_post_meta($post_id, '_item_tlc_quotation_price_high', $price_high);
 					update_post_meta($post_id, '_item_tlc_quotation_price_low', $price_low);
+					update_post_meta($post_id, '_post_quoted', current_time('mysql'));
 					if ($pricing_id) {
 						update_post_meta($post_id, 'item_pricing_database_id', $pricing_id);
 					}
@@ -3560,9 +3588,11 @@ function sellers_get_email_format($format_id) {
 	}
 }
 
-function sellers_send_notification($subject, $message) {
+function sellers_send_notification($subject, $message, $shop_email = '') {
 	global $OPTION;
-	$shop_email = $OPTION['wps_shop_email'];
+	if (!strlen($shop_email)) {
+		$shop_email = $OPTION['wps_shop_email'];
+	}
 	NWS_send_email($shop_email, $subject, $message, '', '', $OPTION['wps_sellers_cc_email']);
 }
 
@@ -3671,7 +3701,6 @@ function sellers_send_completed_quotation_email($post_id) {
 			$seller_items_table .= '<td valign="top" width="85"><b>Condition</b></td>';
 			$seller_items_table .= '<td valign="top" width="100"><b>Includes</b></td>';
 			$seller_items_table .= '<td valign="top" width="130"><b>Final Payment to you</b><br>(Choose your price between this range)</td>';
-			$seller_items_table .= '<td valign="top" width="120"><b>Your price</b><br>(please write your final price here)</td>';
 			$seller_items_table .= '</tr>';
 			foreach($pending_items as $pending_item) {
 				$item_id = $pending_item->ID;
@@ -3689,7 +3718,6 @@ function sellers_send_completed_quotation_email($post_id) {
 					$seller_items_table .= '<td valign="top">'.$condition.'</td>';
 					$seller_items_table .= '<td valign="top">'.implode(", ", $includes).'&nbsp;</td>';
 					$seller_items_table .= '<td valign="top">'.format_price($quotation_price_high * $quotation_currency_rate).' - '.format_price($quotation_price_low * $quotation_currency_rate).' '.$quotation_currency_code.'</td>';
-					$seller_items_table .= '<td valign="top">&nbsp;</td>';
 					$seller_items_table .= '</tr>';
 					$esend = true;
 				}
@@ -3706,7 +3734,7 @@ function sellers_send_completed_quotation_email($post_id) {
 function sellers_admin_nav($total_posts, $pgparam, $tabname) {
 	global $OPTION;
 	$admin_items_per_page = $OPTION['wps_sellers_admin_files_items_per_page'];
-	$transit_params = 'search-username='.$_GET['search-username'].'&search-option='.$_GET['search-option'].'&search-date-start='.$_GET['search-date-start'].'&search-date-end='.$_GET['search-date-end'].'&iscat='.$_GET['iscat'].'&pscat='.$_GET['pscat'].'&tab='.$tabname.'&';
+	$transit_params = 'search-username='.$_GET['search-username'].'&search-quotation='.$_GET['search-quotation'].'&search-option='.$_GET['search-option'].'&search-date-start='.$_GET['search-date-start'].'&search-date-end='.$_GET['search-date-end'].'&iscat='.$_GET['iscat'].'&pscat='.$_GET['pscat'].'&tab='.$tabname.'&';
 	$admin_files_url = get_permalink($OPTION['wps_tlc_admin_files_page']).'?'.$transit_params.$pgparam.'=';
 	$pg = $_GET[$pgparam];
 	if (!$pg) { $pg = 1; }
@@ -5178,15 +5206,20 @@ function shorturl($url) {
 
 function nws_subscribe_action($type, $data) {
 	// Mailchimp
-	if ($type != 'register') {
-		if (!class_exists('MCAPI')) { require_once(  './prelaunch/lib/MCAPI.class.php' ); }
-		$api = new MCAPI("1b8715e58f34dc6d98d1db2f165d30ba-us2");
-		$l = $api->lists();
-		$mergeVars = array('FNAME' => '', 'LNAME' => '');
-		if (strlen($data['gender'])) {
-			$mergeVars['GROUPINGS'] = array(0 => array('name' => 'Sex', 'groups' => $data['gender']));
+	$mergeVars = array('FNAME' => '', 'LNAME' => '');
+	if (strlen($data['gender'])) {
+		$mergeVars['GROUPINGS'] = array(0 => array('name' => 'Sex', 'groups' => $data['gender']));
+	}
+	if (!class_exists('MCAPI')) { require_once(  './prelaunch/lib/MCAPI.class.php' ); }
+	$api = new MCAPI("1b8715e58f34dc6d98d1db2f165d30ba-us2");
+	$l = $api->lists();
+	if ($l) {
+		foreach($l['data'] as $ldata) {
+			if ($ldata['name'] == 'Luxury Closet VIP list') {
+				$api->listSubscribe($ldata['id'], $data['email'], $mergeVars);
+				return $api->errorMessage;
+			}
 		}
-		$api->listSubscribe($l['data'][0]['id'], $data['email'], $mergeVars);
 	}
 
 	// Infusionsoft
@@ -5267,6 +5300,59 @@ function is_spec_staff_user() {
 	return false;
 }
 
+// post date created
+add_action('save_post', 'post_created_save_post');
+add_action('wp_insert_post', 'post_created_save_post');
+function post_created_save_post($post_id) {
+	global $wpdb;
+	if (defined('DOING_AUTOSAVE') && DOING_AUTOSAVE) {
+		return $post_id;
+	}
+	$post_row = $wpdb->get_row(sprintf("SELECT * FROM %sposts WHERE ID = %s", $wpdb->prefix, $post_id));
+	$post_created = $post_row->post_created;
+	if (!$post_created) {
+		$post_created = $post_row->post_date;
+		if (!$post_created) {
+			$post_created = current_time('mysql');
+		}
+		$update = array();
+		$update['post_created'] = $post_created;
+		$wpdb->update($wpdb->prefix."posts", $update, array('ID' => $post_id));
+	}
+	return $post_created;
+}
+
+function copy_follow_brands_to_alerts() {
+	global $wpdb;
+	$nmb = 1;
+	$fbrands = $wpdb->get_results(sprintf("SELECT * FROM %sfollow_brands WHERE copied = 0 ORDER BY id LIMIT 0, 1000", $wpdb->prefix));
+	if ($fbrands) {
+		foreach($fbrands as $fbrand) {
+			$id = $fbrand->id;
+			$user_email = $fbrand->email;
+			$brands = $fbrand->brands;
+			if (strlen($brands) && $brands != ',') {
+				$brands = substr($brands, 0, -1);
+				$value = '{'.str_replace(',', '};{', $brands).'}';
+				$check = $wpdb->get_var(sprintf("SELECT COUNT(alert_id) FROM %swps_user_alerts WHERE user_email = '%s' AND type = 3", $wpdb->prefix, $user_email));
+				if ($check == 0) {
+					$user_id = (int)$wpdb->get_var(sprintf("SELECT ID FROM %susers WHERE user_email = '%s'", $wpdb->prefix, $user_email));
+					$insert = array();
+					$insert['user_id'] = $user_id;
+					$insert['user_email'] = $user_email;
+					$insert['type'] = '3';
+					$insert['value'] = $value;
+					$wpdb->insert($wpdb->prefix."wps_user_alerts", $insert);
+
+					echo $nmb.'. Email: '.$user_email.' (User: '.$user_id.') - Brands: '.$brands.'<br>';
+					$nmb++;
+				}
+			}
+			$wpdb->query(sprintf("UPDATE %sfollow_brands SET copied = 1 WHERE id = %s", $wpdb->prefix, $id));
+		}
+	}
+}
+
 // hivista init
 add_action('init', 'nws_additional_init');
 function nws_additional_init() {
@@ -5281,8 +5367,12 @@ function nws_additional_init() {
 		sellers_send_change_price_email();
 		exit;
 	}
+	if ($_GET['follow-brands'] == 'copy') {
+		copy_follow_brands_to_alerts();
+		exit;
+	}
 	if ($_GET['hivista'] == 'test') {
-		sellers_send_completed_quotation_email(19907);
+		var_dump(nws_subscribe_action('register', array('email' => 'aabbcc@mail.ru', 'gender' => 'Male')));
 		exit;
 	}
 }

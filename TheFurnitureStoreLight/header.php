@@ -185,6 +185,7 @@ $lostPass	= get_page_by_title($OPTION['wps_passLostPg']);
 		<script type="text/javascript" src="<?php bloginfo('template_url') ?>/js/jquery-ui.min.js"></script>
 		<script src="<?php bloginfo('stylesheet_directory'); ?>/js/jquery.colorbox-min.js"></script>
 		<script type="text/javascript" src="<?php bloginfo('template_url'); ?>/js/drop-down.js"></script>
+		<script type="text/javascript" src="<?php bloginfo('stylesheet_directory'); ?>/js/doubletaptogo.js"></script>
 		<script src="<?php bloginfo('stylesheet_directory'); ?>/js/jquery.mCustomScrollbar.concat.min.js"></script>
 		<script src="<?php bloginfo('stylesheet_directory'); ?>/js/custom.js"></script>
 		<script src="<?php bloginfo('template_url') ?>/js/jquery.jqtransform.js"></script>
@@ -192,7 +193,15 @@ $lostPass	= get_page_by_title($OPTION['wps_passLostPg']);
 		<script src="<?php bloginfo('template_url'); ?>/js/sellers-process.js"></script>
 		<script src="<?php bloginfo('template_url'); ?>/js/alerts.js"></script>
 		<script id='search-ajax' src="<?php bloginfo('template_url'); ?>/js/search-ajax.js" data-url="<?php bloginfo('template_url'); ?>"></script>
-
+		<?php if (wp_is_mobile()) { ?>
+		<script type="text/javascript">
+		(function() {
+			var po = document.createElement("script"); po.type = "text/javascript"; po.async = true;
+			po.src = "https://apis.google.com/js/plusone.js?publisherid=114474869893468804277";
+			var s = document.getElementsByTagName("script")[0]; s.parentNode.insertBefore(po, s);
+		})();
+		</script>
+		<?php } ?>
 		<!--[if lt IE 10]>
 			<script src="<?php bloginfo('stylesheet_directory'); ?>/js/PIE.js"></script>
 			<script type="text/javascript">
@@ -286,6 +295,6 @@ $lostPass	= get_page_by_title($OPTION['wps_passLostPg']);
 					<div class="follow-message"><?php echo $_SESSION['follow_brand_unsubscribe_msg']; ?></div>
 				<?php unset($_SESSION['follow_brand_unsubscribe_msg']); } ?>
 				<!--<div class="container clearfix">-->
-					<?php if(!is_page_template('page-sell-item.php') && !is_page_template('page-what-happens-next.php') && !is_page_template('page-shop-1.php') && !is_page_template('page-shop-2.php') && !is_page_template('page-shop-3.php') && !is_page_template('page-shop-4.php') && !is_page_template('page-shop-5.php')): ?>
+					<?php if( !is_page_template('page-sell-us.php') && !is_page_template('page-sell-item.php') && !is_page_template('page-what-happens-next.php') && !is_page_template('page-shop-1.php') && !is_page_template('page-shop-2.php') && !is_page_template('page-shop-3.php') && !is_page_template('page-shop-4.php') && !is_page_template('page-shop-5.php')): ?>
 					<?php include( STYLESHEETPATH . "/includes/headers/page-titles.php" ); ?>
 					<?php endif; ?>

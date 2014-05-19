@@ -1,6 +1,5 @@
 <?php
 global $OPTION;
-$VOUCHER = load_what_is_needed('voucher');
 $LANG['delivery'] 				= __('Delivery Option:','wpShop');
 $LANG['payment']				= __('Payment Option:','wpShop');
 $LANG['change'] 				= __('edit','wpShop');
@@ -28,28 +27,27 @@ $order 		= process_order(3);
 $CART 		= show_cart();
 $cart_comp 	= cart_composition($_SESSION['cust_id']);	
 //get shipping fees
-$shipping = '0.00';
-if($cart_comp != 'digi_only' && $_SESSION['layaway_order'] == 0){  // however the shipping option might be, no shipping for a digital product only 		
+$shipping = 0;
+if($cart_comp != 'digi_only' && $_SESSION['layaway_order'] == 0){  // however the shipping option might be, no shipping for a digital product only
 	$shipping = calculate_shipping($order['d_option'],$CART['total_price'],$CART['total_weight'],$CART['total_item_num'],$order['country']);
 }
 //get tax
-$tax_amount = '0.00';
+$tax_amount = 0;
 if ($_SESSION['layaway_order'] == 0) {
 	$tax_amount = calculate_tax($order, $CART['total_price']);
 }
 //update the order
-if(($order['voucher'] != 'non')&&($VOUCHER->code_exist($order['voucher'])))
-{
-	$order_am	= (float) $CART['total_price'];
-	$vdata 		= $VOUCHER->subtract_voucher($order_am,$order);
-			
-	$TOTAL_AM	= format_price(update_order($CART['total_weight'],$shipping,$CART['total_price'],sprintf("%01.2f",$vdata['subtr_am']),$tax_amount));
-	$total_amnt = ($CART['total_price'] - $vdata['subtr_am']) + $shipping + $tax_amount;
+$voucher_amount = 0;
+if ($_SESSION['checkout_voucher']) {
+	$vdata = $_SESSION['checkout_voucher'];
+	$voucher_amount = $vdata->amount;
+	if ($vdata->option == 'P') {
+		$voucher_amount = round(($CART['total_price'] / 100) * $vdata->amount, 2);
+	}
 }
-else {
-	$TOTAL_AM	= format_price(update_order($CART['total_weight'],$shipping,$CART['total_price'],NULL,$tax_amount));
-	$total_amnt = $CART['total_price'] + $shipping + $tax_amount;
-}
+
+$TOTAL_AM	= format_price(update_order($CART['total_weight'], $shipping, $CART['total_price'], $voucher_amount, $tax_amount));
+$total_amnt = ($CART['total_price'] - $voucher_amount) + $shipping + $tax_amount;
 
 $d_labels			= array();
 $d_labels['pickup']		= __('Pick Up','wpShop');
@@ -152,10 +150,10 @@ wps_shop_process_steps(4);
 					</tr>
 				<?php } else { ?>
 					<?php // VOUCHER amount ?>
-					<?php if ($order['voucher'] != 'non' && $VOUCHER->code_exist($order['voucher'])) { ?>
+					<?php if ($voucher_amount) { ?>
 						<tr class="sums">
 							<td colspan="2"><?php echo __('- Voucher','wpShop'); ?>:</td>
-							<td colspan="2"><?php echo format_price($vdata['subtr_am'] * $_SESSION['currency-rate'], true); ?></td>
+							<td colspan="2"><?php echo format_price($voucher_amount * $_SESSION['currency-rate'], true); ?></td>
 						</tr>
 					<?php } ?>
 					<?php // SHIPPING amount ?>
@@ -212,7 +210,7 @@ wps_shop_process_steps(4);
 				<input type="hidden" name="p_option" value="<?php echo $order['p_option']; ?>" />
 				<input type="hidden" name="order_step" value="3">
 				<div class="button-right">
-					<input type="submit" class="shop-button" name="add" value="Place Order" />
+					<input type="submit" class="btn-orange" name="add" value="Place Order" />
 				</div>
 			</form>	
 		<?php } ?>

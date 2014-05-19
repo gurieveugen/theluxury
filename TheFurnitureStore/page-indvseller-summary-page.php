@@ -53,7 +53,8 @@ if (strlen($scat)) {
 				$pid = $user_post->ID;
 				$pstatus = $user_post->post_status;
 				$item_inventory = get_item_inventory($user_post->ID);
-				if ($pstatus == 'iseller_approved' || $pstatus == 'iseller_pickup' || $pstatus == 'iseller_received' || $pstatus == 'pending') { $pstatus = 'approved'; }
+				if ($pstatus == 'iseller_approved' || $pstatus == 'iseller_pickup' || $pstatus == 'iseller_received') { $pstatus = 'approved'; }
+				if ($pstatus == 'pending') { $pstatus = 'iseller_pending'; }
 				$seller_posts[$pstatus][] = $user_post;
 			}
 		}
@@ -108,7 +109,7 @@ if (strlen($scat)) {
 						$spost_your_price = sellers_currency_price($spost_your_price);
 						$spost_tlc_quotation_price_low = sellers_currency_price($spost_tlc_quotation_price_low);
 						$spost_tlc_quotation_price_high = sellers_currency_price($spost_tlc_quotation_price_high);
-						$quotation_value = 'No Quote';
+						$quotation_value = 'Unable to accept item';
 						if ($spost_tlc_quotation_price_low > 0 && $spost_tlc_quotation_price_high > 0) {
 							$quotation_value = format_price($spost_tlc_quotation_price_high, true).' - '.format_price($spost_tlc_quotation_price_low, true);
 						}
@@ -168,7 +169,7 @@ if (strlen($scat)) {
 		</div>
 		<?php
 		$sold_array = array();
-		$sold_items = $wpdb->get_results(sprintf("SELECT p.* FROM %sposts p LEFT JOIN %spostmeta pm ON pm.post_id = p.ID LEFT JOIN %sterm_relationships tr ON tr.object_id = p.ID LEFT JOIN %swps_shopping_cart sc ON sc.postID = p.ID LEFT JOIN %swps_orders o ON o.who = sc.who WHERE p.post_type = 'post' AND p.post_author = %s AND p.post_status = 'publish' AND pm.meta_key = 'item_seller' AND pm.meta_value = 'i' AND o.level IN ('6', '7') %s GROUP BY p.ID ORDER BY p.ID DESC", $wpdb->prefix, $wpdb->prefix, $wpdb->prefix, $wpdb->prefix, $wpdb->prefix, $seller_id, $sWhere));
+		$sold_items = $wpdb->get_results(sprintf("SELECT p.* FROM %sposts p LEFT JOIN %spostmeta pm ON pm.post_id = p.ID LEFT JOIN %sterm_relationships tr ON tr.object_id = p.ID LEFT JOIN %swps_shopping_cart sc ON sc.postID = p.ID LEFT JOIN %swps_orders o ON o.who = sc.who WHERE p.post_type = 'post' AND p.post_author = %s AND p.post_status = 'publish' AND pm.meta_key = 'item_seller' AND pm.meta_value = 'i' AND sc.item_amount > 0 AND o.level IN ('6', '7') %s GROUP BY p.ID ORDER BY p.ID DESC", $wpdb->prefix, $wpdb->prefix, $wpdb->prefix, $wpdb->prefix, $wpdb->prefix, $seller_id, $sWhere));
 		if ($sold_items) {
 			foreach($sold_items as $sold_item) {
 				$sold_array[] = $sold_item->ID;

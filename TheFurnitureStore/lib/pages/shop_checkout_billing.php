@@ -158,9 +158,6 @@ wps_shop_process_steps(3); ?>
 								<textarea name="custom_note" cols="50" rows="10"><?php echo $_POST['custom_note']; ?></textarea>
 							</div>
 						<?php } ?>
-						<div class="shop-button-holder">
-							<input class="shop-button s-b-1" type="submit" name="step2" value="Next Step" />
-						</div>
 					</div>
 					<?php
 					// Display Delivery Address Form
@@ -196,6 +193,9 @@ wps_shop_process_steps(3); ?>
 						<?php } ?>
 					</div>
 				</div>
+			</div>
+			<div class="button-right">
+				<input class="btn-orange" type="submit" name="step2" value="NEXT" />
 			</div>
 			<input type="hidden" name="order_step" value="2">
 		</form>

@@ -124,13 +124,14 @@ if ($all_draft_posts) {
 					<?php } ?>
 				<?php } ?>
 			</ul>
-			<ul class="tabset inner">
+			<ul class="tabset inner" style="padding-left:5px;">
 				<li><a href="#tab-submitted-items-is" class="active">Submitted</a></li>
 				<li><a href="#tab-pending-approval-items-is">Pending Approval</a></li>
 				<li><a href="#tab-requests-items-is">Requests</a></li>
 				<li><a href="#tab-approved-items-is">Approved</a></li>
 				<li><a href="#tab-pickup-items-is">Pickup</a></li>
 				<li><a href="#tab-received-items-is">Received</a></li>
+				<li><a href="#tab-authenticated-items-is">Authenticated</a></li>
 				<li><a href="#tab-on-sale-items-is">On Sale</a></li>
 				<li><a href="#tab-sold-items-is">Sold</a></li>
 			</ul>
@@ -513,8 +514,8 @@ if ($all_draft_posts) {
 			<!-- Received -->
 			<div id="tab-received-items-is" class="tab-content">
 				<div class="sellers-other-tabs">
-					<form method="POST">
-					<input type="hidden" name="SellersAction" value="tlc_returned_items">
+					<form name="received_items_form" method="POST">
+					<input type="hidden" name="SellersAction" value="">
 					<?php
 					$pg = $_GET['isripg']; if (!$pg) { $pg = 1; }
 					$limit = ' LIMIT '.(($pg - 1) * $admin_items_per_page).', '.$admin_items_per_page;
@@ -549,11 +550,62 @@ if ($all_draft_posts) {
 						</div>
 					<?php } ?>
 					<div class="returned-button">
-						<input type="submit" value="Returned">
+						<input type="submit" value="Returned" onclick="document.received_items_form.SellersAction.value='tlc_returned_items';">
+					</div>
+					<div class="authenticated-button">
+						<input type="submit" value="Authenticated" onclick="document.received_items_form.SellersAction.value='tlc_authenticated_items';">
 					</div>
 					<?php if ($total_posts > $admin_items_per_page) { ?>
 					<div class="pagenavi-holder">
 						<?php sellers_admin_nav($total_posts, 'isripg', 'tab-received-items-is'); ?>
+					</div>
+					<?php }
+					} ?>
+					</form>
+				</div>
+			</div>
+			<div class="clear"></div>
+			<!-- Authenticated -->
+			<div id="tab-authenticated-items-is" class="tab-content">
+				<div class="sellers-other-tabs">
+					<form method="POST">
+					<input type="hidden" name="SellersAction" value="tlc_authenticated_items">
+					<?php
+					$pg = $_GET['isaipg']; if (!$pg) { $pg = 1; }
+					$limit = ' LIMIT '.(($pg - 1) * $admin_items_per_page).', '.$admin_items_per_page;
+
+					$authenticated_user_posts = $wpdb->get_results(sprintf("SELECT SQL_CALC_FOUND_ROWS p.*, u.user_login FROM %sposts p LEFT JOIN %susers u ON u.ID = p.post_author LEFT JOIN %sterm_relationships tr ON tr.object_id = p.ID LEFT JOIN %spostmeta pm ON pm.post_id = p.ID AND pm.meta_key = 'ID_item' WHERE p.post_type = 'post' AND p.post_status = 'iseller_authed' %s %s GROUP BY p.ID ORDER BY p.ID DESC %s", $wpdb->prefix, $wpdb->prefix, $wpdb->prefix, $wpdb->prefix, $sWhere, $iseller_where, $limit));
+					$total_posts = $wpdb->get_var("SELECT FOUND_ROWS()");
+					if ($authenticated_user_posts) {
+						foreach($authenticated_user_posts as $spost) {
+							$spost_picture = nws_get_item_thumb($spost->ID);
+							$spost_username = $spost->user_login;
+							$spost_item_your_quotation_price = get_post_meta($spost->ID, 'item_your_quotation_price', true);
+							$spost_price = get_post_meta($spost->ID, 'price', true);
+							$spost_new_price = get_post_meta($spost->ID, 'new_price', true);
+							$item_seller = $spost->meta_value;
+							if (!$spost_new_price) { $spost_new_price = $spost_price; }
+
+							$spost_new_price = sellers_currency_price($spost_new_price);
+							$spost_item_your_quotation_price = sellers_currency_price($spost_item_your_quotation_price);
+						?>
+						<div class="product-item">
+							<div class="published-check"><input type="checkbox" name="postid[]" value="<?php echo $spost->ID; ?>"></div>
+							<?php if ($spost_picture) { ?><a href="<?php echo get_post_thumb($spost_picture, 800, 800); ?>" class="pic-zoom"><img src="<?php echo get_post_thumb($spost_picture, 91, 91, true); ?>" class="thumbnail" alt="" /></a><?php } ?>
+							<div class="description">
+								<h4><a href="<?php echo $summary_page_url.$spost->post_author; ?>"><?php echo $spost_username; ?></a></h4>
+								<h4 class="item-title"><a href="<?php echo get_permalink($spost->ID); ?>"><?php echo $spost->post_title; ?></a></h4>
+								<p><?php echo get_post_meta($spost->ID, 'ID_item', true); ?></p>
+								<div class="price-row">
+									<span class="price"><strong>Seller Payout:</strong> <?php echo format_price($spost_item_your_quotation_price, true); ?></span>
+									<span class="price"><strong>The Luxury Closet Selling Price:</strong> <?php echo format_price($spost_new_price, true); ?></span>
+								</div>
+							</div>
+						</div>
+					<?php } ?>
+					<?php if ($total_posts > $admin_items_per_page) { ?>
+					<div class="pagenavi-holder">
+						<?php sellers_admin_nav($total_posts, 'isaipg', 'tab-authenticated-items-is'); ?>
 					</div>
 					<?php }
 					} ?>
@@ -620,7 +672,7 @@ if ($all_draft_posts) {
 					$pg = $_GET['issoipg']; if (!$pg) { $pg = 1; }
 					$limit = ' LIMIT '.(($pg - 1) * $admin_items_per_page).', '.$admin_items_per_page;
 
-					$sold_user_posts = $wpdb->get_results(sprintf("SELECT SQL_CALC_FOUND_ROWS p.*, u.user_login, o.level, o.layaway_order FROM %sposts p LEFT JOIN %spostmeta pmi ON pmi.post_id = p.ID LEFT JOIN %susers u ON u.ID = p.post_author LEFT JOIN %sterm_relationships tr ON tr.object_id = p.ID LEFT JOIN %spostmeta pm ON pm.post_id = p.ID AND pm.meta_key = 'ID_item' LEFT JOIN %swps_shopping_cart sc ON sc.postID = p.ID LEFT JOIN %swps_orders o ON o.oid = sc.order_id WHERE p.post_type = 'post' AND p.post_status = 'publish' AND p.inventory = 0 AND pmi.meta_key = 'item_seller' AND pmi.meta_value = 'i' %s %s GROUP BY p.ID ORDER BY p.ID DESC %s", $wpdb->prefix, $wpdb->prefix, $wpdb->prefix, $wpdb->prefix, $wpdb->prefix, $wpdb->prefix, $wpdb->prefix, $sWhere, $iseller_where, $limit));
+					$sold_user_posts = $wpdb->get_results(sprintf("SELECT SQL_CALC_FOUND_ROWS p.*, u.user_login, o.level, o.layaway_order FROM %sposts p LEFT JOIN %spostmeta pmi ON pmi.post_id = p.ID LEFT JOIN %susers u ON u.ID = p.post_author LEFT JOIN %sterm_relationships tr ON tr.object_id = p.ID LEFT JOIN %spostmeta pm ON pm.post_id = p.ID AND pm.meta_key = 'ID_item' LEFT JOIN %swps_shopping_cart sc ON sc.postID = p.ID AND sc.order_id > 0 LEFT JOIN %swps_orders o ON o.oid = sc.order_id WHERE p.post_type = 'post' AND p.post_status = 'publish' AND p.inventory = 0 AND pmi.meta_key = 'item_seller' AND pmi.meta_value = 'i' %s %s GROUP BY p.ID ORDER BY p.ID DESC %s", $wpdb->prefix, $wpdb->prefix, $wpdb->prefix, $wpdb->prefix, $wpdb->prefix, $wpdb->prefix, $wpdb->prefix, $sWhere, $iseller_where, $limit));
 					$total_posts = $wpdb->get_var("SELECT FOUND_ROWS()");
 					if ($sold_user_posts) {
 						foreach($sold_user_posts as $spost) { $spost_picture = nws_get_item_thumb($spost->ID);
@@ -692,7 +744,7 @@ if ($all_draft_posts) {
 				<li<?php if ($pscat == 'sunglasses') { echo ' class="active"'; } ?>><a href="<?php the_permalink(); ?>?pscat=sunglasses&mtab=ps" rel="ps">Sunglasses<?php if ($psellers_cat_nums['sunglasses'] > 0) { ?> <span class="num"><?php echo $psellers_cat_nums['sunglasses']; ?></span><?php } ?></a></li>
 				<li<?php if ($pscat == 'jewelry') { echo ' class="active"'; } ?>><a href="<?php the_permalink(); ?>?pscat=jewelry&mtab=ps" rel="ps">Jewelry<?php if ($psellers_cat_nums['jewelry'] > 0) { ?> <span class="num"><?php echo $psellers_cat_nums['jewelry']; ?></span><?php } ?></a></li>
 			</ul>
-			<ul class="tabset inner">
+			<ul class="tabset inner" style="padding-left:5px;">
 				<li><a href="#tab-submitted-items-ps" class="active">Submitted</a></li>
 				<li><a href="#tab-approved-items-ps">Approved</a></li>
 				<li><a href="#tab-on-sale-items-ps">On Sale</a></li>

@@ -1,3 +1,10 @@
+jQuery(document).ready(function(){
+	jQuery('.menu li.noclick').each(function(){
+		jQuery(this).find('a').eq(0).click(function(){
+			return false;
+		});
+	});
+});
 jQuery(function() {
 	initNav({
 		menuId: "nav",
@@ -13,6 +20,8 @@ jQuery(function() {
 	jQuery("#nav .title a").click(function(event) {
 		event.preventDefault();
 	});
+
+	jQuery( '#nav li:has(ul)' ).not('.noclick').doubleTapToGo();
 });
 
 function initNav(o)

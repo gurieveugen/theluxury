@@ -70,9 +70,11 @@ jQuery(document).ready(function() {
 
 			if(count($post_images) > 0) { ?>
 				<div class="image-box">
-					<div class="holder">
-						<div class="frame">
-							<a href="<?php echo get_post_thumb($post_images[0]); ?>" class="MagicZoom MagicThumb" id="zoom1" rel="show-title: false; zoom-fade: true; zoom-position: inner; thumb-change: mouseover"><img src="<?php echo get_post_thumb($post_images[0], 605, 605, true); ?>" alt="<?php echo get_custom_alt_title('alt', $post_images[0], $custom_alt_attr); ?>" title="<?php echo get_custom_alt_title('title', $post_images[0], $custom_title_attr); ?>" /></a>
+					<div class="image-frame">
+						<div class="holder">
+							<div class="frame">
+								<a href="<?php echo get_post_thumb($post_images[0]); ?>" class="MagicZoom MagicThumb" id="zoom1" rel="show-title: false; zoom-fade: true; zoom-position: inner; thumb-change: mouseover"><img src="<?php echo get_post_thumb($post_images[0], 605, 605, true); ?>" alt="<?php echo get_custom_alt_title('alt', $post_images[0], $custom_alt_attr); ?>" title="<?php echo get_custom_alt_title('title', $post_images[0], $custom_title_attr); ?>" /></a>
+							</div>
 						</div>
 					</div>
 				</div>
@@ -101,7 +103,7 @@ jQuery(document).ready(function() {
 			$price = get_post_meta($post->ID, 'price', true);
 			$new_price = get_post_meta($post->ID, 'new_price', true);
 			if($new_price) { ?>
-				<h2>Price: <span class="old-price"><?php product_prices_list($price); ?></span></h2>
+				<h2>Price <span class="old-price"><?php product_prices_list($price); ?></span></h2>
 				<h2 class="price"><?php product_prices_list($new_price); ?></h2>
 				<?php $price = $new_price; ?>
 			<?php } else { ?>
@@ -182,10 +184,13 @@ jQuery(document).ready(function() {
 									<?php } ?>
 								<?php } ?>
 							<?php } else { // if ($stock_amount > 0) { ?>
-								<img src="<?php bloginfo('template_url'); ?>/images/product/btn-sold-out.png" class="btn-sold-out" />
+								<strong class="prod-status-text">Sold Out</strong>
 								<?php if ($OPTION['wps_alerts_enable']) { ?>
 									<input type="hidden" name="request_value" value="<?php the_title(); ?>" id="request-this-product-value" />
 									<!--<a href="#request" class="btn-request" id="request-this-product">Request this product</a>-->
+								<?php } ?>
+								<?php if($OPTION['wps_lrw_yes']) { ?>
+									<a class="link-wishlist" href="<?php echo site_url('index.php?wishlist=add&fpg=single&pid='.$post->ID); ?>">Add to Wishlist</a>
 								<?php } ?>
 							<?php } ?>
 						<?php } ?>
@@ -217,9 +222,6 @@ jQuery(document).ready(function() {
 				</ul>
 			</div>
 			<div class="clear"></div>
-			<?php if($OPTION['wps_lrw_yes']) { ?>
-				<a class="link-wishlist" href="<?php echo site_url('index.php?wishlist=add&fpg=single&pid='.$post->ID); ?>">Add to Wishlist</a>
-			<?php } ?>
 			<div class="data-section section-1">
 				<?php
 				$ip = $_SERVER['REMOTE_ADDR'];
@@ -232,9 +234,9 @@ jQuery(document).ready(function() {
 					<?php // display what is currently_in_stock	
 					if($OPTION['wps_track_inventory'] == 'active' && $stock_amount !== 'not_set' && !is_it_digital() && $OPTION['wps_display_product_amounts'] == 'active') {
 						if($attr_option == 1 || $attr_option == 2 ){ $stock_amt = '&nbsp;'; }else{ $stock_amt = $stock_amount; } ?>
-						<p>Stock on hand: <strong><?php echo $stock_amt; ?></strong></p>
+						<p>Stock: <strong><?php echo $stock_amt; ?></strong></p>
 					<?php } ?>
-					<div class="prod-views">
+					<div class="prod-views" style="visibility:hidden;">
 						<p>People viewing this item: <strong id="prod-views-nmb">0</strong></p>
 					</div>
 				</div>
@@ -303,7 +305,7 @@ jQuery(document).ready(function() {
 								<?php if (strlen($item_width)) { ?> <?php echo $item_width; ?> CM(W)<?php } ?>
 								<br />
 							<?php } ?>
-							<?php if (strlen($item_shoulder_strap)) { ?><strong>Shoulder Strap</strong>: <?php echo $item_shoulder_strap; ?> CM<br /><?php } ?>
+							<?php if (strlen($item_shoulder_strap)) { ?><strong>Shoulder Strap</strong>: <?php echo $item_shoulder_strap; if (strpos($item_shoulder_strap, 'CM') === false) { echo ' CM'; } ?><br /><?php } ?>
 							<?php if (strlen($item_handle_drop)) { ?><strong>Handle Drop</strong>: <?php echo $item_handle_drop; ?> CM<br /><?php } ?>
 							<?php if (strlen($item_material)) { ?><strong>Material</strong>: <?php echo $item_material; ?><br /><?php } ?>
 							<?php if (strlen($item_exterior_material)) { ?><strong>Exterior Material</strong>: <?php echo $item_exterior_material; ?><br /><?php } ?>

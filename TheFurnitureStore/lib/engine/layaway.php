@@ -15,10 +15,13 @@ function layaway_set_session() {
 			$layaway_amount = round($layaway_amount / $_SESSION['currency-rate']);
 		}
 
-		if ($layaway_amount < $layaway_def_amount) {
-			$layaway_amount = $layaway_def_amount;
-			$minerror = true;
-		} else if ($layaway_amount > $layaway_cart_total) {
+		if (!$_SESSION['layaway_order']) {
+			if ($layaway_amount < $layaway_def_amount) {
+				$layaway_amount = $layaway_def_amount;
+				$minerror = true;
+			}
+		}
+		if ($layaway_amount > $layaway_cart_total) {
 			$layaway_amount = $layaway_cart_total;
 		}
 	}
@@ -93,6 +96,7 @@ function layaway_get_process_amounts($order_id) {
 		if (!$order_date) { $order_date = $layaway_order->order_time; }
 		$paid = $layaway_order->amount;
 
+		$am_5_percent = 0;
 		$odays = ceil((time() - $order_date) / 86400);
 		if ($odays > 30 && $layaway_order->level == '3' && $remove_charge != 1) {
 			$am_5_percent = ($total / 100) * 5;
@@ -100,7 +104,7 @@ function layaway_get_process_amounts($order_id) {
 		}
 		$balance = $total - $paid;
 		if ($balance < 0) { $balance = 0; }
-		$pamounts = array('total' => round($total), 'paid' => round($paid), 'balance' => round($balance), 'order_date' => $order_date, 'odays' => $odays);
+		$pamounts = array('total' => round($total), 'paid' => round($paid), 'balance' => round($balance), 'order_date' => $order_date, 'odays' => $odays, 'fee' => $am_5_percent);
 	}
 	return $pamounts;
 }

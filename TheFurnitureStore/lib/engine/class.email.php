@@ -172,7 +172,6 @@
 		
 		function email_confirmation($order,$PDT_DATA,$pm=''){
 			global $wpdb, $OPTION, $order_payment_methods;
-			$VOUCHER = load_what_is_needed('voucher');
 			$INVOICE = load_what_is_needed('invoice');
 
 			$order_id = $OPTION['wps_order_no_prefix'].$order['oid'];

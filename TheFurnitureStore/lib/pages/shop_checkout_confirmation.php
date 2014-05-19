@@ -10,23 +10,27 @@ wps_shop_process_steps(5);
 	<h1 class="title">Order Review</h1>
 	<div class="holder">
 		<div class="content-step-5">
-			<?php if ($order_payment_data['p_option'] == 'paypal' || $order_payment_data['p_option'] == 'audi') { ?>
-				<h2>Thank you for your Order!</h2>
-				<p>An e-mail confirmation has been sent your address. A tracking number will be sent via e-mail once your items have been shipped.</p>
-			<?php } else if ($order_payment_data['p_option'] == 'cod') { ?>
-				<h2>Thank you for shopping with us!</h2>
-				<p>We will call you to confirm your order.</p>
-			<?php } else if ($order_payment_data['p_option'] == 'cash') { ?>
-				<h2>Thank you for shopping with us!</h2>
-				<p>We will call you to confirm your order. Your items have been reserved for 3 days.</p>
-			<?php } else if ($order_payment_data['p_option'] == 'transfer') { ?>
-				<h2>Thank you for your Order!</h2>
-				<p>Your items have been reserved for 3 days and an e-mail confirmation has been sent to your address.</p>
-				<p>Please follow the instructions in the e-mail to complete your order.</p>
+			<?php if (strlen($order_payment_data['error'])) { ?>
+				<p style="color:#FF0000;"><?php echo $order_payment_data['error']; ?></p>
+			<?php } else { ?>
+				<?php if ($order_payment_data['p_option'] == 'paypal' || $order_payment_data['p_option'] == 'audi') { ?>
+					<h2>Thank you for your Order!</h2>
+					<p>An e-mail confirmation has been sent your address. A tracking number will be sent via e-mail once your items have been shipped.</p>
+				<?php } else if ($order_payment_data['p_option'] == 'cod') { ?>
+					<h2>Thank you for shopping with us!</h2>
+					<p>We will call you to confirm your order.</p>
+				<?php } else if ($order_payment_data['p_option'] == 'cash') { ?>
+					<h2>Thank you for shopping with us!</h2>
+					<p>We will call you to confirm your order. Your items have been reserved for 3 days.</p>
+				<?php } else if ($order_payment_data['p_option'] == 'transfer') { ?>
+					<h2>Thank you for your Order!</h2>
+					<p>Your items have been reserved for 3 days and an e-mail confirmation has been sent to your address.</p>
+					<p>Please follow the instructions in the e-mail to complete your order.</p>
+				<?php } ?>
 			<?php } ?>
 			<p>If you have any further questions or concerns, kindly send us an e-mail on <a href="mailto:<?php echo $OPTION['wps_shop_email']; ?>" class="mark"><?php echo $OPTION['wps_shop_email']; ?></a> or call us on <span class="mark"><?php echo $OPTION['wps_shop_questions_phone']; ?></span></p>
 			<div class="shop-button-holder top-padding">
-				<a href="<?php echo home_url('/'); ?>" class="shop-button">Continue Shopping</a>
+				<a href="<?php echo home_url('/'); ?>" class="btn-orange">Continue Shopping</a>
 			</div>
 		</div>
 	</div>
@@ -55,5 +59,5 @@ sale.setProductID('<?php echo $order_payment_data['itemname']; ?>');
 PostAffTracker.register();
 </script>
 <?php
-unset($_SESSION['order_payment_data']);
+//unset($_SESSION['order_payment_data']);
 ?>

@@ -293,10 +293,10 @@
 					if( $ul.css('display') == 'none' ) {jqTransformHideSelect();} 
 					if($select.attr('disabled')){return false;}
 
-					$ul.slideToggle('fast', function(){					
-						var offSet = ($('a.selected', $ul).offset().top - $ul.offset().top);
-						$ul.animate({scrollTop: offSet});
-					});
+					// $ul.slideToggle('fast', function(){					
+					// 	var offSet = ($('a.selected', $ul).offset().top - $ul.offset().top);
+					// 	$ul.animate({scrollTop: offSet});
+					// });
 					return false;
 				})
 			;

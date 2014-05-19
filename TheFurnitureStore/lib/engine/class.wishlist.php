@@ -127,6 +127,9 @@ class Wishlist{
 				$table 	= is_dbtable_there('shopping_cart');
 				$wpdb->query(sprintf("DELETE FROM %s WHERE cid = '%s'", $table, $cid));
 			}
+			if ($_GET['oreview'] == 'true') {
+				$url = site_url('/?orderNow=3');
+			}
 		}
 
 		// to avoid unitentional reposts

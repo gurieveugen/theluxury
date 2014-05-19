@@ -18,27 +18,16 @@
 		$links['members']	 = '?page=functions.php&section=members';
 		$links['pricing']	 = '?page=functions.php&section=pricing';
 		$links['searches']	 = '?page=functions.php&section=searches';
+		$links['logs']		 = '?page=functions.php&section=logs';
 
-		$css_class 				 = array();
-		$css_class['settings']	 = 'class="inactive"';
-		$css_class['orders']  	 = 'class="inactive"';
-		$css_class['inquiries']  = 'class="inactive"';
-		$css_class['inventory']  = 'class="inactive"';
-		$css_class['lkeys']  	 = 'class="inactive"';
-		$css_class['statistics'] = 'class="inactive"';
-		$css_class['vouchers']	 = 'class="inactive"';
-		$css_class['members']	 = 'class="inactive"';
-		$css_class['pricing']	 = 'class="inactive"';
-		$css_class['searches']	 = 'class="inactive"';
-		
-		foreach($links as $k => $v){
-			if($k == $current){
-				$v 				= '#';
-				$css_class[$k]	= 'class="active"';
+		$css_class = array();
+		foreach($links as $k => $v) {
+			$css_class[$k] = 'class="inactive"';
+			if($k == $current) {
+				$css_class[$k] = 'class="active"';
 			}
 		}
-		
-			
+
 		$output2 = "<div class='wrap'>";
 			$output2 .= "<ul class='tabs mainTabs'>";
 				if(current_user_role() == 'editor') {
@@ -82,7 +71,8 @@
 						$output2 .= "<li><a href='$links[statistics]' $css_class[statistics] >".__('Statistics','wpShop')."</a></li>";
 					}
 					$output2 .= "<li><a href='$links[pricing]' $css_class[pricing] >".__('Pricing','wpShop')."</a></li>";
-					$output2 .= "<li><a href='$links[searches]' $css_class[pricing] >".__('Searches','wpShop')."</a></li>";
+					$output2 .= "<li><a href='$links[searches]' $css_class[searches] >".__('Searches','wpShop')."</a></li>";
+					$output2 .= "<li><a href='$links[logs]' $css_class[logs] >".__('Logs','wpShop')."</a></li>";
 				}
 			$output2 .= "</ul>";
 		
@@ -244,62 +234,33 @@
 
 	function multi_change_order_level(){
 		global $wpdb;
-		// update orders table
 		$table = is_dbtable_there('orders');						
 		$table2 = is_dbtable_there('shopping_cart');
-		$table3 = is_dbtable_there('inventory');
 
-		foreach($_POST as $k=>$v){	
-			if($v == 'move') {
+		foreach($_POST as $order_id => $act){	
+			if($act == 'move') {
 				$status = trim($_POST['status']);
 				
-				if ($status == 'delete') { //  || $status == 0
-					total_order_delete($k, true, 'order_delete');
+				if ($status == 'delete' || $status == 0) {
+					total_order_delete($order_id);
 				} else {
-					$column_value_array 	= array();
-					$where_conditions 		= array();
-					
-					$column_value_array['level'] 	= $status;	
-					$where_conditions[0]			= "oid = $k";
-										
-					db_update($table, $column_value_array, $where_conditions);
+					$wpdb->query(sprintf("UPDATE %s SET level = '%s' WHERE oid = %s", $table, $status, $order_id));
 					
 					// if payment received then send order email if product owner is seller
 					if($status == '6') {
-						$who = $wpdb->get_var(sprintf("SELECT who FROM %s WHERE oid = '%s'", $table, $k));
-						$order_products = $wpdb->get_results(sprintf("SELECT * FROM %s WHERE who = '%s'", $table2, $who));
+						$order_products = $wpdb->get_results(sprintf("SELECT * FROM %s WHERE order_id = '%s'", $table2, $order_id));
 						if ($order_products) {
 							foreach($order_products as $order_product) {
 								sellers_send_order_email($order_product->postID, $order_product->item_id);
 							}
 						}
-					} else if ($status == 0) {
-						cancelled_order($k);
 					}
+					$ola_vals = array('4' => 'new_level', '5' => 'shipped_level', '6' => 'received_level', '7' => 'completed_level');
+					order_log_action($order_id, $ola_vals[$status]);
 				}
 			}
 		}
 		return true;
-	}
-
-	function cancelled_order($order_id) {
-		global $wpdb, $current_user;
-		$cancel_reason = $_POST['cancel_reason'];
-		$table = is_dbtable_there('orders');
-		$table2 = is_dbtable_there('shopping_cart');
-
-		$who = $wpdb->get_var(sprintf("SELECT who FROM %s WHERE oid = '%s'", $table, $order_id));
-		$order_products = $wpdb->get_results(sprintf("SELECT * FROM %s WHERE who = '%s'", $table2, $who));
-		if ($order_products) {
-			foreach($order_products as $order_product) {
-				$item_id = $order_product->item_id;
-				// update inventory
-				update_item_inventory($item_id, 1, true, 'Cancel order - oid = '.$order_id);
-
-				log_action('order_cancel', 'Order ID: '.$order_id.'; Item ID: '.$item_id.'; Qty: 1; User ID: '.$current_user->ID);
-			}
-		}
-		$wpdb->query(sprintf("UPDATE %s SET cancel_reason = '%s' WHERE oid = %s", $table, $cancel_reason, $order_id));
 	}
 
 	function total_order_delete($order_id, $inventory_return = true, $action = '') {
@@ -307,24 +268,28 @@
 		$cancel_reason = $_POST['cancel_reason'];
 		$table = is_dbtable_there('orders');
 		$table2 = is_dbtable_there('shopping_cart');
-		$table3 = is_dbtable_there('inventory');
 
 		$order = $wpdb->get_row(sprintf("SELECT * FROM %s WHERE oid = %s", $table, $order_id));
 		if ($order->level != 0) {
 			if ($inventory_return) {
-				$sc_items = $wpdb->get_results(sprintf("SELECT * FROM %s WHERE who = '%s'", $table2, $order->who));
+				$sc_items = $wpdb->get_results(sprintf("SELECT * FROM %s WHERE order_id = '%s'", $table2, $order_id));
 				if ($sc_items) {
 					foreach($sc_items as $sc_item) {
+						$cid = $sc_item->cid;
 						$item_id = $sc_item->item_id;
 						$item_amount = $sc_item->item_amount;
 						// update inventory
-						update_item_inventory($item_id, $item_amount, false, 'Total order delete - oid = '.$order_id);
+						update_item_inventory($item_id, $item_amount, true, 'Total order delete - oid = '.$order_id);
+
+						// update shopping cart qty
+						$wpdb->query(sprintf("UPDATE %s SET item_amount = item_amount - %s WHERE cid = %s", $table2, $item_amount, $cid));
 
 						log_action($action, 'Order ID: '.$order_id.'; Item ID: '.$item_id.'; Qty: '.$item_amount.'; User ID: '.$current_user->ID);
 					}
 				}
 			}
 			$wpdb->query(sprintf("UPDATE %s SET level = '0', cancel_reason = '%s' WHERE oid = %s", $table, $cancel_reason, $order_id));
+			order_log_action($order_id, 'cancelled_level');
 		}
 	}
 
@@ -384,8 +349,15 @@
 							echo "</td>";
 							
 							echo "<td $style>";
-								if(diversity_check($order,0,'BE') === TRUE){
-									echo address_format(retrieve_delivery_addr('BE',$order),'d-addr');
+								if($order['d_addr'] == '1'){
+									$delivery_addr = retrieve_delivery_addr('BE',$order);
+									echo address_format($delivery_addr,'d-addr');
+									if(strlen($delivery_addr['email'])){
+										echo "<br/><a href='mailto:$delivery_addr[email]'>".__('Send email','wpShop')."</a>";
+									}
+									if(strlen($delivery_addr['telephone'])){
+										echo "<br/>".__('Tel:','wpShop'). $delivery_addr['telephone'];
+									}
 								}
 								echo "
 							</td>
@@ -403,16 +375,8 @@
 								else $return_link = '';
 								echo __('Track-ID:','wpShop').' '.$order['tracking_id'].$return_link;
 								
-								if($order['voucher'] !== 'non'){
-								
-									$table 	= is_dbtable_there('vouchers'); 
-									$qStr 	= "SELECT * FROM $table WHERE vcode = '$order[voucher]' LIMIT 0,1";
-									$res	= mysql_query($qStr);
-									$row 	= mysql_fetch_assoc($res);
-									
-									$vEnding = ($row['voption'] == 'P' ? '%' : ' '.$OPTION['wps_currency_code']);
-								
-									echo __('Voucher','wpShop').' '.$order['voucher'].' '.__('Value:','wpShop').$row['vamount'].$vEnding.' '.__('redeemed.','wpShop');
+								if(strlen($order['voucher']) && $order['voucher'] != 'non'){
+									echo '<br />Voucher: '.$order['voucher'].' Amount: $'.format_price($order['voucher_amount']);
 								}
 								if(digital_in_cart($order[who]) === TRUE){
 									echo "<a href = '?page=functions.php&section=orders&subsection=dlinks&token=$order[who]'>".__('Send D-Links','wpShop')."</a>$dl_sent_info";
@@ -2583,47 +2547,71 @@ function staff_allowed_ip_page() {
 <?php
 }
 
-// date created
-add_action('save_post', 'post_created_save_post');
-add_action('wp_insert_post', 'post_created_save_post');
-function post_created_save_post($post_id) {
-	global $wpdb;
-	if (defined('DOING_AUTOSAVE') && DOING_AUTOSAVE) {
-		return $post_id;
-	}
-	$post_created = $wpdb->get_var(sprintf("SELECT post_created FROM %sposts WHERE ID = %s", $wpdb->prefix, $post_id));
-	if (!$post_created) {
-		$post_created = current_time('mysql');
-		$update = array();
-		$update['post_created'] = $post_created;
-		$wpdb->update($wpdb->prefix."posts", $update, array('ID' => $post_id));
-	}
-	return $post_created;
-}
+// post admin dates
 add_action('post_submitbox_misc_actions', 'post_created_modified_date_metabox');
 function post_created_modified_date_metabox() {
 	global $post;
 	if ($post->post_type == 'post') {
-		$post_created = post_created_save_post($post->ID); ?>
+		$post_created = post_created_save_post($post->ID);
+		$post_quoted = get_post_meta($post->ID, '_post_quoted', true);
+		$post_received = get_post_meta($post->ID, '_post_received', true); ?>
 		<div class="post-created-date-val">
 			<span>Created on: <b><?php echo date("M j, Y @ H:i", strtotime($post_created)); ?></b></span>
 		</div>
 		<div class="post-modified-date-val">
 			<span>Modified on: <b><?php echo date("M j, Y @ H:i", strtotime($post->post_modified)); ?></b></span>
 		</div>
+		<?php if (strlen($post_quoted)) { ?>
+			<div class="post-modified-date-val">
+				<span>Quoted on: <b><?php echo date("M j, Y @ H:i", strtotime($post_quoted)); ?></b></span>
+			</div>
+		<?php } ?>
+		<?php if (strlen($post_received)) { ?>
+			<div class="post-modified-date-val">
+				<span>Received on: <b><?php echo date("M j, Y @ H:i", strtotime($post_received)); ?></b></span>
+			</div>
+		<?php } ?>
 	<?php
     }
 }
 
-add_action('init', 'orders_invoice_init');
-function orders_invoice_init() {
-	$oid = $_GET['oid'];
-	if ($_GET['invoice'] == 'regenerate' && $oid > 0) {
-		$table = is_dbtable_there('orders');
-		$res   = mysql_query("SELECT * FROM $table WHERE oid = '$oid' LIMIT 1");
-		$order = mysql_fetch_assoc($res);
-		$INVOICE = load_what_is_needed('invoice');
-		$INVOICE->make_pdf($order);
+add_action('init', 'backend_actions_init');
+function backend_actions_init() {
+	global $wpdb, $current_user;
+	// VOUCHER ACTIONS
+	if (isset($_GET['voucher_action'])) {
+		if ($_GET['voucher_action'] == 'create') {
+			if (strlen(trim($_POST['voucher_code']))) {
+				$voucher_expired = '';
+				if (strlen($_POST['voucher_expired_dd']) && strlen($_POST['voucher_expired_mm']) && strlen($_POST['voucher_expired_yy'])) {
+					$yy = $_POST['voucher_expired_yy'];
+					$mm = $_POST['voucher_expired_mm'];
+					$dd = $_POST['voucher_expired_dd'];
+					$hh = $_POST['voucher_expired_hh'];
+					$ii = $_POST['voucher_expired_hh'];
+					$ss = 00;
+					if (!$hh) { $hh = '00'; }
+					if (!$ii) { $ii = '00'; }
+					$voucher_expired = $yy.'-'.$mm.'-'.$dd.' '.$hh.':'.$ii.':'.$ss;
+				}
+				$insert = array();
+				$insert['code'] = trim($_POST['voucher_code']);
+				$insert['option'] = $_POST['voucher_option'];
+				$insert['amount'] = trim($_POST['voucher_amount']);
+				$insert['expired'] = $voucher_expired;
+				$insert['zone'] = $_POST['voucher_zone'];
+				$insert['created'] = current_time('mysql');
+				$insert['user_id'] = $current_user->ID;
+				$wpdb->insert($wpdb->prefix."wps_vouchers", $insert);
+			}
+		} else if ($_GET['voucher_action'] == 'remove') {
+			$vid = $_GET['vid'];
+			if ($vid) {
+				$wpdb->query(sprintf("DELETE FROM %swps_vouchers WHERE vid = %s", $wpdb->prefix, $vid));
+			}
+		}
+		wp_redirect('admin.php?page=functions.php&section=vouchers');
+		wp_exit();
 	}
 }
 ?>

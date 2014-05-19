@@ -139,6 +139,7 @@ $remove_charge = get_user_meta($user_ID, 'remove_charge', true);
 	<?php
 	} else {
 		_e("Currently You don't have any purchases.","wpShop");
+		echo '<br /><br />';
 	}
 	?>
 	<a class="btn-orange" href="<?php bloginfo('home'); ?>"><?php _e('Continue Shopping','wpShop');?></a>

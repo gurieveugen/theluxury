@@ -12,11 +12,11 @@ if (is_user_logged_in() && !in_array('profseller', $current_user->roles)) {
 $seller_posts = array();
 $seller_categories = get_terms('seller-category', 'hide_empty=0&orderby=id&order=asc');
 
-$submitted_items_description = apply_filters('the_content', $OPTION['wps_sellers_submitted_items_description']);
-$select_your_payout_description = apply_filters('the_content', $OPTION['wps_sellers_select_your_payout_description']);
-$awaiting_pickup_items_description = apply_filters('the_content', $OPTION['wps_sellers_awaiting_pickup_items_description']);
-$your_items_on_sale_description = apply_filters('the_content', $OPTION['wps_sellers_your_items_on_sale_description']);
-$sold_items_description = apply_filters('the_content', $OPTION['wps_sellers_sold_items_description']);
+$submitted_items_description = apply_filters('the_content', stripcslashes($OPTION['wps_sellers_submitted_items_description']));
+$select_your_payout_description = apply_filters('the_content', stripcslashes($OPTION['wps_sellers_select_your_payout_description']));
+$awaiting_pickup_items_description = apply_filters('the_content', stripcslashes($OPTION['wps_sellers_awaiting_pickup_items_description']));
+$your_items_on_sale_description = apply_filters('the_content', stripcslashes($OPTION['wps_sellers_your_items_on_sale_description']));
+$sold_items_description = apply_filters('the_content', stripcslashes($OPTION['wps_sellers_sold_items_description']));
 
 $scat = trim($_GET['scat']);
 if (strlen($scat)) {
@@ -30,24 +30,10 @@ if (strlen($scat)) {
 <?php if (have_posts()) : while (have_posts()) : the_post(); ?>
 
 <div class="user-info-row">
-	<div class="right">
-		<a href="<?php echo get_permalink($OPTION['wps_what_happens_next_page']); ?>">Find out what happens next</a>
+	<div class="right" style="margin:0px;">
+		<button class="btn-orange" onclick="window.location.href='<?php echo get_permalink($OPTION['wps_indvseller_add_item_page']); ?>';">Submit Another Item</button>
 	</div>
 	<h1 class="main-title"><?php echo $current_user->data->user_login; ?></h1>
-</div>
-<div class="add-item-steps">
-	<div class="step">
-		<a href="<?php echo get_permalink($OPTION['wps_indvseller_add_item_page']); ?>" class="ico">1</a>
-		<strong>Submit an item</strong>
-	</div>
-	<div class="step active">
-		<a href="<?php echo get_permalink($OPTION['wps_indvseller_my_items_page']); ?>" class="ico">2</a>
-		<strong>Manage items</strong>
-	</div>
-	<div class="step last">
-		<a href="<?php echo get_permalink($OPTION['wps_indvseller_my_info_page']); ?>" class="ico">3</a>
-		<strong>Payment</strong>
-	</div>
 </div>
 <?php if (isset($_GET['success'])) { ?>
 <div class="text-step">
@@ -58,14 +44,14 @@ if (strlen($scat)) {
 <div class="indvseller-my-items">
 	<div id="my-items" class="tab-content items-list">
 		<?php
-		$user_posts = $wpdb->get_results(sprintf("SELECT p.* FROM %sposts p LEFT JOIN %spostmeta pm ON pm.post_id = p.ID LEFT JOIN %sterm_relationships tr ON tr.object_id = p.ID WHERE p.post_type = 'post' AND p.post_author = %s AND p.post_status IN ('iseller_draft', 'iseller_noquote', 'iseller_pending', 'iseller_approved', 'iseller_pickup', 'iseller_received', 'publish') AND pm.meta_key = 'item_seller' AND pm.meta_value = 'i' %s GROUP BY p.ID ORDER BY p.ID DESC", $wpdb->prefix, $wpdb->prefix, $wpdb->prefix, $current_user->ID, $sWhere));
+		$user_posts = $wpdb->get_results(sprintf("SELECT p.* FROM %sposts p LEFT JOIN %spostmeta pm ON pm.post_id = p.ID LEFT JOIN %sterm_relationships tr ON tr.object_id = p.ID WHERE p.post_type = 'post' AND p.post_author = %s AND p.post_status IN ('iseller_draft', 'iseller_noquote', 'iseller_pending', 'iseller_approved', 'iseller_pickup', 'iseller_received', 'iseller_authed', 'publish') AND pm.meta_key = 'item_seller' AND pm.meta_value = 'i' %s GROUP BY p.ID ORDER BY p.ID DESC", $wpdb->prefix, $wpdb->prefix, $wpdb->prefix, $current_user->ID, $sWhere));
 		if ($user_posts) {
 			foreach($user_posts as $user_post) {
 				$pid = $user_post->ID;
 				$pstatus = $user_post->post_status;
 				$item_inventory = get_item_inventory($user_post->ID);
 				$item_suggested_price = get_post_meta($user_post->ID, 'item_suggested_price', true);
-				if ($pstatus == 'iseller_approved' || $pstatus == 'iseller_pickup' || $pstatus == 'iseller_received') { $pstatus = 'approved'; }
+				if ($pstatus == 'iseller_approved' || $pstatus == 'iseller_pickup' || $pstatus == 'iseller_received' || $pstatus == 'iseller_authed') { $pstatus = 'approved'; }
 				if ($pstatus == 'publish' && $item_inventory == 0) { $pstatus = 'sold'; }
 				if ($pstatus == 'publish' && $item_suggested_price == 'true') { $pstatus = 'iseller_pending'; }
 				if ($pstatus == 'iseller_noquote') { $pstatus = 'iseller_pending'; }
@@ -155,7 +141,7 @@ if (strlen($scat)) {
 								<div class="column" style="margin-right:10px;">
 									<p class="help">Your Payout</p>
 									<?php if ($no_quote) { ?>
-										<p><a href="#no-quotation" class="no-quotation">No Quotation</a></p>
+										<p><a href="#no-quotation" class="no-quotation">Unable to accept item</a></p>
 									<?php } else { ?>
 										<p><span class="item-your-quotation-price-<?php echo $spost->ID; ?>"><?php echo format_price($spost_tlc_quotation_price_high, true).' - '.format_price($spost_tlc_quotation_price_low, true); ?></span></p>
 									<?php } ?>
@@ -257,6 +243,7 @@ if (strlen($scat)) {
 							<div class="description">
 								<h4><a href="<?php echo get_permalink($spost->ID); ?>"><?php echo $spost->post_title; ?></a></h4>
 								<p>ID Number: <?php echo get_post_meta($spost->ID, 'ID_item', true); ?></p>
+								<?php if ($spost->inventory > 0) { ?>
 								<div class="price-row">
 									<div class="reduce-success" style="display:none;">Your payout has been successfully changed.</div>
 									<a href="#change-price" class="btn-orange change-price-btn" rel="<?php echo $spost->ID; ?>" style="right:28px;">Reduce Your Payout</a>
@@ -281,6 +268,7 @@ if (strlen($scat)) {
 										<span class="price"><strong>New Selling Price:</strong> <font class="nsprice"><?php echo format_price($spost_new_price, true); ?></font></span>
 									</div>
 								</div>
+								<?php } ?>
 							</div>
 						</div>
 						<?php } ?>

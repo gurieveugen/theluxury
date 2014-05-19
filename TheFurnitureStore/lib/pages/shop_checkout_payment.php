@@ -16,16 +16,32 @@ if($order_level == 2){
 	$go	= '3&dpchange=1';
 }
 
+$show_pickup = true; // show pickup delivery for UAE visitors
+$show_transfer = true;
+$geoplugin = new geoPlugin();
+$ip = $_SERVER['REMOTE_ADDR'];
+$geoplugin->locate($ip);
+if (strlen($geoplugin->countryName)) {
+	$ip_country = strtoupper(trim($geoplugin->countryName));
+	if (strlen($ip_country)) {
+		if ($ip_country == 'UNITED STATES') {
+			$show_transfer = false;
+		}
+		if ($ip_country != 'UNITED ARAB EMIRATES') {
+			$show_pickup = false;
+		}
+	}
+}
+
 $CART = show_cart();
 $cart_items = $CART["content"];
-$show_pickup = true; // show pickup delivery
-foreach($cart_items as $cart_item) {
+/*foreach($cart_items as $cart_item) {
 	$cidata = explode("|", $cart_item);
 	$pid = $cidata[8];
 	if (in_category($OPTION['wps_women_watches_category'], $pid) || in_category($OPTION['wps_men_watches_category'], $pid)) {
 		$show_pickup = false;
 	}
-}
+}*/
 
 if ($_SESSION['layaway_order'] > 0) { $dstyle = ' style="display:none;"'; }
 
@@ -71,18 +87,6 @@ wps_shop_process_steps(2); ?>
 							echo "<p id='cod_error e_message'><span class='error' style='padding-left:20px;'><b>".$LANG['cod_available']."</b></span></p>";		
 							unset($_SESSION['cod_not_available']);
 						}
-						$show_transfer = true;
-						$geoplugin = new geoPlugin();
-						$ip = $_SERVER['REMOTE_ADDR'];
-						$geoplugin->locate($ip);
-						if (strlen($geoplugin->countryName)) {
-							$ip_country = strtoupper(trim($geoplugin->countryName));
-							if (strlen($ip_country)) {
-								if ($ip_country == 'UNITED STATES') {
-									$show_transfer = false;
-								}
-							}
-						}
 						$payment_options = get_payment_options($dpch); 
 						foreach($payment_options as $poval => $podata) {
 							if ($poval == 'transfer' && !$show_transfer) { continue; }
@@ -102,9 +106,9 @@ wps_shop_process_steps(2); ?>
 					<div class="voucher_wrap"<?php echo $dstyle; ?>>
 						<h4><?php echo $LANG['enter_voucher']; ?></h4>
 						<label for="vid"><?php echo __('Voucher / Discount Code: ','wpShop'); ?></label>
-						<input type="text" name="v_no" id="vid" maxlength="50" onkeyup="checkVoucher('<?php echo is_in_subfolder(); ?>','<?php echo get_protocol(); ?>','<?php echo $custid; ?>');" 
-						onblur="checkVoucher('<?php echo is_in_subfolder(); ?>','<?php echo get_protocol(); ?>','<?php echo $custid; ?>');" />
-						<div id="txtHint" style="margin-top:12px;"></div>
+						<input type="text" name="voucher_code" id="voucher-code" maxlength="100" onkeyup="check_voucher_code();" 
+						onblur="check_voucher_code();" />
+						<div id="voucher-code-result" style="margin-top:12px;"></div>
 					</div>
 				<?php
 				}
@@ -182,10 +186,10 @@ wps_shop_process_steps(2); ?>
 							</td>
 						</tr>
 					</table>
-				</div>
-				<div class="button-right">
-					<input class="shop-button" type="submit" name="step1" value="Proceed" />
-				</div>
+				</div><br />
+			</div>
+			<div class="button-right">
+				<input class="btn-orange" type="submit" name="step1" value="NEXT" />
 			</div>
 			<input type="hidden" name="order_step" value="1">
 		</form>
@@ -194,14 +198,16 @@ wps_shop_process_steps(2); ?>
 <script language="JavaScript"> 
 	function changePaymentAvailability(deliveryMethod) {  
 		if (deliveryMethod == 'pickup') {
-			if (document.getElementById('pOptcod').checked) {  
-				document.getElementById('pOptcash').checked = true;
+			if (jQuery('#pOptcod').is(':checked')) {
+				jQuery('#pOptcod').removeAttr('checked');
+				jQuery('#pOptcash').attr('checked', 'checked');
 			}
 			jQuery('#cod').hide();
 			jQuery('#cash').show();
 		 } else {
-			if (document.getElementById('pOptcash').checked) {
-				document.getElementById('pOptcod').checked = true;
+			if (jQuery('#pOptcash').is(':checked')) {
+				jQuery('#pOptcash').removeAttr('checked');
+				jQuery('#pOptcod').attr('checked', 'checked');
 			}
 			jQuery('#cash').hide();
 			jQuery('#cod').show();

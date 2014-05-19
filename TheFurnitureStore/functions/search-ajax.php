@@ -39,10 +39,10 @@ function search_products_ajax()
 	unset($_SESSION["last_args"]['tax_query']['relation']);
 	unset($_SESSION["last_args"]['post_status']);
 
-	$json['loop']       = load_template_part('loop', 'products');
-	$json['args']       = rawurlencode(http_build_query($_SESSION["last_args"]));
-	$json['categories'] = (isset($_SESSION['all_display_categories'])) ? $_SESSION['all_display_categories'] : '';
-
+	$json['loop']           = load_template_part('loop', 'products');
+	$json['args']           = rawurlencode(http_build_query($_SESSION["last_args"]));
+	$json['categories']     = (isset($_SESSION['all_display_categories'])) ? $_SESSION['all_display_categories'] : '';
+	$json['hidden_terms'] = (isset($_SESSION['hidden_terms'])) ? $_SESSION['hidden_terms'] : '';	
 	echo json_encode($json);
 
 	die();
@@ -157,4 +157,29 @@ function load_template_part($template_name, $part_name = null)
     $var = ob_get_contents();
     ob_end_clean();
     return $var;
+}
+
+/**
+ * Set Cache
+ * @param string  $key    
+ * @param string  $val    
+ * @param integer $time   
+ * @param string  $prefix 
+ */
+function setCache($key, $val, $time = 3600, $prefix = 'cheched-')
+{
+	set_transient($prefix.$key, $val, $time);
+}
+
+/**
+ * Get Cache
+ * @param  string $key    
+ * @param  string $prefix 
+ * @return mixed
+ */
+function getCache($key, $prefix = 'cheched-')
+{		
+	$cached   = get_transient($prefix.$key);
+	if (false !== $cached) return $cached;		
+	return false;
 }

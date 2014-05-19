@@ -3473,6 +3473,7 @@ form.order_now .shopform_btn,form.inquire_now .shopform_btn{
 	background:url("images/button_sprits.png") no-repeat scroll -2px -148px transparent;
 	float:left;
 }
+
 a.sitelock{
 	display:inline-block;
 	width:99px;
@@ -4329,7 +4330,19 @@ a.active,
 .product-sidebar .buttons input{
 	float: none;
 }
-.btn-sold-out,
+.btn-pink{
+	border: none;
+	background: #d91d78;
+	display: block;
+	padding: 0 10px;
+	height: 28px;
+	font: bold 21px/28px Cabin, Helvetica, sans-serif;
+	text-transform: uppercase;
+	text-align: center;
+	color: #fff;
+}
+
+.btn-pink,
 .btn-installments,
 .btn-installments-avail,
 .btn-installments-unavail,
@@ -9950,6 +9963,11 @@ table.sellers-summary-info td p{
 .disabled{
 	color: #cccccc;
 }
+
+.disabled-check{	
+	background: url(images/bg-f-check.png) no-repeat scroll 0 -22px rgba(0, 0, 0, 0) !important;
+}
+
 .footer-xmlsitemap-link{
 	font-size:12px;
 	position:absolute;
@@ -9958,7 +9976,7 @@ table.sellers-summary-info td p{
 }
 
 .disabled-jqTransformCheckbox{
-	background: url("images/bg-f-check.png") no-repeat scroll 0 -22px rgba(0, 0, 0, 0) !important;
+	background: url("images/check_disabled.png") no-repeat scroll 0 0px rgba(0, 0, 0, 0) !important;
 }
 
 .search-filter-form-loading{
@@ -10353,7 +10371,7 @@ table.sellers-summary-info td p{
 	line-height: 18px;
 }
 .text-step{
-	color: #a5a5a5;
+	color: #AF7B0F;
 	font-size: 14px;
 	line-height: 17px;
 	text-align: center;

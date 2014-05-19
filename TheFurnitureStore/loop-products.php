@@ -176,16 +176,9 @@ if($_SESSION['custom_args'])
 	$_SESSION['custom_args'] = NULL;
 }
 
-if(!isset($_SESSION['show_latest_products']))
-{
-	add_filter( 'posts_where', 'filter_where' );	
-}
-else
-{
-	unset($_SESSION['show_latest_products']);
-}
-
 query_posts($args);
+
+global $wp_taxonomies;
 
 $_SESSION["last_args"] = $args;
 $_SESSION["old_args"]  = $args;
@@ -197,16 +190,19 @@ if(!$_SESSION["ajax"])
 }
 
 
-$_SESSION['all_display_categories'] = get_all_categories_from_posts($args);
+$filter_cats                        = getFilterCats();
+$_SESSION['all_display_categories'] = getEachBlock($filter_cats, $args);
+$_SESSION['hidden_terms']           = getHidedTerms($args);
 
 
 // =========================================================
 // Save default filters
 // =========================================================
-
 $queried_object     = get_queried_object();
 $json['taxonomy']   = $queried_object->taxonomy;
+$json['term_id']    = $queried_object->term_id;
 $json['categories'] = (isset($_SESSION['all_display_categories'])) ? $_SESSION['all_display_categories'] : '{}';
+	
 ?>
 <script>
 	var default_categories = <?php echo json_encode($json); ?>;
@@ -454,26 +450,23 @@ else
 <?php 
 wp_reset_query();
 
-
-
-
-
 function get_all_categories_from_posts($args)
-{
+{	
 	$args['posts_per_page'] = 1000;
-	$args['fields']         = 'ids';	
-	$ids                    = get_posts($args);		
+	$args['fields']         = 'ids';						
+	$ids                    = get_posts($args);			
 	$all_categories         = array();
-	$taxonomies             = array('brand', 'price', 'colour', 'selection', 'category', 'clothes-size', 'size', 'ring-size');	
-	$categories             = wp_get_object_terms($ids, $taxonomies);	
-			
-	foreach($categories as &$value)
-	{
-		$all_categories[$value->taxonomy][$value->term_id]['name'] = $value->name;
-		$all_categories[$value->taxonomy][$value->term_id]['slug'] = $value->slug;
-		if($value->parent != 0)
+	$taxonomies             = array('brand', 'price', 'colour', 'selection', 'category', 'clothes-size', 'size', 'ring-size');			
+	$terms                  = _wp_get_object_terms($ids, $taxonomies, array('fields' => 'ids'));		
+	
+	foreach($terms as &$value)
+	{		
+		$term = get_term_by_id_only($value);						
+		$all_categories[$term->taxonomy][$term->term_id]['name'] = $term->name;
+		$all_categories[$term->taxonomy][$term->term_id]['slug'] = $term->slug;
+		if($term->parent != 0)
 		{
-			$arr = getParents($value->parent, $value->taxonomy);			
+			$arr = getParents($term->parent, $term->taxonomy);			
 			foreach ($arr as $key2 => $value2) 
 			{
 				$all_categories[$value2->taxonomy][$value2->term_id]['name'] = $value2->name;
@@ -481,7 +474,55 @@ function get_all_categories_from_posts($args)
 			}
 		}
 	}
+
 	return $all_categories;
+}
+
+function getHidedTerms($args)
+{
+	$selected_terms = getSelectedTerms();
+
+	foreach ($_SESSION['all_display_categories'] as $key => $value) 
+	{
+		if(is_array($value))
+		{
+			foreach ($value as $key2 => $value2) 
+			{
+				$arr[$key][] = $value2['slug'];
+			}	
+		}
+		
+	}
+
+	if($selected_terms)
+	{
+		foreach ($selected_terms as $key => $value) 
+		{
+			foreach ($value as $key2 => $value2) 
+			{
+				if(!isset($arr[$key])) $hidden[$key][$value2->term_id] = $value2->slug;
+				else if(!in_array($value2->slug, $arr[$key])) $hidden[$key][$value2->term_id] = $value2->slug;
+			}
+		}
+	}
+	else return null;
+	
+
+	return $hidden;
+}
+
+function getSelectedTerms()
+{
+	$arr = null;
+	if(is_array($_POST['all']))
+	{
+		foreach ($_POST['all'] as $key => $value) 
+		{
+			$k = str_replace('filter-', '', $value[0]);			
+			$arr[$k][] = get_term_by('slug', $value[1], $k);
+		}	
+	}
+	return $arr;
 }
 
 function getParents($id, $tax)
@@ -495,10 +536,225 @@ function getParents($id, $tax)
 
 function filter_where( $where = '' ) 
 {
-    // where post_date > today
+ 
     $week  = 7;
 	$today = date('Y-m-d');
 
     $where .= " AND wp_posts.post_date <= '" . date('Y-m-d',strtotime($today) - (24*3600*$week)) . "'"; 
     return $where;
+}
+
+function getFilterCats()
+{
+	$arr = array();
+	if(isset($_POST['all']) && is_array($_POST['all']))
+	{
+		foreach ($_POST['all'] as $key => $value) 
+		{
+			$arr[str_replace('filter-', '', $value[0])][] = $value[1];
+		}
+	}
+	return $arr;
+}
+
+function getFilterTaxQuery($arr)
+{	
+	if(is_array($arr))
+	{
+		foreach ($arr as $key => &$value) 
+		{
+			$tax_query[] = array(
+				'taxonomy' => $key,
+				'field'    => 'slug',
+				'terms'    => $value);			
+		}	
+		if(count($tax_query)) $tax_query['relation'] = 'AND';
+	}
+	return $tax_query;
+}
+
+function getEachBlock($arr, $args)
+{
+	
+	$all  = null;
+	$taxs = array('price', 'colour', 'brand', 'category', 'selection');
+
+	foreach ($taxs as $tax) 
+	{
+		$new_arr = $arr;
+		unset($new_arr[$tax]);
+
+
+		$args['tax_query'] = getFilterTaxQuery($new_arr);		
+		$queried           = get_all_categories_from_posts($args);		
+		$all[$tax]         = $queried[$tax];
+	}
+	
+	return $all;
+}
+
+/**
+ * Get term just by id only
+ */
+function get_term_by_id_only($term, $output = OBJECT, $filter = 'raw') 
+{
+    global $wpdb;
+    $null = null;
+
+    if(empty($term)) 
+    {
+        $error = new WP_Error('invalid_term', __('Empty Term'));
+        return $error;
+    }
+
+    if (is_object($term) && empty($term->filter)) 
+    {
+        wp_cache_add($term->term_id, $term, 'my_custom_queries');
+        $_term = $term;
+    } 
+    else 
+    {
+        if (is_object($term)) $term = $term->term_id;
+        $term = (int) $term;
+        if (!$_term = wp_cache_get($term, 'my_custom_queries')) 
+        {
+            $_term = $wpdb->get_row( $wpdb->prepare( "SELECT t.*, tt.* FROM $wpdb->terms AS t INNER JOIN $wpdb->term_taxonomy AS tt ON t.term_id = tt.term_id WHERE t.term_id = %s LIMIT 1", $term) );
+            if(!$_term) return $null;
+            wp_cache_add($term, $_term, 'my_custom_queries');
+        }
+    }
+
+    if ( $output == OBJECT ) 
+    {
+        return $_term;
+    } 
+    else if ($output == ARRAY_A) 
+	{
+        $__term = get_object_vars($_term);
+        return $__term;
+    } 
+    else if ( $output == ARRAY_N ) 
+    {
+        $__term = array_values(get_object_vars($_term));
+        return $__term;
+    } 
+    else 
+    {
+        return $_term;
+    }
+}
+
+/**
+ * OPTIMIZATION default wp function wp_get_object_terms
+ * Just add DISTINCT int ot MYSQL Query 
+ */
+function _wp_get_object_terms($object_ids, $taxonomies, $args = array()) 
+{
+	global $wpdb;
+
+	if ( empty( $object_ids ) || empty( $taxonomies ) )
+		return array();
+
+	if ( !is_array($taxonomies) )
+		$taxonomies = array($taxonomies);
+
+	foreach ( (array) $taxonomies as $taxonomy ) {
+		if ( ! taxonomy_exists($taxonomy) )
+			return new WP_Error('invalid_taxonomy', __('Invalid taxonomy'));
+	}
+
+	if ( !is_array($object_ids) )
+		$object_ids = array($object_ids);
+	$object_ids = array_map('intval', $object_ids);
+
+	$defaults = array('orderby' => 'name', 'order' => 'ASC', 'fields' => 'all');
+	$args = wp_parse_args( $args, $defaults );
+
+	$terms = array();
+	if ( count($taxonomies) > 1 ) {
+		foreach ( $taxonomies as $index => $taxonomy ) {
+			$t = get_taxonomy($taxonomy);
+			if ( isset($t->args) && is_array($t->args) && $args != array_merge($args, $t->args) ) {
+				unset($taxonomies[$index]);
+				$terms = array_merge($terms, wp_get_object_terms($object_ids, $taxonomy, array_merge($args, $t->args)));
+			}
+		}
+	} else {
+		$t = get_taxonomy($taxonomies[0]);
+		if ( isset($t->args) && is_array($t->args) )
+			$args = array_merge($args, $t->args);
+	}
+
+	extract($args, EXTR_SKIP);
+
+	if ( 'count' == $orderby )
+		$orderby = 'tt.count';
+	else if ( 'name' == $orderby )
+		$orderby = 't.name';
+	else if ( 'slug' == $orderby )
+		$orderby = 't.slug';
+	else if ( 'term_group' == $orderby )
+		$orderby = 't.term_group';
+	else if ( 'term_order' == $orderby )
+		$orderby = 'tr.term_order';
+	else if ( 'none' == $orderby ) {
+		$orderby = '';
+		$order = '';
+	} else {
+		$orderby = 't.term_id';
+	}
+
+	// tt_ids queries can only be none or tr.term_taxonomy_id
+	if ( ('tt_ids' == $fields) && !empty($orderby) )
+		$orderby = 'tr.term_taxonomy_id';
+
+	if ( !empty($orderby) )
+		$orderby = "ORDER BY $orderby";
+
+	$order = strtoupper( $order );
+	if ( '' !== $order && ! in_array( $order, array( 'ASC', 'DESC' ) ) )
+		$order = 'ASC';
+
+	$taxonomies = "'" . implode("', '", $taxonomies) . "'";
+	$object_ids = implode(', ', $object_ids);
+
+	$select_this = '';
+	if ( 'all' == $fields )
+		$select_this = 't.*, tt.*';
+	else if ( 'ids' == $fields )
+		$select_this = 't.term_id';
+	else if ( 'names' == $fields )
+		$select_this = 't.name';
+	else if ( 'slugs' == $fields )
+		$select_this = 't.slug';
+	else if ( 'all_with_object_id' == $fields )
+		$select_this = 't.*, tt.*, tr.object_id';
+
+	$query = "SELECT DISTINCT $select_this FROM $wpdb->terms AS t INNER JOIN $wpdb->term_taxonomy AS tt ON tt.term_id = t.term_id INNER JOIN $wpdb->term_relationships AS tr ON tr.term_taxonomy_id = tt.term_taxonomy_id WHERE tt.taxonomy IN ($taxonomies) AND tr.object_id IN ($object_ids) $orderby $order";
+
+	if ( 'all' == $fields || 'all_with_object_id' == $fields ) {
+		$_terms = $wpdb->get_results( $query );
+		foreach ( $_terms as $key => $term ) {
+			$_terms[$key] = sanitize_term( $term, $taxonomy, 'raw' );
+		}
+		$terms = array_merge( $terms, $_terms );
+		update_term_cache( $terms );
+	} else if ( 'ids' == $fields || 'names' == $fields || 'slugs' == $fields ) {
+		$_terms = $wpdb->get_col( $query );
+		$_field = ( 'ids' == $fields ) ? 'term_id' : 'name';
+		foreach ( $_terms as $key => $term ) {
+			$_terms[$key] = sanitize_term_field( $_field, $term, $term, $taxonomy, 'raw' );
+		}
+		$terms = array_merge( $terms, $_terms );
+	} else if ( 'tt_ids' == $fields ) {
+		$terms = $wpdb->get_col("SELECT tr.term_taxonomy_id FROM $wpdb->term_relationships AS tr INNER JOIN $wpdb->term_taxonomy AS tt ON tr.term_taxonomy_id = tt.term_taxonomy_id WHERE tr.object_id IN ($object_ids) AND tt.taxonomy IN ($taxonomies) $orderby $order");
+		foreach ( $terms as $key => $tt_id ) {
+			$terms[$key] = sanitize_term_field( 'term_taxonomy_id', $tt_id, 0, $taxonomy, 'raw' ); // 0 should be the term id, however is not needed when using raw context.
+		}
+	}
+
+	if ( ! $terms )
+		$terms = array();
+
+	return apply_filters('wp_get_object_terms', $terms, $object_ids, $taxonomies, $args);
 }

@@ -675,6 +675,15 @@ jQuery(document).ready(function(){
 		show_custom_popup('what-you-can-sell');
 		return false;
 	});
+	jQuery('#what-you-can-sell .categories-block .item').click(function(){
+		var ckey = jQuery(this).attr('href').replace('#', '');
+		var lkey = jQuery('#what-you-can-sell .categories-block .active').attr('href').replace('#', '');
+		jQuery('.brands-'+lkey).hide();
+		jQuery('.brands-'+ckey).fadeIn();
+		jQuery('#what-you-can-sell .categories-block .active').removeClass('active');
+		jQuery(this).addClass('active');
+		return false;
+	});
 	jQuery('.window-mask, .popup-box .close').click(function(){
 		jQuery('.window-mask').fadeOut();
 		jQuery('.popup-box').fadeOut();
@@ -916,13 +925,23 @@ function indivseller_presubmit_form() {
 			var item_brand = jQuery('#item-form-'+f+' .item-brand select').val();
 			var item_condition = jQuery('#item-form-'+f+' .item-condition input:checked').val();
 			var item_photos = jQuery('#item-form-'+f+' .item-photos .uploaded-pics li').size();
+			var iphotos = '';
+			if (item_photos > 0) {
+				jQuery('#item-form-'+f+' .item-photos .uploaded-pics li img').each(function(){
+					var irel = jQuery(this).attr('rel');
+					if (irel != '') {
+						if (iphotos != '') { iphotos = iphotos + ';'; }
+						iphotos = iphotos + irel;
+					}
+				});
+			}
 
 			if (item_condition == undefined) { item_condition = ''; }
 			if (item_category == '') { ferrors += ';category'; }
 			if (item_name == '') { ferrors += ';name'; }
 			if (item_brand == '') { ferrors += ';brand'; }
 			if (item_condition == '') { ferrors += ';condition'; }
-			if (item_photos == 0) { ferrors += ';photos'; }
+			if (iphotos == '') { ferrors += ';photos'; }
 			if (ferrors != '') {
 				gloaberror = true;
 				var ferrs = ferrors.split(';');
@@ -930,11 +949,6 @@ function indivseller_presubmit_form() {
 					jQuery('#item-form-'+f+' .item-'+ferrs[i]+' label').addClass('error');
 				}
 			} else {
-				var iphotos = '';
-				jQuery('#item-form-'+f+' .item-photos .uploaded-pics li img').each(function(){
-					if (iphotos != '') { iphotos = iphotos + ';'; }
-					iphotos = iphotos + jQuery(this).attr('rel');
-				});
 				jQuery('#item-form-'+f+' .item-photos .ipictures').val(iphotos);
 			}
 		}
@@ -949,7 +963,14 @@ function indivseller_presubmit_form() {
 		if (item_user_pass == '') { errors += ';user-pass'; }
 	}
 	if (jQuery('#item-user-phone').size() > 0) {
-		if (item_user_phone == '') { errors += ';user-phone'; }
+		if (item_user_phone == '') {
+			errors += ';user-phone';
+		} else {
+			var intRegex = /^\d+$/;
+			if (!intRegex.test(item_user_phone)) {
+				errors += ';user-phone';
+			}
+		}
 	}
 	if (jQuery('#item-user').size() > 0) {
 		if (item_user == '') { errors += ';user'; }
@@ -1225,7 +1246,8 @@ function swf_upload_init(n) {
 	.bind('fileQueued', function(event, file){
 		var unmb = jQuery(this).find('.uploaded-pics li').size();
 		if (unmb >= 5) {
-			alert('Limit of pictures is 5.');
+			jQuery(this).find('.max-upload-error').animate({height:'show'}, 300);
+			//alert('Please upload a maximum of 5 pictures.');
 			return false;
 		}
 		var listitem = '<li id="'+file.id+'" >'+
@@ -1238,7 +1260,9 @@ function swf_upload_init(n) {
 		});
 		jQuery(this).swfupload('startUpload');
 	})
-	.bind('fileQueueError', function(event, file, errorCode, message){})
+	.bind('fileQueueError', function(event, file, errorCode, message){
+		alert('File `'+file.name+'` was not uploaded because it is too large. File size must be below 2048 Kb.');
+	})
 	.bind('fileDialogComplete', function(event, numFilesSelected, numFilesQueued){})
 	.bind('uploadStart', function(event, file){})
 	.bind('uploadProgress', function(event, file, bytesLoaded){

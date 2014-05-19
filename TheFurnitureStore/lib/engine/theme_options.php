@@ -378,9 +378,9 @@ array ( 	"name" 	=> __('Design','wpShop'),
 								"type" 	=> "checkbox",
 								"std" 	=> "false"),
 
-					array(  	"name" 	=> __('Alert Categories','wpShop'),
+					array(  	"name" 	=> __('Excluded Categories','wpShop'),
 								"desc" 	=> __('Categories list shown on create alert form.','wpShop'),
-								"id" 	=> $CONFIG_WPS['shortname']."_alerts_categories",
+								"id" 	=> $CONFIG_WPS['shortname']."_alerts_excluded_categories",
 								"vals"  => $shop_wp_cats,
 								"type" 	=> "multi-categories",
 								"std" 	=> "false"),
@@ -2314,6 +2314,19 @@ array ( 	"name" 	=> __('Shop','wpShop'),
 				array(    	"type" 	=> "close"),
 			array(   	"type" => "close"),			
 
+			// What You Can Sell popup
+			array ( 	"name" 	=> __('What You Can Sell popup','wpShop'),
+						"type" 	=> "title"),
+				array(    	"type" 	=> "open"),
+
+					array(  	"name" 	=> __('Brands','wpShop'),
+								"id" 	=> $CONFIG_WPS['shortname']."_wycsp_brands",
+								"std" 	=> "",
+								"type" 	=> "wycsp_brands"),					
+
+				array(    	"type" 	=> "close"),
+			array(   	"type" => "close"),			
+
 
 		array (		"type" 	=> "fieldset_end"),	
 //###############################################################################################################
@@ -3081,65 +3094,131 @@ array ( 	"name" 	=> __('Shop','wpShop'),
 								"type" 	=> "multi-checkbox",
 								"std" 	=> "false"),
 
-				
 					array(  	"name" 	=> __('BHD Bahrani Dinar','wpShop'),
-								"desc" 	=> __('Enter exchange rate - base currency is '.get_option('wps_currency_code').'','wpShop')."</b>",
+								"desc" 	=> __('Enter exchange rate - base currency is '.get_option('wps_currency_code').'','wpShop'),
 								"id" 	=> $CONFIG_WPS['shortname']."_exr_bhd",
 								"type" 	=> "text",
 								"std" 	=> ""),
 								
 								
 					array(  	"name" 	=> __('EGP Egyptian Pound','wpShop'),
-								"desc" 	=> __('Enter exchange rate - base currency is '.get_option('wps_currency_code').'','wpShop')."</b>",
+								"desc" 	=> __('Enter exchange rate - base currency is '.get_option('wps_currency_code').'','wpShop'),
 								"id" 	=> $CONFIG_WPS['shortname']."_exr_egp",
 								"type" 	=> "text",
 								"std" 	=> ""),
 			
 					array(  	"name" 	=> __('Jordanian Dinar','wpShop'),
-								"desc" 	=> __('Enter exchange rate - base currency is '.get_option('wps_currency_code').'','wpShop')."</b>",
+								"desc" 	=> __('Enter exchange rate - base currency is '.get_option('wps_currency_code').'','wpShop'),
 								"id" 	=> $CONFIG_WPS['shortname']."_exr_jod",
 								"type" 	=> "text",
 								"std" 	=> ""),
 
 					array(  	"name" 	=> __('Kuwati Dinar','wpShop'),
-								"desc" 	=> __('Enter exchange rate - base currency is '.get_option('wps_currency_code').'','wpShop')."</b>",
+								"desc" 	=> __('Enter exchange rate - base currency is '.get_option('wps_currency_code').'','wpShop'),
 								"id" 	=> $CONFIG_WPS['shortname']."_exr_kwd",
 								"type" 	=> "text",
 								"std" 	=> ""),
 								
 					array(  	"name" 	=> __('Lebanese Pound','wpShop'),
-								"desc" 	=> __('Enter exchange rate - base currency is '.get_option('wps_currency_code').'','wpShop')."</b>",
+								"desc" 	=> __('Enter exchange rate - base currency is '.get_option('wps_currency_code').'','wpShop'),
 								"id" 	=> $CONFIG_WPS['shortname']."_exr_lbp",
 								"type" 	=> "text",
 								"std" 	=> ""),
 								
 					array(  	"name" 	=> __('Qatari Riyal','wpShop'),
-								"desc" 	=> __('Enter exchange rate - base currency is '.get_option('wps_currency_code').'','wpShop')."</b>",
+								"desc" 	=> __('Enter exchange rate - base currency is '.get_option('wps_currency_code').'','wpShop'),
 								"id" 	=> $CONFIG_WPS['shortname']."_exr_qar",
 								"type" 	=> "text",
 								"std" 	=> ""),
 			
 					array(  	"name" 	=> __('Saudi Riyal','wpShop'),
-								"desc" 	=> __('Enter exchange rate - base currency is '.get_option('wps_currency_code').'','wpShop')."</b>",
+								"desc" 	=> __('Enter exchange rate - base currency is '.get_option('wps_currency_code').'','wpShop'),
 								"id" 	=> $CONFIG_WPS['shortname']."_exr_sar",
 								"type" 	=> "text",
 								"std" 	=> ""),
 
 					array(  	"name" 	=> __('Syrian Pound','wpShop'),
-								"desc" 	=> __('Enter exchange rate - base currency is '.get_option('wps_currency_code').'','wpShop')."</b>",
+								"desc" 	=> __('Enter exchange rate - base currency is '.get_option('wps_currency_code').'','wpShop'),
 								"id" 	=> $CONFIG_WPS['shortname']."_exr_syp",
 								"type" 	=> "text",
 								"std" 	=> ""),
 
 					array(  	"name" 	=> __('UAE Dirham','wpShop'),
-								"desc" 	=> __('Enter exchange rate - base currency is '.get_option('wps_currency_code').'','wpShop')."</b>",
+								"desc" 	=> __('Enter exchange rate - base currency is '.get_option('wps_currency_code').'','wpShop'),
 								"id" 	=> $CONFIG_WPS['shortname']."_exr_aed",
 								"type" 	=> "text",
 								"std" 	=> ""),
 
 					array(  	"name" 	=> __('Omani Rial','wpShop'),
-								"desc" 	=> __('Enter exchange rate - base currency is '.get_option('wps_currency_code').'','wpShop')."</b>",
+								"desc" 	=> __('Enter exchange rate - base currency is '.get_option('wps_currency_code').'','wpShop'),
 								"id" 	=> $CONFIG_WPS['shortname']."_exr_omr",
+								"type" 	=> "text",
+								"std" 	=> ""),
+					// XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+					array(  	"name" 	=> __('USD - Location','wpShop'),
+								"desc" 	=> __('Enter location of this currency','wpShop'),
+								"id" 	=> $CONFIG_WPS['shortname']."_exr_loc_usd",
+								"type" 	=> "text",
+								"std" 	=> ""),
+
+					array(  	"name" 	=> __('BHD Bahrani Dinar - Location','wpShop'),
+								"desc" 	=> __('Enter location of this currency','wpShop'),
+								"id" 	=> $CONFIG_WPS['shortname']."_exr_loc_bhd",
+								"type" 	=> "text",
+								"std" 	=> ""),
+								
+								
+					array(  	"name" 	=> __('EGP Egyptian Pound - Location','wpShop'),
+								"desc" 	=> __('Enter location of this currency','wpShop'),
+								"id" 	=> $CONFIG_WPS['shortname']."_exr_loc_egp",
+								"type" 	=> "text",
+								"std" 	=> ""),
+			
+					array(  	"name" 	=> __('Jordanian Dinar - Location','wpShop'),
+								"desc" 	=> __('Enter location of this currency','wpShop'),
+								"id" 	=> $CONFIG_WPS['shortname']."_exr_loc_jod",
+								"type" 	=> "text",
+								"std" 	=> ""),
+
+					array(  	"name" 	=> __('Kuwati Dinar - Location','wpShop'),
+								"desc" 	=> __('Enter location of this currency','wpShop'),
+								"id" 	=> $CONFIG_WPS['shortname']."_exr_loc_kwd",
+								"type" 	=> "text",
+								"std" 	=> ""),
+								
+					array(  	"name" 	=> __('Lebanese Pound - Location','wpShop'),
+								"desc" 	=> __('Enter location of this currency','wpShop'),
+								"id" 	=> $CONFIG_WPS['shortname']."_exr_loc_lbp",
+								"type" 	=> "text",
+								"std" 	=> ""),
+								
+					array(  	"name" 	=> __('Qatari Riyal - Location','wpShop'),
+								"desc" 	=> __('Enter location of this currency','wpShop'),
+								"id" 	=> $CONFIG_WPS['shortname']."_exr_loc_qar",
+								"type" 	=> "text",
+								"std" 	=> ""),
+			
+					array(  	"name" 	=> __('Saudi Riyal - Location','wpShop'),
+								"desc" 	=> __('Enter location of this currency','wpShop'),
+								"id" 	=> $CONFIG_WPS['shortname']."_exr_loc_sar",
+								"type" 	=> "text",
+								"std" 	=> ""),
+
+					array(  	"name" 	=> __('Syrian Pound - Location','wpShop'),
+								"desc" 	=> __('Enter location of this currency','wpShop'),
+								"id" 	=> $CONFIG_WPS['shortname']."_exr_loc_syp",
+								"type" 	=> "text",
+								"std" 	=> ""),
+
+					array(  	"name" 	=> __('UAE Dirham - Location','wpShop'),
+								"desc" 	=> __('Enter location of this currency','wpShop'),
+								"id" 	=> $CONFIG_WPS['shortname']."_exr_loc_aed",
+								"type" 	=> "text",
+								"std" 	=> ""),
+
+					array(  	"name" 	=> __('Omani Rial - Location','wpShop'),
+								"desc" 	=> __('Enter location of this currency','wpShop'),
+								"id" 	=> $CONFIG_WPS['shortname']."_exr_loc_omr",
 								"type" 	=> "text",
 								"std" 	=> ""),
 
@@ -3835,6 +3914,13 @@ array ( 	"name" 	=> __('Shop','wpShop'),
 								"vals" 	=> $wp_full_pages,
 								"std" 	=> "Select a Page"),
 
+					array(    	"name" 	=> __('What Happens Next page','wpShop'),
+								"desc" 	=> '',
+								"id" 	=> $CONFIG_WPS['shortname']."_what_happens_next_page",
+								"type" 	=> "pages",
+								"vals" 	=> $wp_full_pages,
+								"std" 	=> "Select a Page"),
+
 				array(   	"type" => "close"),
 			array(   	"type" => "close"),
 
@@ -4471,239 +4557,148 @@ function NWS_theme_admin()
 			echo  make_section_footer();
 		break;
 		case 'vouchers':
-			echo make_section_header('vouchers');
-				
-			// subactions 
-			if(isset($_GET['action'])){
-				global $OPTION;									
-				$VOUCHER = load_what_is_needed('voucher');		
-			}
-			switch($_GET['action']){
-				case 'upload':
-					echo make_voucher_tabs('upload');
-					
-					$upload_result 	= $VOUCHER->save();			
-					echo "<h2>$upload_result</h2>";					
-				break;
-				case 'display':
-					echo make_voucher_tabs('display');
-					
-					if($_GET['subaction'] == 'del'){
-						$VOUCHER->delete($_GET[vid]);
-						$url = "themes.php?page=functions.php&section=vouchers&action=display";
-						echo "<meta http-equiv='refresh' content='0; URL=$url'>";
-					}
-					echo "<h3>".__('Single-Use Vouchers','wpShop')."</h3>"; ?>
-					<div class="tablenav">
-						<div class="alignleft actions">
-							<?php
-								echo "
-								<form class='nws_search nws_voucher_search' action='?page=functions.php&section=vouchers' method='get'>
-									<input type='hidden' name='page' value='functions.php' />
-									<input type='hidden' name='section' value='vouchers' />
-									<input type='hidden' name='action' value='display' />
-									<input type='text' name='vouch_wanted' value='$_GET[vouch_wanted]' maxlength='255' />
-									<input class='button-secondary action' type='submit' name='search_vouchers' value='Search' /><br/>
-									<small>".__('Enter a Voucher Code','wpShop')."</small>
-								</form>
-								";
-							?>	
-						</div>
-						<div class='tablenav-pages'>
-							<?php NWS_voucher_pagination(20); ?>	
-						</div>
-					</div>
-					<?php
-					echo $VOUCHER->display(is_dbtable_there('vouchers'),20);	
-				break;
-				case 'bgImg':
-					echo make_voucher_tabs('bgImg');
-					echo "
-					<form action='?page=functions.php&section=vouchers&action=bgImgUpload' enctype='multipart/form-data' name='voucher_bg_form' id='voucher_form' method='post'>
-						<h3>".__('Single-Use Vouchers: Background Uploader','wpShop')."</h3>
-						<small><b>".__('Before you upload anything make sure you have selected the correct PDF format from your Theme Options > Shop > PDF Options"','wpShop')."</b></small>
-						<fieldset>
-							<table>					
-								<tr>
-									<td>".__('Select an Image File:','wpShop')."</td>
-									<td><input name='imgfile' type='file' /></td>
-								</tr>
-								<tr>
-									<td colspan='2'><small>".__('After a succeful upload you will be given it\'s saved file name. Copy what you see and save it under your Theme Options > Shop > PDF Options"','wpShop')."</small></td>
-								</tr>
-								<tr>
-									<td>&nbsp;</td>
-									<td><input type='submit' value='Submit' /></td>
-								</tr>
-								<tr>
-									<td colspan='2'>&nbsp</td>
-								</tr>
-							</table>
-						</fieldset>
-					</form>
-					";
-				break;
-				case 'bgImgUpload':
-					echo make_voucher_tabs('bgImg');
-					echo "<h3>".__('Single-Use Vouchers: Background Uploader','wpShop')."</h3>";
-					$img_path 	= "../wp-content/themes/".$CONFIG_WPS['themename']."/images/vouchers/";
-					$res 		= $VOUCHER->upload_bg_img('imgfile',$img_path,20000000);
-					echo $res[0] .'<input type="text" value="'.$res[1].'" readonly="readonly" size="50" /> '.__('was uploaded.','wpShop'); 
-					echo "<p>".__('Please copy and save the above image file name under your Theme Options > Shop > PDF Options"','wpShop')."</p>";
-				break;
-				case 'reseller':
-					echo make_voucher_tabs('reseller');
-					
-					if($_GET['subaction'] == 'del'){
-						echo "
-						<div class='confirm_delete' style='border: red 1px solid;'>
-							<p>
-								".__('Do you really want to delete this Reseller?','wpShop')." 
-								<a href='?page=functions.php&section=vouchers&action=reseller&subaction=del&vid={$_GET[vid]}&confirmed=yes'>".__('Yes','wpShop')."</a> |
-								<a href='?page=functions.php&section=vouchers&action=reseller'>".__('No','wpShop')."</a>
-							</p>
-						</div>";
-					}
-					if(($_GET['subaction'] == 'del') && ($_GET['confirmed'] == 'yes')){
-						$VOUCHER->reseller_delete($_GET[vid]);
-						$url = "themes.php?page=functions.php&section=vouchers&action=reseller";
-						echo "<meta http-equiv='refresh' content='0; URL=$url'>";
-					}
-				
-					if($_POST){		
-						$VOUCHER->reseller_form_check();
-																			
-						if($VOUCHER->reseller()){		
-							$url = "themes.php?page=functions.php&section=vouchers&action=reseller_notify&vc={$_POST[voucher_code]}";
-							echo "<meta http-equiv='refresh' content='0; URL=$url'>";
-						}
-					}					
-					else { 
-						$label_1 = __('Voucher-Code:','wpShop');
-						$label_2 = __('Voucher Option:','wpShop');
-						$label_3 = __('Amount:','wpShop');
-						$label_4 = __('Name of Reseller:','wpShop');
-						$label_5 = __('Email of Reseller:','wpShop');
-						$label_6 = __('Save and Notify','wpShop');
-						echo "<h3>".__('Create Reseller (Multi-Use) Voucher-Codes','wpShop')."</h3>";
-						echo '<form action="?page=functions.php&section=vouchers&action=reseller" method="post">
-							<table>
-								<tr><td>'.$label_1.'</td><td><input type="text" name="voucher_code" maxlength="255" style="width:150px;" /></td></tr>
-								<tr><td>'.$label_2.'</td><td><select name="voucher_option" style="width:150px;"><option value="P">'.__('Percentage','wpShop').', %</option><option value="A">'.__('Fixed amount','wpShop').', $</option></select></td></tr>
-								<tr><td>'.$label_3.'</td><td><input type="text" name="voucher_amount" maxlength="3" style="width:150px;" /></td></tr>
-								<tr><td>'.$label_4.'</td><td><input type="text" name="receiver" maxlength="255" style="width:150px;" /></td></tr>
-								<tr><td>'.$label_5.'</td><td><input type="text" name="receiver_mail" maxlength="255" style="width:150px;" /></td></tr>
-								<tr><td>&nbsp;</td><td><input type="submit" name="save_vcode" value="'.$label_6.'" /></td></tr>
-							</table>
-						</form>';
-						echo "<h3>".__('Manage your Resellers','wpShop')."</h3>";
-						$res = $VOUCHER->display_all_resellers();
-						if(mysql_num_rows($res) == 0){
-							_e('You have created No Resellers yet.','wpShop');
-						}
-						else { ?>
-							<div class="tablenav">
-								<div class="alignleft actions">
-									<?php
-										echo "
-										<form class='nws_search nws_reseller_search' action='?page=functions.php&section=vouchers&action=reseller' method='get'>
-											<input type='hidden' name='page' value='functions.php' />
-											<input type='hidden' name='section' value='vouchers' />
-											<input type='hidden' name='action' value='reseller' />
-											<input type='text' name='resellers_wanted' value='$_GET[resell_wanted]' maxlength='255' />
-											<input class='button-secondary action' type='submit' name='search_resellers' value='Search' /><br/>
-											<small>".__('Enter a Voucher Code','wpShop')."</small>
-										</form>
-										";
-									?>	
-								</div>
-								<div class='tablenav-pages'>
-									<?php NWS_resellers_pagination(20); ?>	
-								</div>
-							</div>
-							<?php echo $VOUCHER->display_resellers(20);						
-						}
-					}
-				break;
-					
-				case 'reseller_notify':
+			$voptions = array('P' => 'Percentage, %', 'A' => 'Fixed amount, $');
+			echo make_section_header('vouchers'); ?>
+			<h3>Create Voucher Code</h3>
+			<form action="admin.php?page=functions.php&section=vouchers&voucher_action=create" method="POST">
+				<table>
+					<tr>
+						<td>Voucher Code:</td>
+						<td><input type="text" name="voucher_code" maxlength="100" style="width:247px;" /></td>
+					</tr>
+					<tr>
+						<td>Voucher Option:</td>
+						<td>
+							<select name="voucher_option" style="width:247px;">
+								<?php foreach($voptions as $vokey => $voname) { ?>
+								<option value="<?php echo $vokey; ?>"><?php echo $voname; ?></option>
+								<?php } ?>
+							</select>
+						</td>
+					</tr>
+					<tr>
+						<td>Amount:</td>
+						<td><input type="text" name="voucher_amount" maxlength="5" style="width:247px;" /></td>
+					</tr>
+					<tr>
+						<td>Expired Date:</td>
+						<td>
+							<select name="voucher_expired_dd" style="padding:1px;width:42px;height:26px;">
+								<option value="">D</option>
+								<?php for($d=1; $d<=31; $d++) { $dv = sprintf("%02d", $d); ?>
+								<option value="<?php echo $dv; ?>"><?php echo $dv; ?></option>
+								<?php } ?>
+							</select>
+							<select name="voucher_expired_mm" style="padding:1px;width:42px;height:26px;">
+								<option value="">M</option>
+								<?php for($m=1; $m<=12; $m++) { $mv = sprintf("%02d", $m); ?>
+								<option value="<?php echo $mv; ?>"><?php echo $mv; ?></option>
+								<?php } ?>
+							</select>
+							<select name="voucher_expired_yy" style="padding:1px;width:60px;height:26px;">
+								<option value="">YYYY</option>
+								<?php $cy = (int)date("Y"); for($y=$cy; $y<=$cy+5; $y++) { ?>
+								<option value="<?php echo $y; ?>"><?php echo $y; ?></option>
+								<?php } ?>
+							</select>
+							<select name="voucher_expired_hh" style="padding:1px;width:42px;height:26px;">
+								<option value="">H</option>
+								<?php for($h=0; $h<=23; $h++) { $hv = sprintf("%02d", $h); ?>
+								<option value="<?php echo $hv; ?>"><?php echo $hv; ?></option>
+								<?php } ?>
+							</select>
+							<select name="voucher_expired_ii" style="padding:1px;width:42px;height:26px;">
+								<option value="">I</option>
+								<?php for($i=0; $i<60; $i=$i+15) { $iv = sprintf("%02d", $i); ?>
+								<option value="<?php echo $iv; ?>"><?php echo $iv; ?></option>
+								<?php } ?>
+							</select>
+						</td>
+					</tr>
+					<tr>
+						<td>Shipping Zone:</td>
+						<td>
+							<select name="voucher_zone" style="width:247px;">
+								<option value="">-- None --</option>
+								<?php for($z=1; $z<=6; $z++) { ?>
+								<option value="<?php echo $z; ?>">Zone <?php echo $z; ?></option>
+								<?php } ?>
+							</select>
+						</td>
+					</tr>
+					<tr>
+						<td>&nbsp;</td>
+						<td align="right"><input type="submit" name="save_vcode" value="&nbsp;&nbsp;Save&nbsp;&nbsp;" /></td>
+					</tr>
+				</table>
+			</form>
+			<?php
+			$opvals = array('A' => 'Amount', 'P' => 'Percent');
+			$vper_page = 20;
+			$vpage = $_GET['vpage'];
+			if (!$vpage) { $vpage = 1; }
+			$vstart = ($vpage - 1) * $vper_page;
 
-					$data 	= $VOUCHER->reseller_data();
-					$shop	= $OPTION['blogname'];
-				
-					echo "<a class='button-secondary' href='mailto:{$data[receiver_mail]}?subject=Your%20reseller%20Voucher-Code%20from%20{$shop}&body=
-					".__('Hello ','wpShop')."{$data[receiver]}, ".__('your Reseller Voucher Code is: ','wpShop')."{$data[vcode]}'>".__('Send ','wpShop')."{$data[receiver]}".__(' an email','wpShop')."</a>";
-					echo "<a class='button-secondary' href='".get_option('siteurl')."/wp-admin/admin.php?page=functions.php&section=vouchers&action=reseller'>".__('Return to Voucher Overview','wpShop')."</a>";
-				
-				break;
-				
-				default;
-					echo make_voucher_tabs('upload'); ?>
-		
-					<script type="text/javascript">
-						function add_amount_field(currency){	
-							if (document.voucher_form.voucher_option.selectedIndex == 0) {		
-								document.getElementById("label_amount_option").innerHTML = "<td>&nbsp;</td>";
-							}			
-							if (document.voucher_form.voucher_option.selectedIndex == 1) {		
-								var label1;
-								label1 = document.forms.voucher_form.elements.voucher_option.options[1].text;
-								document.getElementById("label_amount_option").innerHTML = "<td>"+ label1 +"</td><td><input name='voucher_amount' type='text' />%</td>";
-							}
-							if (document.voucher_form.voucher_option.selectedIndex == 2) {
-								var label2;
-								label2 = document.forms.voucher_form.elements.voucher_option.options[2].text;
-								document.getElementById("label_amount_option").innerHTML = "<td>"+ label2 +"</td><td><input name='voucher_amount' type='text' /> "+ currency +"</td>";
-							}
-							return true;
-						}
-					</script>
-		
-					<?php	
-					$currency = '"'. $OPTION['wps_currency_code'] .'"';
-					echo "	
-					<form action='?page=functions.php&section=vouchers&action=upload' enctype='multipart/form-data' name='voucher_form' id='voucher_form' method='post'>
-						<h3>".__('Single-Use Vouchers: Code Uploader','wpShop')."</h3>
-						<fieldset>
-							<table>
-								<tr>
-									<td colspan='2'><small>".__('Remember that a Fixed Amount Voucher can only be deducted if the Buyer\'s Shopping Basket Total is more that the Vousher\'s Value!','wpShop')."</small></td>
-								</tr>
-								<tr>
-									<td>".__('Voucher Option','wpShop')."</td>
-								 <td>
-									<select name='voucher_option' id='voucher_option' onchange='return add_amount_field($currency)' size='1'>
-										<option value='nc' selected='selected'>".__('Pls select','wpShop')."</option>
-										<option value='P'>".__('Percentage','wpShop')."</option>
-										<option value='A'>".__('Fixed amount','wpShop')."</option>
-									</select>
-								</tr>					
-								<tr id='label_amount_option'></tr>
-								
-								<tr>
-									<td>".__('Voucher Code Text File','wpShop')."</td>
-									<td><input name='csvfile' type='file' /></td>
-								</tr>
-								<tr>
-									<td colspan='2'><small>".__('[Please keep in mind: It has to be a .txt file - Size: not more than 100KB.]','wpShop')."</small></td>
-								</tr>
-								<tr>
-									<td>&nbsp;</td>
-									<td><input type='submit' value='Submit' /></td>
-								</tr>
-								<tr>
-									<td colspan='2'>&nbsp</td>
-								</tr>
-							</table>
-						</fieldset>
-					</form>
-					";
-				break;	
+			$where = "";
+			$voucher_search = trim($_GET['voucher_search']);
+			if (strlen($voucher_search)) {
+				$where = " WHERE code = '".$voucher_search."'";
 			}
-				
+			$vouchers = $wpdb->get_results(sprintf("SELECT SQL_CALC_FOUND_ROWS * FROM %swps_vouchers %s ORDER BY code LIMIT %s, %s", $wpdb->prefix, $where, $vstart, $vper_page));
+			$vouchers_total = $wpdb->get_var("SELECT FOUND_ROWS()");
+			$vouchers_total_pages = ceil($vouchers_total / $vper_page);
+			?>
+			<h3>Voucher Codes List</h3>
+			<div class="tablenav">
+				<div class="alignleft actions">
+					<form action="admin.php" class="nws_search nws_voucher_search">
+					<input type="hidden" name="page" value="functions.php">
+					<input type="hidden" name="section" value="vouchers">
+					<input type="text" maxlength="100" name="voucher_search" value="<?php echo $voucher_search; ?>">
+					<input type="submit" value="Search" class="button-secondary action"><br><small>Enter a Voucher Code</small>
+					</form>
+				</div>
+			</div>
+			<table class="widefat">
+				<tr>
+					<th style="border-bottom:1px solid #E4E5E5;">Voucher Code</th>
+					<th style="border-bottom:1px solid #E4E5E5;">Option</th>
+					<th style="border-bottom:1px solid #E4E5E5;">Amount</th>
+					<th style="border-bottom:1px solid #E4E5E5;">Expired</th>
+					<th style="border-bottom:1px solid #E4E5E5;">Zone</th>
+					<th style="border-bottom:1px solid #E4E5E5;text-align:center;">Used</th>
+					<th style="border-bottom:1px solid #E4E5E5;width:50px;">Remove</th>
+				</tr>
+				<?php if ($vouchers) {
+					foreach($vouchers as $voucher) {
+						$voucher_expired = '';
+						if (strlen($voucher->expired) && $voucher->expired != '0000-00-00 00:00:00') { $voucher_expired = date("d.m.Y H:i", strtotime($voucher->expired)); } ?>
+						<tr>
+							<td><?php echo $voucher->code; ?></td>
+							<td><?php echo $opvals[$voucher->option]; ?></td>
+							<td><?php echo $voucher->amount; ?></td>
+							<td><?php echo $voucher_expired; ?></td>
+							<td><?php if ($voucher->zone > 0) { echo 'Zone '.$voucher->zone; } else { echo '&nbsp;'; } ?></td>
+							<td align="center"><?php echo $voucher->used; ?></td>
+							<td><a href="admin.php?page=functions.php&section=vouchers&voucher_action=remove&vid=<?php echo $voucher->vid; ?>">remove</a></td>
+						</tr>
+					<?php } ?>
+				<?php } else { ?>
+					<tr><td colspan="7">No found vouchers.</td></tr>
+				<?php } ?>
+			</table>
+			<?php if ($vouchers_total_pages > 1) { ?>
+			<div class="tablenav">
+				<div class="tablenav-pages">
+					<a style="text-decoration:none;" href="?page=functions.php&amp;section=vouchers&amp;voucher_search=<?php echo $voucher_search; ?>&amp;vpage=<?php echo ($vpage - 1); ?>" class="prev<?php if ($vpage == 1) { echo ' disabled'; } ?>">&laquo;</a>
+					<span class="page-numbers current"><?php echo $vpage; ?></span>
+					<a style="text-decoration:none;" href="admin.php?page=functions.php&amp;section=vouchers&amp;voucher_search=<?php echo $voucher_search; ?>&amp;vpage=<?php echo ($vpage + 1); ?>" class="next<?php if ($vpage >= $vouchers_total_pages) { echo ' disabled'; } ?>">&raquo;</a>
+				</div>
+			</div>
+			<?php } ?>
+			<?php
 			echo  make_section_footer();
-			
-		break;		
+		break;
 		
 		case 'members':
 			echo make_section_header('members'); ?>
@@ -4813,6 +4808,7 @@ function NWS_theme_admin()
 						}
 						echo "<li><a href='?page=functions.php&section=pricing'>".__('Pricing','wpShop')."</a></li>";
 						echo "<li><a href='?page=functions.php&section=searches'>".__('Searches','wpShop')."</a></li>";
+						echo "<li><a href='?page=functions.php&section=logs'>".__('Logs','wpShop')."</a></li>";
 						
 						?>
 					</ul>
@@ -5272,6 +5268,68 @@ function NWS_theme_admin()
 
 								<?php break;	
 
+								case "wycsp_brands":
+									$taxbrands = get_terms('brand', 'hide_empty=0');
+									$svals = get_option($value['id']);
+									if (!$taxbrands) { $taxbrands = array(); }
+									if (!is_array($svals)) { $svals = array(); }
+									?>
+									<tr>
+										<td>
+											<style>
+											.wycsp-brands .brlist{
+												width:165px;
+												height:300px;
+												overflow:auto;
+											}
+											</style>
+											<table class="wycsp-brands" width="100%">
+												<tr>
+													<td><strong>HANDBAGS</strong></td>
+													<td><strong>SHOES</strong></td>
+													<td><strong>WATCHES</strong></td>
+													<td><strong>CLOTHES</strong></td>
+													<td><strong>JEWELRY</strong></td>
+													<td><strong>ACCESSORIES</strong></td>
+												</tr>
+												<tr>
+													<td><div class="brlist">
+														<?php foreach($taxbrands as $taxbrand) { ?>
+														<input type="checkbox" name="<?php echo $value['id']; ?>[handbags][]" value="<?php echo $taxbrand->term_id; ?>"<?php if (@in_array($taxbrand->term_id, $svals['handbags'])) { echo ' CHECKED'; } ?>> <?php echo $taxbrand->name; ?><br />
+														<?php } ?>
+													</div></td>
+													<td><div class="brlist">
+														<?php foreach($taxbrands as $taxbrand) { ?>
+														<input type="checkbox" name="<?php echo $value['id']; ?>[shoes][]" value="<?php echo $taxbrand->term_id; ?>"<?php if (@in_array($taxbrand->term_id, $svals['shoes'])) { echo ' CHECKED'; } ?>> <?php echo $taxbrand->name; ?><br />
+														<?php } ?>
+													</div></td>
+													<td><div class="brlist">
+														<?php foreach($taxbrands as $taxbrand) { ?>
+														<input type="checkbox" name="<?php echo $value['id']; ?>[watches][]" value="<?php echo $taxbrand->term_id; ?>"<?php if (@in_array($taxbrand->term_id, $svals['watches'])) { echo ' CHECKED'; } ?>> <?php echo $taxbrand->name; ?><br />
+														<?php } ?>
+													</div></td>
+													<td><div class="brlist">
+														<?php foreach($taxbrands as $taxbrand) { ?>
+														<input type="checkbox" name="<?php echo $value['id']; ?>[clothes][]" value="<?php echo $taxbrand->term_id; ?>"<?php if (@in_array($taxbrand->term_id, $svals['clothes'])) { echo ' CHECKED'; } ?>> <?php echo $taxbrand->name; ?><br />
+														<?php } ?>
+													</div></td>
+													<td><div class="brlist">
+														<?php foreach($taxbrands as $taxbrand) { ?>
+														<input type="checkbox" name="<?php echo $value['id']; ?>[jewelry][]" value="<?php echo $taxbrand->term_id; ?>"<?php if (@in_array($taxbrand->term_id, $svals['jewelry'])) { echo ' CHECKED'; } ?>> <?php echo $taxbrand->name; ?><br />
+														<?php } ?>
+													</div></td>
+													<td><div class="brlist">
+														<?php foreach($taxbrands as $taxbrand) { ?>
+														<input type="checkbox" name="<?php echo $value['id']; ?>[accessories][]" value="<?php echo $taxbrand->term_id; ?>"<?php if (@in_array($taxbrand->term_id, $svals['accessories'])) { echo ' CHECKED'; } ?>> <?php echo $taxbrand->name; ?><br />
+														<?php } ?>
+													</div></td>
+												</tr>
+											</table>
+										</td>
+									</tr>
+									<tr><td colspan="2">&nbsp;</td></tr>
+								<?php break;
+
 							}
 						} ?>
 
@@ -5633,6 +5691,64 @@ function NWS_theme_admin()
 			</div>
 			<div style="clear:both;"></div>
 			<div class="export-csv" style="padding-top:5px; margin-top:15px; border-top:1px solid #C1C1C1;"><a href="admin.php?page=functions.php&section=searches&sdate=<?php echo $sdate; ?>&edate=<?php echo $edate; ?>&floc=<?php echo $floc; ?>&csvexport=searches">Export CSV</a></div>
+			<?php
+			echo make_section_footer();
+		break;
+		case 'logs':
+			$item_id = trim($_GET['item_id']);
+			echo make_section_header('logs');
+			?>
+			<h2 style="padding:0px;"><?php _e('Actions Logs','wpShop'); ?></h2>
+			<ul class="searches-fliter">
+				<form name="searches_filter" action="admin.php">
+				<input type="hidden" name="page" value="functions.php">
+				<input type="hidden" name="section" value="logs">
+				<li class="txt">Item ID:</li>
+				<li><input type="text" name="item_id" value="<?php echo $item_id; ?>"></li>
+				<li><input type="submit" value="&nbsp;&nbsp;Search&nbsp;&nbsp;"></li>
+				</form>
+			</ul>
+			<div style="clear:both;"></div>
+			<?php if (strlen($item_id)) { ?><br />
+				<table cellpadding="0" cellspacing="0" class="searches-list" width="100%">
+					<tr class="heads">
+						<td><strong>Date</strong></td>
+						<td><strong>Action</strong></td>
+						<td><strong>Info</strong></td>
+					</tr>
+					<?php
+					$log_codes = array(
+						'order_cancel' => 'Order Cancelled',
+						'order_delete' => 'Order Deleted',
+						'order_return' => 'Order Returned',
+						'inventory_update' => 'Inventory Updated'
+					);
+					$logs = $wpdb->get_results(sprintf("SELECT * FROM %swps_log_actions WHERE log_desc LIKE '%s' ORDER BY log_id", $wpdb->prefix, '%'.$item_id.'%'));
+					if ($logs) {
+						foreach($logs as $log) {
+							$log_desc = $log->log_desc;
+							if (strpos($log_desc, 'Order ID:') !== false) {
+								$oid = substr($log_desc, strpos($log_desc, 'Order ID:') + 10);
+								$oid = substr($oid, 0, strpos($oid, ';'));
+								$log_desc = str_replace('Order ID: '.$oid, 'Order ID: '.$OPTION['wps_order_no_prefix'].$oid, $log_desc);
+							}
+							if (strpos($log_desc, 'User ID:') !== false) {
+								$uid = substr($log_desc, strpos($log_desc, 'User ID:') + 9);
+								$user_login = $wpdb->get_var(sprintf("SELECT user_login FROM %susers WHERE ID = %s", $wpdb->prefix, $uid));
+								$log_desc = str_replace('User ID: '.$uid, 'User: '.$user_login, $log_desc);
+							}
+							?>
+							<tr>
+								<td><?php echo $log->log_date; ?></td>
+								<td><?php echo $log_codes[$log->log_code]; ?></td>
+								<td><?php echo $log_desc; ?></td>
+							</tr>
+						<?php } ?>
+					<?php } else { ?>
+						<tr><td colspan="3">Nothing found.</td></tr>
+					<?php } ?>
+				</table>
+			<?php } ?>
 			<?php
 			echo make_section_footer();
 		break;

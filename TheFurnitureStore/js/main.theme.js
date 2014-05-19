@@ -1,8 +1,5 @@
 var mcepopup = false;
 jQuery(document).ready(function(){
-	jQuery('#nav li.womenitem a:eq(0), #nav li.menitem a:eq(0)').click(function(){
-		return false;
-	});
 	// cart shipping costs
 	jQuery('.cart-ship-costs').click(function(){
 		jQuery.colorbox({inline:true, href:'#cart-shipping-costs'});
@@ -327,17 +324,40 @@ function mcEvilPopupClickCookie(clnmb) {
 	document.cookie = 'MCEvilPopupClick='+clnmb+';expires=' + expires_date.toGMTString()+';path=/';  
 }
 
+function check_voucher_code() {
+	var vcode = jQuery('#voucher-code').val();
+	if (vcode != '') {
+		jQuery.post(siteurl, 
+			{
+				FormAction: 'check_voucher',
+				vcode: vcode
+			},
+			function(data){
+				if (data == 'success') {
+					jQuery('#voucher-code-result').html('<b class="success">Success! Your voucher has been verified.</b>');
+				} else {
+					jQuery('#voucher-code-result').html('<b class="failure">Sorry! Your voucher is invalid!</b>');
+				}
+			}
+		);
+	} else {
+		jQuery('#voucher-code-result').html('');
+	}
+}
+
 function fb_login(redirurl) {
     FB.login(function(response) {
         if (response.authResponse) {
             access_token = response.authResponse.accessToken; // get access token
             user_id = response.authResponse.userID; // get FB UID
-			var query = FB.Data.query('select name, email from user where uid={0}', user_id);
+			var query = FB.Data.query('select name, email, sex from user where uid={0}', user_id);
 			query.wait(function(rows) {
 				jQuery.post(siteurl, 
 					{
 						ajax_login_popup: 'fblogin',
-						email: rows[0].email
+						name: rows[0].name,
+						email: rows[0].email,
+						gender: rows[0].sex
 					},
 					function(data){
 						if (data == 'success') {

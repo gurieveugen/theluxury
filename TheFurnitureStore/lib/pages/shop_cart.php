@@ -114,7 +114,11 @@ wps_shop_process_steps(1); ?>
 						$prod_id = $pdetails[8];
 						$days = layaway_get_product_days($prod_id);
 						if ($days >= 8) {
-							$layaway_amount = layaway_get_amount($CART['total_price']);
+							if ($_SESSION['layaway_order'] > 0) {
+								$layaway_amount = $oamounts['balance'];
+							} else {
+								$layaway_amount = layaway_get_amount($CART['total_price']);
+							}
 							$layaway_def_amount = $layaway_amount;
 							if ($_SESSION['layaway_process'] == 1 && $_SESSION['layaway_amount']) {
 								$layaway_amount = $_SESSION['layaway_amount'];
@@ -188,15 +192,15 @@ wps_shop_process_steps(1); ?>
 				<input type="hidden" name="layaway_def_amount" value="'.$layaway_def_amount.'">
 				<input type="hidden" name="layaway_cart_total" id="layaway-cart-total" value="'.$CART['total_price'].'">
 				<div class="shop-button-holder right">
-					<a class="shop-button cartActionBtn cont_shop" href="'.$_SESSION[cPage].'">'.$LANG[continue_shopping].'</a>
-					<input class="shop-button checkout" type="submit" name="checkout" value="Proceed" />
+					<a class="btn-grey cartActionBtn cont_shop" href="'.$_SESSION[cPage].'">'.$LANG[continue_shopping].'</a>
+					<input class="btn-orange lm checkout" type="submit" name="checkout" value="Proceed to Checkout" />
 				</div>
 			</form>
 			';
 		} else { // Cart is empty
 			$_SESSION['cPage'] = get_category_link($OPTION['wps_women_bags_category']); ?>
 			<p class="cart_empty"><?php echo $LANG['cart_empty']; ?></p>
-			<a class="shop-button cartActionBtn cont_shop" href="<?php echo $_SESSION['cPage']; ?>"><?php echo $LANG['start_shopping']; ?></a>
+			<a class="btn-orange cartActionBtn cont_shop" href="<?php echo $_SESSION['cPage']; ?>"><?php echo $LANG['start_shopping']; ?></a>
 			<?php
 		}
 		?>

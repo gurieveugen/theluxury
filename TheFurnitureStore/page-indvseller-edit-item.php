@@ -52,24 +52,7 @@ jQuery(function(){ swf_upload_init(1); });
 </script>
 
 <div class="user-info-row">
-	<div class="right">
-		<a href="<?php echo get_permalink($OPTION['wps_what_happens_next_page']); ?>">Find out what happens next</a>
-	</div>
 	<h1 class="main-title"><?php echo $current_user->data->user_login; ?></h1>
-</div>
-<div class="add-item-steps">
-	<div class="step">
-		<a href="<?php echo get_permalink($OPTION['wps_indvseller_add_item_page']); ?>" class="ico">1</a>
-		<strong>Submit an item</strong>
-	</div>
-	<div class="step active">
-		<a href="<?php echo get_permalink($OPTION['wps_indvseller_my_items_page']); ?>" class="ico">2</a>
-		<strong>Manage items</strong>
-	</div>
-	<div class="step last">
-		<a href="<?php echo get_permalink($OPTION['wps_indvseller_my_info_page']); ?>" class="ico">3</a>
-		<strong>Payment</strong>
-	</div>
 </div>
 <form id="indivseller-edit-item" method="POST" class="form-add edit-item" enctype="multipart/form-data" onsubmit="return indivseller_presubmit_form();">
 	<input type="hidden" name="post_id" value="<?php echo $post_id; ?>">

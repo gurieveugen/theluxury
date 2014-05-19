@@ -144,11 +144,11 @@ jQuery(document).ready(function(){
 	
 	jQuery('.widget-filter .f-row').jqTransform();
 	
-	jQuery('.f-block .f-container, .shop-by-category, .widget-selection .holder').mCustomScrollbar({
-		scrollButtons:{
-			enable:true
-		}
-	});
+	// jQuery('.f-block .f-container, .shop-by-category, .widget-selection .holder').mCustomScrollbar({
+	// 	scrollButtons:{
+	// 		enable:true
+	// 	}
+	// });
 		
 	jQuery('.widget-filter .f-block h4').click(function(){
 		jQuery(this).next('.f-container').slideToggle(300,function(){
@@ -165,10 +165,13 @@ jQuery(document).ready(function(){
 	// });
 	
 	jQuery('.widget-filter .has-drop').click(function(){
-		jQuery(this).next('.sub-category').slideToggle(300,function(){
-			jQuery(this).parent().toggleClass('open');
-			jQuery(this).parents('.shop-by-category').mCustomScrollbar('update');
-		});
+		if(jQuery(this).data('depth') == 0)
+		{
+			jQuery(this).next('.sub-category').slideToggle(300,function(){
+				jQuery(this).parent().toggleClass('open');
+				jQuery(this).parents('.shop-by-category').mCustomScrollbar('update');
+			});	
+		}
 	});
 	
 	//---------------------------------------------------------------
@@ -269,6 +272,8 @@ function change_currency() {
 		jQuery('#currencySelect strong .opacity-fader').html(ccurrency);
 		jQuery('#currencySelect .currency-list li').removeClass('current');
 		jQuery('#currencySelect .currency-list .currency-'+ccurrency).addClass('current');
+		jQuery('.currency-block .curr-loc-'+lcurrency.toLowerCase()).hide();
+		jQuery('.currency-block .curr-loc-'+ccurrency.toLowerCase()).fadeIn();
 
 		jQuery('.price-'+ccurrency).show();
 		jQuery('.price-'+lcurrency).hide();

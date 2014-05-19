@@ -44,11 +44,10 @@
 									<td colspan="2" align="right">Subtotal</th>
 									<td align="left"><?php echo format_price($CART['total_price'] * $_SESSION["currency-rate"], true); ?></td>
 								</tr>
-								<?php if ($order['voucher'] != 'non' && $VOUCHER->code_exist($order['voucher'])) {
-									$vdata = $VOUCHER->subtract_voucher($CART['total_price'], $order); ?>
+								<?php if (strlen($order['voucher']) && $order['voucher'] != 'non') { ?>
 									<tr>
 										<td colspan="2" align="right">- Voucher</th>
-										<td align="left"><?php echo format_price($vdata['subtr_am'] * $_SESSION["currency-rate"], true); ?></td>
+										<td align="left"><?php echo format_price($order['voucher_amount'] * $_SESSION["currency-rate"], true); ?></td>
 									</tr>
 								<?php } ?>
 								<tr>
@@ -115,22 +114,23 @@
 
 							<?php } else { ?>
 
-								<strong>It will be sent to:</strong><br><br>
-
-								<?php if ($order['d_addr'] == 1 && count($shipping_data)) { ?>
-									<?php echo $shipping_data['f_name'].' '.$shipping_data['l_name']; ?><br>
-									<?php echo $order['telephone']; ?><br><br>
-									<?php echo $shipping_data['street']; ?><br>
-									<?php echo $shipping_data['town']; ?><br>
-									<?php echo $shipping_data['state']; ?><br>
-									<?php echo $shipping_data['country']; ?><br><br>
-								<?php } else { ?>
-									<?php echo $order['f_name'].' '.$order['l_name']; ?><br>
-									<?php echo $order['telephone']; ?><br><br>
-									<?php echo $order['street']; ?><br>
-									<?php echo $order['town']; ?><br>
-									<?php echo $order['state']; ?><br>
-									<?php echo $order['country']; ?><br><br>
+								<?php if($order['p_option'] != 'cod' && $order['p_option'] != 'cash') { ?>
+									<strong>It will be sent to:</strong><br><br>
+									<?php if ($order['d_addr'] == 1 && count($shipping_data)) { ?>
+										<?php echo $shipping_data['f_name'].' '.$shipping_data['l_name']; ?><br>
+										<?php echo $order['telephone']; ?><br><br>
+										<?php echo $shipping_data['street']; ?><br>
+										<?php echo $shipping_data['town']; ?><br>
+										<?php echo $shipping_data['state']; ?><br>
+										<?php echo $shipping_data['country']; ?><br><br>
+									<?php } else { ?>
+										<?php echo $order['f_name'].' '.$order['l_name']; ?><br>
+										<?php echo $order['telephone']; ?><br><br>
+										<?php echo $order['street']; ?><br>
+										<?php echo $order['town']; ?><br>
+										<?php echo $order['state']; ?><br>
+										<?php echo $order['country']; ?><br><br>
+									<?php } ?>
 								<?php } ?>
 								
 								<strong>Billing & Payment:</strong><br><br>

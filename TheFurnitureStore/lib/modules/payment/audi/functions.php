@@ -10,15 +10,16 @@ function audi_response(){
 	$EMAIL 		= load_what_is_needed('email');		//change.9.10
 	
 	$feedback 	= array();
-	
-	$feedback['status'] 				= $_GET['vpc_TxnResponseCode'];
-	$feedback['order_id']				= $_GET['orderInfo'];
-	$feedback['amount']					= null2unknown(addslashes($_GET['amount'])/100);
-	$feedback['CURRENCY']				= 'USD';
-	$feedback['trans_id']				= null2unknown(addslashes($_GET['merchTxnRef']));
-	$feedback['message']				= null2unknown(addslashes($_GET['vpc_Message']));
-	$feedback['pay_m']					= 'audi';
-	$feedback['itemname']				= "Order No." . $feedback['order_id'] . " - " . date($OPTION['date_format']);
+	$feedback['status'] 	= $_GET['vpc_TxnResponseCode'];
+	$feedback['order_id']	= $_GET['orderInfo'];
+	$feedback['amount']		= null2unknown(addslashes($_GET['amount'])/100);
+	$feedback['CURRENCY']	= 'USD';
+	$feedback['trans_id']	= null2unknown(addslashes($_GET['merchTxnRef']));
+	$feedback['pay_m']		= 'audi';
+	$feedback['itemname']	= "Order No." . $feedback['order_id'] . " - " . date($OPTION['date_format']);
+	if (strlen($_GET['vpc_Message'])) {
+		$feedback['message'] = null2unknown(addslashes($_GET['vpc_Message']));
+	}
 
 	//lets log the raw data from Audi 
 	log_authn_payment_data($_POST,$feedback['trans_id']);
@@ -26,15 +27,25 @@ function audi_response(){
 	switch($feedback['status'])
 	{
 		case "0":
+			//check if hash is correct, security measure to prevent users correct GET params
+			$hashCorrect = isHashCorrect();
+			if($hashCorrect!="correct"){
+				$order['status'] = '9';
+				$order['error']  = 'There has been an error processing this transaction.</b><br>';
+				$order['error'] .= 'ERROR: incorrect hash, please try again.<br/>';
+				$order['error'] .= $feedback['message'];
+				return $order;
+			}
+
 			// Update DB 
 			$order = process_payment($feedback,'audi');
 			
 			//if $order is empty, it's usually means that user pressed refressh or copied link to browser..
 			if (!$order) {
-				echo "<br><b>There has been an error processing this transaction.</b><br>";	
-				echo ("ERROR: current order was processed already.<br/><br/>");
-				$order['status'] = "9";
-				unset($_SESSION['cust_id']);
+				$order['status'] = '9';
+				$order['error']  = 'There has been an error processing this transaction.</b><br>';
+				$order['error'] .= 'ERROR: current order was processed already.<br/>';
+				$order['error'] .= $feedback['message'];
 				return $order;
 			}
 			
@@ -63,14 +74,10 @@ function audi_response(){
 		break;
 		
 		default:
-			echo "<br><b>There has been an error processing this transaction.</b><br>";	
-			
-			if (isset($_GET['vpc_TxnResponseCode'])){
-				echo ("ERROR: " . getResponseDescription($feedback['status'])) . "<br/>";
-				echo $feedback['message'];
-			}
-			$order['status'] = "9";
-			unset($_SESSION['cust_id']);
+			$order['status'] = '9';
+			$order['error']  = 'There has been an error processing this transaction.</b><br>';
+			$order['error'] .= 'ERROR: '.getResponseDescription($feedback['status']).'<br/>';
+			$order['error'] .= $feedback['message'];
 			return $order;
 				
 		break;
@@ -212,7 +219,7 @@ function log_authn_payment_data($data,$who){
 			// sort all the incoming vpc response fields and leave out any with no value
 			foreach($_GET as $key => $value) 
 			{
-				if ($key != "vpc_SecureHash" && strlen($value) > 0 && $key != 'action' ) 
+				if ($key != "vpc_SecureHash" && strlen($value) > 0 && $key != 'action' && $key != 'confirm' ) 
 				{
 					$hash_value = str_replace(" ",'+',$value);
 					$hash_value = str_replace("%20",'+',$hash_value);

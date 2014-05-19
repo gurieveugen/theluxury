@@ -238,63 +238,71 @@
 		<br><br>
 		<a href="#close" class="close">close</a>
 	</div>
-	<div class="popup-box lightbox-sell inner" id="what-you-can-sell" style="display:none;">
-		<h3>Brands</h3>
-		<div class="columns">
-			<?php
-			$tax_brands = get_terms('brand');
-			if ($tax_brands) {
-				$total_brands = count($tax_brands);
-				$in_column = ceil($total_brands / 3);
-				$cnmb = 1;
-				?>
-				<ul class="column">
-					<?php foreach($tax_brands as $tax_brand) { ?>
-					<li><a href="<?php echo get_term_link($tax_brand); ?>"><?php echo strtoupper($tax_brand->name); ?></a></li>
-					<?php if ($cnmb == $in_column && $total_brands > 1) { $cnmb = 0; ?>
-				</ul>
-				<ul class="column">
+	<?php
+	$wycsp_brands = unserialize($OPTION['wps_wycsp_brands']);
+	$wycspcats = array('handbags' => 'Handbag', 'shoes' => 'Shoe', 'watches' => 'Watch', 'clothes' => 'Clothing', 'jewelry' => 'Jewelry', 'accessories' => 'Accessory');
+	?>
+	<div class="popup-box lightbox-sell inner wycs-popup" id="what-you-can-sell" style="display:none;">
+		<?php foreach($wycspcats as $ckey => $cname) { ?>
+			<div class="wycs-brands brands-<?php echo $ckey; ?>"<?php echo $dnstyle; ?>>
+				<h3><?php echo $cname; ?> Brands</h3>
+				<div class="columns">
+					<?php
+					$tax_brands = get_terms('brand', array('hide_empty' => 0, 'include' => $wycsp_brands[$ckey]));
+					if ($tax_brands) {
+						$total_brands = count($tax_brands);
+						$in_column = ceil($total_brands / 3);
+						$cnmb = 1;
+						?>
+						<ul class="column">
+							<?php foreach($tax_brands as $tax_brand) { ?>
+							<li><a href="<?php echo get_term_link($tax_brand); ?>"><?php echo strtoupper($tax_brand->name); ?></a></li>
+							<?php if ($cnmb == $in_column && $total_brands > 1) { $cnmb = 0; ?>
+						</ul>
+						<ul class="column">
+							<?php } ?>
+							<?php $cnmb++; $total_brands--; } ?>
+						</ul>
 					<?php } ?>
-					<?php $cnmb++; $total_brands--; } ?>
-				</ul>
-			<?php } ?>
-		</div>
+				</div>
+			</div>
+		<?php $dnstyle = ' style="display:none;"'; } ?>
 		<div class="categories-block">
 			<h3>Categories</h3>
 			<div class="categories-list">
-				<a href="<?php echo get_category_link($OPTION['wps_women_bags_category']); ?>" class="item">
+				<a href="#handbags" class="item active">
 					<span class="icon">
-						<i><img src="<?php bloginfo('template_url'); ?>/images/ico-handbags.png" alt="" /></i>
+						<img src="<?php bloginfo('template_url'); ?>/images/ico-handbags-3.png" alt="" />
 					</span>
 					<strong>HANDBAGS</strong>
 				</a>
-				<a href="<?php echo get_category_link($OPTION['wps_women_shoes_category']); ?>" class="item">
+				<a href="#shoes" class="item">
 					<span class="icon">
-						<i><img src="<?php bloginfo('template_url'); ?>/images/ico-shoes.png" alt="" /></i>
+						<img src="<?php bloginfo('template_url'); ?>/images/ico-shoes-3.png" alt="" />
 					</span>
 					<strong>SHOES</strong>
 				</a>
-				<a href="<?php echo get_category_link($OPTION['wps_women_watches_category']); ?>" class="item">
+				<a href="#watches" class="item">
 					<span class="icon">
-						<i><img src="<?php bloginfo('template_url'); ?>/images/ico-watches.png" alt="" /></i>
+						<img src="<?php bloginfo('template_url'); ?>/images/ico-watches-3.png" alt="" />
 					</span>
 					<strong>WATCHES</strong>
 				</a>
-				<a href="<?php echo get_category_link($OPTION['wps_women_clothes_category']); ?>" class="item">
+				<a href="#clothes" class="item">
 					<span class="icon">
-						<i><img src="<?php bloginfo('template_url'); ?>/images/ico-clothes.png" alt="" /></i>
+						<img src="<?php bloginfo('template_url'); ?>/images/ico-clothes-3.png" alt="" />
 					</span>
 					<strong>CLOTHES</strong>
 				</a>
-				<a href="<?php echo get_category_link($OPTION['wps_women_jewelry_category']); ?>" class="item">
+				<a href="#jewelry" class="item">
 					<span class="icon">
-						<i><img src="<?php bloginfo('template_url'); ?>/images/ico-jewelry.png" alt="" /></i>
+						<img src="<?php bloginfo('template_url'); ?>/images/ico-jewelry-3.png" alt="" />
 					</span>
 					<strong>JEWELRY</strong>
 				</a>
-				<a href="<?php echo get_category_link($OPTION['wps_women_accessories_category']); ?>" class="item">
+				<a href="#accessories" class="item">
 					<span class="icon">
-						<i><img src="<?php bloginfo('template_url'); ?>/images/ico-accessories.png" alt="" /></i>
+						<img src="<?php bloginfo('template_url'); ?>/images/ico-accessories-3.png" alt="" />
 					</span>
 					<strong>ACCESSORIES</strong>
 				</a>
@@ -344,7 +352,7 @@
 			<div class="column">
 				<h5>Select Payout</h5>
 				<div class="input-holder">
-					<span class="input">5700</span>
+					<span class="input">5300</span>
 					<span class="ico error"></span>
 				</div>
 				<p>Payout is outside the range</p>

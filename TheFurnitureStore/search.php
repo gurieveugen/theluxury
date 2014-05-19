@@ -4,7 +4,9 @@ if(is_category('member-bags') || is_category('reserved-bags') || is_category('sa
 	auth_redirect_theme_login();
 }
 get_header();
-
+?>
+<script>var is_search_page = true; </script>
+<?php
 //collect options
 $WPS_prodCol       = $OPTION['wps_prodCol_option'];
 $WPS_catCol        = $OPTION['wps_catCol_option'];
@@ -41,7 +43,7 @@ if($OPTION['wps_catDescr_enable'])
 {
 	echo term_description();
 } ?>
-<div id="main_col" class="<?php echo $the_float_class;?>">
+<div id="main_col" class="<?php echo $the_float_class;?>">	
 <?php
 product_sort_select(); ?>
 	<div class="<?php echo $the_div_class;?>" id="products-container">

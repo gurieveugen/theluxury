@@ -40,11 +40,11 @@ remove_action( 'wp_footer', 'grofiles_attach_cards');
 remove_action( 'wp_footer', 'grofiles_extra_data'); 
 wp_footer(); 
 include('footer-popups.php');
-?>
+if ($_GET['slp'] == 'true') { ?><script type="text/javascript">jQuery(document).ready(function(){ jQuery('.log-buttons .login-lnk').trigger('click'); });</script><?php } ?>
 </div> <!-- #wrapper -->
 <div class="bg-popup-login" style="display:none;"></div>
 <div class="window-mask" style="display:none;"></div>
-
+<?php if (is_category($OPTION['wps_sale_category'])) { ?><div class="sale-category-pg" style="display:none;"><?php echo $OPTION['wps_sale_category'].';'.get_cat_name($OPTION['wps_sale_category']); ?></div><?php } ?>
 <script type="text/javascript">
 document.write(unescape("%3Cscript id=%27pap_x2s6df8d%27 src=%27" + (("https:" == document.location.protocol) ? "https://" : "http://") + "perf.clickmena.com/scripts/trackjs.js%27 type=%27text/javascript%27%3E%3C/script%3E"));
 </script>

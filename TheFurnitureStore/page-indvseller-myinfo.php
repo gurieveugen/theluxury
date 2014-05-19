@@ -23,20 +23,6 @@ if (!strlen($seller_bank_type)) { $seller_bank_type = 'Bank transfer'; }
 	</div>
 	<h1 class="main-title"><?php echo $current_user->data->user_login; ?></h1>
 </div>
-<div class="add-item-steps">
-	<div class="step">
-		<a href="<?php echo get_permalink($OPTION['wps_indvseller_add_item_page']); ?>" class="ico">1</a>
-		<strong>Submit an item</strong>
-	</div>
-	<div class="step">
-		<a href="<?php echo get_permalink($OPTION['wps_indvseller_my_items_page']); ?>" class="ico">2</a>
-		<strong>Manage items</strong>
-	</div>
-	<div class="step active last">
-		<a href="<?php echo get_permalink($OPTION['wps_indvseller_my_info_page']); ?>" class="ico">3</a>
-		<strong>Payment</strong>
-	</div>
-</div>
 <div class="indvseller-my-items">
 	<div id="my-info">
 		<div class="sellers-other-tabs">

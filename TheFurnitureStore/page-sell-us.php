@@ -2,7 +2,8 @@
 /*
 Template Name: Sell Us Page
 */
-global $OPTION, $current_user, $sellers_error;
+global $OPTION, $current_user, $sellers_error, $wpdb;
+$soldnmb = $wpdb->get_var(sprintf("SELECT COUNT(sc.item_id) FROM %swps_shopping_cart sc LEFT JOIN %swps_orders o ON o.oid = sc.order_id WHERE o.level = '7'", $wpdb->prefix, $wpdb->prefix));
 ?>
 <?php get_header(); ?>
 
@@ -13,50 +14,62 @@ global $OPTION, $current_user, $sellers_error;
 <script type="text/javascript" src="<?php echo TEMPLURL; ?>/js/swfupload/swfupload.js"></script>
 <script type="text/javascript" src="<?php echo TEMPLURL; ?>/js/jquery.swfupload.js"></script>
 
-<div class="add-item-steps">
-	<div class="step active">
-		<a href="<?php echo get_permalink($OPTION['wps_indvseller_add_item_page']); ?>" class="ico">1</a>
-		<strong>Submit an item</strong>
-	</div>
-	<div class="step">
-		<a href="<?php echo get_permalink($OPTION['wps_indvseller_my_items_page']); ?>" class="ico">2</a>
-		<strong>Manage items</strong>
-	</div>
-	<div class="step last">
-		<a href="<?php echo get_permalink($OPTION['wps_indvseller_my_info_page']); ?>" class="ico">3</a>
-		<strong>Payment</strong>
-	</div>
-</div>
 <div class="cf add-item-main">
 	<div class="add-item-content">
-		<h3>How It Works</h3>
-		<div class="center">
-			<img src="<?php echo TEMPLURL; ?>/images/img-steps.png" alt="">
+		<div class="row-counter">
+			<strong class="items-counter">
+				<?php for ($s=1; $s<=strlen($soldnmb); $s++) {
+					$n = substr($soldnmb, $s - 1, 1);
+					$class = 'num'.$s;
+					if ($s == 1) { $class .= ' first'; }
+					if ($s == strlen($soldnmb)) { $class .= ' last'; }
+					?>
+					<span class="<?php echo $class; ?>"><i data-num="<?php echo $n; ?>"><?php echo $s; ?></i></span>
+				<?php } ?>
+			</strong> designer items sold
 		</div>
-		<div class="center-link"><a href="#our-consignment-process" class="our-consignment-process">Our Consignment Process</a></div>
-		<h4 class="center">Five Reasons  you Should Sell Your Items at the Luxury Closet</h4>
-		<div class="reasons-block mini">
-			<div class="item"> <span class="icon"> <i> <img alt="" src="<?php echo TEMPLURL; ?>/images/ico-money-mini-grey.png"> </i> </span>
-				<h4>Get the maximum value for your products by selling on consignment</h4>
-			</div>
-			<div class="item">
-				<span class="icon"> <i> <img alt="" src="<?php echo TEMPLURL; ?>/images/ico-delivery-mini-grey.png"> </i> </span>
-				<h4>Free pick-up of your item in the U.A.E and no up-front shipping costs for G.C.C customers</h4>
-			</div>
-			<div class="item">
-				<span class="icon"> <i> <img alt="" src="<?php echo TEMPLURL; ?>/images/ico-secure-mini-grey.png"> </i> </span>
-				<h4>Secure, insured storage of your item at our temperature controlled facility</h4>
-			</div>
-			<div class="item">
-				<span class="icon"> <i> <img alt="" src="<?php echo TEMPLURL; ?>/images/ico-photography-mini-grey.png"> </i> </span>
-				<h4>Professional photography and presentation of your item</h4>
-			</div>
-			<div class="item">
-				<span class="icon"> <i> <img alt="" src="<?php echo TEMPLURL; ?>/images/ico-globe-mini-grey.png"> </i> </span>
-				<h4>Global reach<br>(we ship items to all corners of the globe every month!)</h4>
-			</div>
+		<script type="text/javascript">
+			var cstop = 0;
+			jQuery(document).ready(function(){
+				var cnmb = jQuery('.items-counter span').size();
+				for (var s=1; s<=cnmb; s++) {
+					sellcounter(s, 1);
+				}
+				cstop = 1;
+			});
+			function sellcounter(n, tm) {
+				if (cstop < n) {
+					jQuery('.items-counter .num'+n+' i').css('margin-top', '-324px');
+					jQuery('.items-counter .num'+n+' i').animate({'margin-top':-36}, '', function(){
+						tm++;
+						sellcounter(n, tm);
+					});
+				} else {
+					var num = jQuery('.items-counter .num'+n+' i').attr('data-num');
+					var mtop = 324 - (num * 36);
+					jQuery('.items-counter .num'+n+' i').animate({'margin-top':-mtop});
+					setTimeout(function(){ cstop++; }, 200);
+				}
+			}
+		</script>
+		<ul>
+			<li>Most items sell within 60 days</li>
+			<li>Get paid by cheque or bank transfer after your item sells</li>
+			<li>Selling made easy: we do all the work for you!</li>
+		</ul>
+		<h3 style="padding: 21px 0"><a href="#what-you-can-sell" class="what-you-can-sell">What You Can Sell</a></h3>
+		<h4>Questions?</h4>
+		<div class="contact-row v1">
+			<p>
+				See our <a href="http://luxcloset.staging.wpengine.com/faqs">FAQs</a> or
+				<span class="i-phone"><?php echo $OPTION['wps_shop_questions_phone']; ?></span>
+				<a class="i-email" href="mailto:<?php echo $OPTION['wps_shop_questions_email']; ?>"><?php echo $OPTION['wps_shop_questions_email']; ?></a>
+			</p>
 		</div>
-		<div class="center-link"><a href="#what-you-can-sell" class="what-you-can-sell">What You Can Sell</a></div>
+		<div class="contact-row v2">
+			<h4>ARE YOU A PROFESSIONAL SELLER?</h4>
+			<a class="btn-orange" href="<?php echo get_permalink($OPTION['wps_professional_seller_page']); ?>">CLICK HERE</a>
+		</div>
 	</div>
 <?php
 $item_number = 1;
@@ -80,11 +93,11 @@ $item_user_phone = get_user_meta($current_user->ID, 'phone', true);
 		} ?>
 		<?php if (!is_user_logged_in()) { ?>
 		<div class="row border-bottom">
-			<div class="column width-216" id="item-user-email">
+			<div class="column width-206" id="item-user-email">
 				<label>Your Email</label>
 				<input type="text" name="user_email" value="<?php echo $user_email; ?>">
 			</div>
-			<div class="column width-216" id="item-user-pass">
+			<div class="column width-206" id="item-user-pass">
 				<label>Create or enter existing password</label>
 				<input type="password" name="user_pass" value="<?php echo $user_pass; ?>">
 			</div>
@@ -94,7 +107,7 @@ $item_user_phone = get_user_meta($current_user->ID, 'phone', true);
 		<div class="row">
 			<div id="item-user-phone">
 				<label class="left"> Telephone no.*</label>
-				<input name="user_phone" type="text" class="right width-317" value="<?php echo $user_phone; ?>">
+				<input name="user_phone" type="text" class="right width-320" value="<?php echo $user_phone; ?>" placeholder="only numbers">
 			</div>
 		</div>
 		<?php } ?>
@@ -124,7 +137,7 @@ $item_user_phone = get_user_meta($current_user->ID, 'phone', true);
 				?>
 					<div id="item-form-<?php echo $in; ?>">
 						<div class="row<?php if ($in > 1) { echo ' border-top'; } ?>">
-							<div class="column width-216 item-category">
+							<div class="column width-206 item-category">
 								<label>Category *</label>
 								<div class="custom-select">
 									<?php $seller_categories = get_terms('seller-category', 'hide_empty=0&orderby=id&order=asc');
@@ -138,7 +151,7 @@ $item_user_phone = get_user_meta($current_user->ID, 'phone', true);
 									<?php } ?>
 								</div>
 							</div>
-							<div class="column width-216 item-brand">
+							<div class="column width-206 item-brand">
 								<label>Brand *</label>
 								<div class="custom-select">
 									<?php $tax_brands = get_terms('brand', 'hide_empty=0');
@@ -154,25 +167,28 @@ $item_user_phone = get_user_meta($current_user->ID, 'phone', true);
 								</div>
 							</div>
 						</div>
-						<div class="row border-bottom">
-							<div class="column width-286 item-name">
+						<div class="row border-bottom v1">
+							<div class="column width-206 item-name">
 								<label>Item Name/Description *</label>
 								<div id="item-name">
 									<input type="text" name="item_name[<?php echo $in; ?>]" value="<?php echo $item_name; ?>">
 								</div>
-								<p class="small">Louis Vuitton Damier Ebene Speedy 30 <i>or</i> <br>Prada Small Purple Leather Bag</p>
 							</div>
-							<div class="column width-146 item-your-price">
+							<div class="column width-206 item-your-price">
 								<label>Your Asking Price, <?php echo $_SESSION["currency-code"]; ?></label>
 								<input type="text" name="item_your_price[<?php echo $in; ?>]" value="<?php echo $item_your_price; ?>">
 							</div>
+							<p class="small">Louis Vuitton Damier Ebene Speedy 30 <i>or</i> <br>Prada Small Purple Leather Bag</p>
 						</div>
 						<div class="row border-bottom item-condition">
 							<label>Condition: *</label>
 							<div class="row-check">
 								<?php
-								$excl = unserialize($OPTION['wps_excluded_selections']);
-								$tax_selections = get_terms('selection', 'hide_empty=0&orderby=id&order=asc&exclude='.implode(',', $excl));
+								if ($OPTION['wps_excluded_selections']) {
+									$excl = unserialize($OPTION['wps_excluded_selections']);
+									$excl = implode(',', $excl);
+								}
+								$tax_selections = get_terms('selection', 'hide_empty=0&orderby=id&order=asc&exclude='.$excl);
 								if ($tax_selections) { ?>
 									<div class="item-conditions">
 									<?php foreach($tax_selections as $tax_selection) { $c = ''; if ($tax_selection->term_id == $item_selection) { $c = ' CHECKED'; } ?>
@@ -188,7 +204,7 @@ $item_user_phone = get_user_meta($current_user->ID, 'phone', true);
 						<div class="row item-photos">
 							<label>Attach Pictures: (max 5 pictures)</label>
 							<div id="item-pictures-box-<?php echo $in; ?>">
-								<!--<a href="#" class="btn-grey w-128">Upload</a>-->
+								<div class="max-upload-error">Please upload a maximum of 5 pictures.</div>
 								<input type="button" class="ipupload" />
 								<ol class="uploaded-pics">
 									<?php if ($item_pictures) { $item_pictures = explode(';', $item_pictures); ?>
@@ -220,19 +236,6 @@ $item_user_phone = get_user_meta($current_user->ID, 'phone', true);
 		<input type="hidden" name="utm_term" id="utm_term">
 	</form>
 </div>
-<div class="contact-data item separated">
-	<div class="contact-row">
-		<p>
-			Questions?
-			<span class="i-phone"><?php echo $OPTION['wps_shop_questions_phone']; ?></span>
-			<a class="i-email" href="mailto:<?php echo $OPTION['wps_shop_questions_email']; ?>"><?php echo $OPTION['wps_shop_questions_email']; ?></a>
-		</p>
-	</div>
-	<div class="contact-row">
-		<h4>ARE YOU A PROFESSIONAL SELLER?</h4>
-		<a class="btn-orange" href="<?php echo get_permalink($OPTION['wps_professional_seller_page']); ?>">CLICK HERE</a>
-	</div>
-</div>
 <script type="text/javascript">
 itemnmb = <?php echo $item_number; ?>;
 </script>
@@ -240,7 +243,7 @@ itemnmb = <?php echo $item_number; ?>;
 <div class="new-item-form" style="display:none;">
 	<div id="item-form-(IN)">
 		<div class="row border-top">
-			<div class="column width-216 item-category">
+			<div class="column width-206 item-category">
 				<label>Category *</label>
 				<div class="custom-select">
 					<?php if ($seller_categories) { ?>
@@ -253,7 +256,7 @@ itemnmb = <?php echo $item_number; ?>;
 					<?php } ?>
 				</div>
 			</div>
-			<div class="column width-216 item-brand">
+			<div class="column width-206 item-brand">
 				<label>Brand *</label>
 				<div class="custom-select">
 					<?php if ($tax_brands) { ?>
@@ -268,18 +271,18 @@ itemnmb = <?php echo $item_number; ?>;
 				</div>
 			</div>
 		</div>
-		<div class="row border-bottom">
-			<div class="column width-286 item-name">
+		<div class="row border-bottom v1">
+			<div class="column width-206 item-name">
 				<label>Item Name/Description *</label>
 				<div id="item-name">
 					<input type="text" name="item_name[(IN)]" value="">
 				</div>
-				<p class="small">Louis Vuitton Damier Ebene Speedy 30 <i>or</i> <br>Prada Small Purple Leather Bag</p>
 			</div>
-			<div class="column width-146 item-your-price">
+			<div class="column width-206 item-your-price">
 				<label>Your Asking Price, <?php echo $_SESSION["currency-code"]; ?></label>
 				<input type="text" name="item_your_price[(IN)]" value="">
 			</div>
+			<p class="small">Louis Vuitton Damier Ebene Speedy 30 <i>or</i> <br>Prada Small Purple Leather Bag</p>
 		</div>
 		<div class="row border-bottom item-condition">
 			<label>Condition: *</label>
@@ -299,6 +302,7 @@ itemnmb = <?php echo $item_number; ?>;
 		<div class="row item-photos">
 			<label>Attach Pictures: (max 5 pictures)</label>
 			<div id="item-pictures-box-(IN)">
+				<div class="max-upload-error">Please upload a maximum of 5 pictures.</div>
 				<input type="button" class="ipupload" />
 				<ol class="uploaded-pics"></ol>
 				<input type="hidden" name="item_pictures[(IN)]" class="ipictures" value="">

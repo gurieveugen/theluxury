@@ -8,6 +8,18 @@ function wps_user_login($creds, $secure_cookie) {
 	return $user;
 }
 
+function wps_user_logout() {
+	unset($_SESSION['uname']);
+    unset($_SESSION['user_logged']);
+    unset($_SESSION['timeout']);
+    unset($_SESSION['browser']);
+    unset($_SESSION['level']);
+    unset($_SESSION['uid']);
+    unset($_SESSION['fname']);
+    unset($_SESSION['lname']);
+	wp_logout();
+}
+
 function wps_user_login_params($user_id) {
 	global $OPTION;
 	$userdata = get_userdata($user_id);
@@ -267,9 +279,15 @@ function wps_register_new_user() {
 	if(!$reff_id) $reff_id = 0;
 
 	$wpdb->update( $wpdb->users, array( 'my_reffer_key' => "$key",'reffer_id' => $reff_id),array( 'ID' => $user_id ),array('%s','%d' ), array('%d'));
-	update_user_meta( $user_id, 'my_points', '0' );
-	update_user_meta( $user_id, 'refferal_commision_status', 'true' );
-	update_user_meta( $user_id, 'refferal_commision_count_buy', '0' );
+	update_user_meta($user_id, 'my_points', '0');
+	update_user_meta($user_id, 'refferal_commision_status', 'true');
+	update_user_meta($user_id, 'refferal_commision_count_buy', '0');
+	if (strlen($_POST['first_name'])) {
+		update_user_meta($user_id, 'first_name', $_POST['first_name']);
+	}
+	if (strlen($_POST['last_name'])) {
+		update_user_meta($user_id, 'last_name', $_POST['last_name']);
+	}
 
 	$gender = $_POST['gender'];
 	if ($gender) {
@@ -282,7 +300,7 @@ function wps_register_new_user() {
 
 	// subscribe user
 	nws_subscribe_action('register', array('email' => $user->user_email, 'gender' => $gender));
-	
+
 	wp_register_notification( $user_id, isset($_POST['send_password']) ? $pass1 : '' );
 	return $user_id;
 }
@@ -310,6 +328,10 @@ function wp_register_notification($user_id, $plaintext_pass = '')
 	// welcome mail to new user
 	$message = "Welcome to $blogname. <br /><br /> We thank you for registering with <a href='".get_option('home')."' target='_blank'>$blogname </a> and are proud to have you as a member.<br /><br /><br />Please login to your account with this user name and password.<br /><br />";
 	$message .= sprintf(__('Username: %s'), $user_email) . "\r\n<br />";
+	if (strlen($plaintext_pass)) {
+		$message .= sprintf(__('Password: %s'), $plaintext_pass) . "\r\n<br />";
+	}
+	$message .= "<br />";
 	$message .= "Login here ".rtrim(get_my_theme_login_link(),'?') . "\r\n<br /><br />";
 	$message .= "If you ever forget your password, you can use the Forgot Your Password link available on the Sign-In page.<br /><br />For any queries and details please feel free to contact us at <a href='mailto:".get_option('admin_email')."'>".get_option('admin_email')."</a><br /><br /> We will be glad to hear from you. <br /><br /><br /> Regards, $blogname";
 	// end of welcome mail content
@@ -435,6 +457,8 @@ function ajax_login_init() {
 			break;
 			case 'fblogin':
 				$user_login = $_POST['email'];
+				$user_name = $_POST['name'];
+				$user_gender = ucfirst($_POST['gender']);
 				$user = get_user_by('email', $user_login);
 				if ($user) {
 					wp_set_current_user($user->ID, $user_login);
@@ -442,8 +466,39 @@ function ajax_login_init() {
 					do_action('wp_login', $user_login);
 					wps_user_login_params($user->ID);
 					echo 'success';
-				} else {
-					echo 'No account with such email.';
+				} else { // register
+					$user_pwd = wp_generate_password();
+					$uname = explode(' ', $user_name);
+					$_POST['first_name'] = $uname[0];
+					$_POST['last_name'] = $uname[1];
+					$_POST['email'] = $user_login;
+					$_POST['pwd'] = $user_pwd;
+					$_POST['pass2'] = $_POST['pwd'];
+					$_POST['gender'] = $user_gender;
+					$_POST['send_password'] = '1';
+					$errors = wps_register_new_user();
+					if (is_wp_error($errors)) {
+						$errors = wps_get_wp_errors($errors);
+						$error = implode(chr(10), $errors);
+						echo $error;
+					} else {
+						$user = get_user_by('email', $user_login);
+						$creds = array();
+						$creds['user_login'] = $user->data->user_login;
+						$creds['user_password'] = $user_pwd;
+						$creds['remember'] = false;
+						$user = wps_user_login($creds, $secure_cookie);
+						if (is_wp_error($user)) {
+							$errors = wps_get_wp_errors($user);
+							$error = implode(chr(10), $errors);
+							echo $error;
+						} else {
+							if (strpos($callpg, 'alertslogin')) {
+								$_SESSION['alertslogin'] = 'true';
+							}
+							echo 'success';
+						}
+					}
 				}
 			break;
 		}

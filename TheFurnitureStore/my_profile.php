@@ -37,7 +37,7 @@ $DIGITALGOODS->delete_dlink();							//change.9.10
 	<?php the_content(); ?>
 	<?php if ($errmsg == '' && !empty($_POST['action'])) { ?>
 		<p class="success-message"><?php _e('Your profile has been updated.')?></p>
-	<?php } else { echo $errmsg; } ?>
+	<?php } else {  } ?>
 	<form name="profile" action="<?php the_permalink(); ?>" method="post" class="my-profile-form">
 		<?php wp_nonce_field('update-profile_' . $user_ID) ?>
 		<input type="hidden" name="from" value="profile" />

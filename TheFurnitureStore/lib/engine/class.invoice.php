@@ -8,7 +8,6 @@
 		function make_pdf($order,$option='bill',$test=0){
 
 			global $OPTION, $order_payment_methods;									
-			$VOUCHER = load_what_is_needed('voucher');		
 
 			if (is_array($order)) {
 				foreach($order as $key => $val){
@@ -189,28 +188,27 @@
 				$pdf->Cell(0,6,pdf_encode($netsum_str),0,1,'R');
 					
 				// voucher 
-				if(($order[voucher] != 'non')&&($VOUCHER->code_exist($order['voucher']))){
-				
-					$TOTAL_AM 	= $CART[total_price];
-					$vdata 		= $VOUCHER->subtract_voucher($TOTAL_AM,$order);
-					
+				if(strlen($order['voucher']) && $order['voucher'] != 'non'){
 					$voucher_str	= pdf_encode( __('- Voucher:','wpShop'));
-					$voucher_str .= '$'.format_price($vdata['subtr_am']); 
+					$voucher_str .= '$'.format_price($order['voucher_amount']); 
 					$pdf->Cell(0,6,"$voucher_str",0,1,'R');
 				}
 
 				//tax
-				$tax_data = tax_invoice_pdf_addition($CART,$order);
-
-				//taxes without shipping costs
+				if ($order['tax'] > 0) {
+					$tax_str = pdf_encode( __('Tax:','wpShop'));
+					$tax_str .= '$'.format_price($order['tax']); 
+					$pdf->Cell(0,6,$tax_str,0,1,'R');
+				}
+				/*$tax_data = tax_invoice_pdf_addition($CART,$order);
 				if(($tax_data['display'] == 'yes')&&($tax_data['without_ship'] == 'yes')&&($tax_data['tax_info'] != 'no_show')){
 					$pdf->Cell(0,6,$tax_data['tax_info'],0,1,'R');
-				}
+				}*/
 				
 				// shipping fee
 				$shipf_str	= pdf_encode( __('Shipping Fee:','wpShop'));
 				$shipf_str .= '$'.format_price($order['shipping_fee']); 
-				$pdf->Cell(0,6,"$shipf_str",0,1,'R');
+				$pdf->Cell(0,6,$shipf_str,0,1,'R');
 					
 				//taxes with shipping costs
 				if(($tax_data['display'] == 'yes')&&($tax_data['with_ship'] == 'yes')&&($tax_data['tax_info'] != 'no_show')){
@@ -222,6 +220,11 @@
 
 				if ($order['layaway_order'] > 0) {
 					$oamounts = layaway_get_process_amounts($order['layaway_order']);
+					if ($order['layaway_fee'] > 0) {
+						$shipf_str	= pdf_encode( __('Late Fee:','wpShop'));
+						$shipf_str .= '$'.format_price($order['layaway_fee']); 
+						$pdf->Cell(00,6,$shipf_str,0,1,'R');
+					}
 					$pdf->SetFont('Arial','B',9);
 					$shipf_str	= pdf_encode( __('Total Amount:','wpShop'));
 					$shipf_str .= '$'.format_price($oamounts['total']); 
@@ -263,9 +266,7 @@
 
 		
 		function make_html($order,$option='bill'){
-		 
 			global $OPTION;                                  
-			$VOUCHER = load_what_is_needed('voucher');       
 		 
 			if($option == 'bill'){
 		 
@@ -337,11 +338,8 @@
 			} 
 		 
 			// voucher?
-			if(($order[voucher] != 'non')&&($VOUCHER->code_exist($order[voucher]))){
-		 
-				$cart_am          = $CART[total_price];
-				$vdata            = $VOUCHER->subtract_voucher($cart_am,$order);
-				$voucher_row     = "<tr><td colspan='4' align='right'>$minus_voucher</td><td>$".format_price($vdata['subtr_am'])."</td></tr>";
+			if(strlen($order['voucher']) && $order['voucher'] != 'non'){
+				$voucher_row     = "<tr><td colspan='4' align='right'>$minus_voucher</td><td>$".format_price($order['voucher_amount'])."</td></tr>";
 			}
 			else {
 				$voucher_row  = NULL;

@@ -47,6 +47,7 @@ require_once(WPSHOP_LIB . 'engine/NWS_taxonomies.php');
 require_once(WPSHOP_LIB . 'engine/NWS_shortcodes.php');
 require_once(WPSHOP_LIB . 'engine/NWS_widgets.php');
 require_once(WPSHOP_LIB . 'engine/nws-email-formats.php');
+require_once(WPSHOP_LIB . 'engine/nws-sell-questions.php');
 require_once(WPSHOP_LIB . 'engine/class.rhinosupport.php');
 require_once(WPSHOP_LIB . 'engine/layaway.php');
 require_once($_SERVER['DOCUMENT_ROOT'] . '/prelaunch/common.php');
@@ -73,8 +74,12 @@ if(is_admin()) {
 $currency_codes = array('usd' => 'USD', 'aed' => 'UAE Dirham', 'bhd' => 'Bahraini Dinar', 'egp' => 'Egyptian Pound', 'jod' => 'Jordanian Dinar', 'kwd' => 'Kuwaiti Dinar', 'lbp' => 'Lebanese Pound', 'omr' => 'Omani Rial', 'qar' => 'Qatari Riyal', 'sar' => 'Saudi Riyal', 'syp' => 'Syrian Pound');
 $currency_options = explode("|", get_option('wps_currency_options'));
 $currency_rates = array();
+$currency_locations = array();
 $currency_rates['usd'] = 1;
-foreach($currency_codes as $cc => $cn) { if ($cc != 'usd') { $currency_rates[$cc] = get_option('wps_exr_'.$cc); } }
+foreach($currency_codes as $cc => $cn) {
+	if ($cc != 'usd') { $currency_rates[$cc] = get_option('wps_exr_'.$cc); }
+	$currency_locations[$cc] = get_option('wps_exr_loc_'.$cc);
+}
 
 register_sidebar( array(
 		'name' => __( 'Banner Area', 'twentyten' ),
@@ -202,6 +207,7 @@ if(is_admin())
 			}
 			add_submenu_page(basename(__FILE__), $CONFIG_WPS['themename'],__('Pricing','wpShop'), 'administrator', basename(__FILE__).'&section=pricing','NWS_theme_admin');
 			add_submenu_page(basename(__FILE__), $CONFIG_WPS['themename'],__('Searches','wpShop'), 'administrator', basename(__FILE__).'&section=searches','NWS_theme_admin');
+			add_submenu_page(basename(__FILE__), $CONFIG_WPS['themename'],__('Logs','wpShop'), 'administrator', basename(__FILE__).'&section=logs','NWS_theme_admin');
 		} else if($currrole == 'editor') { // EDITOR Role
 			add_object_page($CONFIG_WPS['themename'],__('eCommerce','wpShop'), 'manage_links', 'nws-inventory', 'NWS_theme_editor', get_bloginfo('template_directory'). '/images/admin/shopping_cart.png'); 
 
@@ -234,7 +240,7 @@ if(is_admin())
 	add_filter('postmeta_form_limit', 'nws_postmeta_form_limit');
 }
 
-// Add translations
+// theme init
 function NWS_theme_init(){
 	global $OPTION, $currency_rates, $currency_codes, $currency_options;
 
@@ -247,6 +253,13 @@ function NWS_theme_init(){
 	}
 	$_SESSION['currency-code'] = $currency_code;
 	$_SESSION['currency-rate'] = $currency_rate;
+
+	// logout
+	if ($_GET['logout'] == 'true') {
+		wps_user_logout();
+		wp_redirect(site_url());
+		wp_exit();
+	}
 
 	// add to wishlist
 	if(isset($_GET['wishlist']) && $_GET['wishlist'] == 'add' && $_GET['pid'] > 0 && is_user_logged_in()){
@@ -270,10 +283,14 @@ function NWS_theme_init(){
 		$feedback = check_address_form();
 		if($feedback['error'] == 0) {
 			process_order(2);
-			wp_redirect(get_real_base_url() .'/?orderNow=3');
-			wp_exit();
+			wp_redirect('/?orderNow=3');
+			exit;
 		}
 	} else if ($_POST['order_step'] == 3 || isset($_GET['confirm'])) {
+		if (!check_cart_items()) {
+			wp_redirect('/?showCart=1');
+			exit;
+		}
 		if ($_POST['order_step'] == 3) {
 			$p_option = $_POST['p_option'];
 			include WP_CONTENT_DIR.'/themes/'.WPSHOP_THEME_NAME.'/lib/modules/payment/'.$p_option.'/functions.php';
@@ -302,8 +319,8 @@ function NWS_theme_init(){
 			}
 		}
 		$_SESSION['order_payment_data'] = $payment_feedback;
-		wp_redirect(get_real_base_url() .'/?orderNow=confirm');
-		wp_exit();
+		wp_redirect('/?orderNow=confirm');
+		exit;
 	}
 	if ($_GET['orderNow'] == '3' && $_POST['order_review'] == 'update') {
 		order_review_update();
@@ -348,11 +365,30 @@ function NWS_theme_init(){
 		} else if ($_POST['FormAction'] == 'popup-subscribe') {
 			// subscribe user
 			nws_subscribe_action('popup', array('email' => $_POST['email'], 'gender' => $_POST['gender']));
+		} else if ($_POST['FormAction'] == 'check_voucher') {
+			// checkout check voucher
+			$vcode = trim($_POST['vcode']);
+			if (nws_check_voucher($vcode)) {
+				$_SESSION['checkout_voucher'] = nws_get_voucher_data($vcode);
+				echo 'success';
+			} else {
+				unset($_SESSION['checkout_voucher']);
+				echo 'fail';
+			}
 		}
 		exit;
 	}
 }
 add_action('init', 'NWS_theme_init');
+
+add_action('template_redirect', 'nws_template_redirect');
+function nws_template_redirect() {
+	if (is_page('login') || is_page('register')) {
+		wp_redirect(site_url().'/?slp=true');
+		wp_exit();
+	}
+}
+
 
 if(!function_exists('current_user_role'))
 {
@@ -546,10 +582,20 @@ function nws_rewrite_rules($wp_rewrite) {
 function log_action($log_code, $log_desc) {
 	global $wpdb;
 	$insert = array();
-	$insert['log_date'] = date("Y-m-d H:i:s");
+	$insert['log_date'] = current_time('mysql');
 	$insert['log_code'] = $log_code;
 	$insert['log_desc'] = $log_desc;
 	$wpdb->insert($wpdb->prefix."wps_log_actions", $insert);
+}
+
+function order_log_action($order_id, $log_action) {
+	global $wpdb, $current_user;
+	$insert = array();
+	$insert['log_date'] = current_time('mysql');
+	$insert['order_id'] = $order_id;
+	$insert['log_action'] = $log_action;
+	$insert['user_id'] = $current_user->ID;
+	$wpdb->insert($wpdb->prefix."wps_orders_logs", $insert);
 }
 
 function nws_users_contactmethods($usercontactmethods) {

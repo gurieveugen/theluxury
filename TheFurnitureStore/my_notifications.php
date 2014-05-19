@@ -65,7 +65,7 @@ $user_ID = $current_user->ID;
 			$user_top_brands = explode(";", $user_top_brands_alerts);
 		}
 	?>
-	<p class="n-item"><span class="num">3</span> Choose from our brands</p>
+	<p class="n-item"><span class="num">3</span> Follow Your Favourite Brands</p>
 	<div class="n-box">
 		<ul class="col-5">
 			<div class="column">
@@ -80,7 +80,8 @@ $user_ID = $current_user->ID;
 		</ul>
 	</div>
     <?php } ?>
-	<p class="n-item"><span class="num">4</span> Or tell us what you are looking for: </p>
+	<p class="n-item" style="margin-bottom:10px;"><span class="num">4</span> Or tell us what you are looking for:</p>
+	<div class="look-for-exmpl" style="font-size:14px;">Eg: Louis Vuitton Speedy<br />Rolex Datejust watch</div>
 	<form method="POST" class="custom-alert-form notifiaction-save">
         <input type="hidden" name="AlertsAction" value="create_alert">
         <input type="hidden" name="ca_type" value="4">
@@ -90,7 +91,7 @@ $user_ID = $current_user->ID;
     <?php
 	$mysearches_alerts = $wpdb->get_results(sprintf("SELECT * FROM %swps_user_alerts WHERE type IN (1,4) AND user_id = %s ORDER BY alert_id DESC", $wpdb->prefix, $current_user->ID));
 	if ($mysearches_alerts) { ?>
-    <p><strong>My saved notifications</strong></p>	
+    <p><strong>My Custom Notifications</strong></p>	
 	<?php
 	$sterms = array();
 	$wpterms = $wpdb->get_results(sprintf("SELECT * FROM %sterms", $wpdb->prefix));
@@ -136,8 +137,8 @@ $user_ID = $current_user->ID;
 		<h2>Create an alert</h2>
 		<form class="my-alerts-add-form" method="POST">
 			<?php
-			$alert_categories = get_option('wps_alerts_categories');
-			$tax_categories = get_categories('hide_empty=0&include='.implode(',', $alert_categories));
+			$alerts_excluded_categories = get_option('wps_alerts_excluded_categories');
+			$tax_categories = get_categories('hide_empty=0&exclude='.implode(',', $alerts_excluded_categories));
 			$tax_brands = get_terms('brand', 'hide_empty=0');
 			$tax_colours = get_terms('colour', 'hide_empty=0');
 			$tax_prices = get_terms('price', 'hide_empty=0');

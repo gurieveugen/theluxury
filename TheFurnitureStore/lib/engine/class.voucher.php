@@ -593,7 +593,7 @@
 			$res 	= mysql_query($qStr);
 			
 			$result 		= array();
-			$result['erg'] 	= mysql_num_rows($res);
+			$result['erg'] 	= @mysql_num_rows($res);
 			$result['res'] 	= $res;
 			
 		return $result;

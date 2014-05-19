@@ -3,7 +3,6 @@
 function provide_tax_data($order,$taxable_amount){
 
 	global $OPTION;								
-	$VOUCHER = load_what_is_needed('voucher');	
 	
 	$tax_data = array();
 
@@ -41,10 +40,6 @@ function provide_tax_data($order,$taxable_amount){
 				case 'origin':
 					//calculate tax amount
 					//if voucher present - subtract before 
-					$vdata 		= $VOUCHER->subtract_voucher($taxable_amount,$order);
-					if($vdata['subtr_am'] > 0.00){
-						$taxable_amount = $taxable_amount - $vdata['subtr_am'];
-					}
 					$tax_data['rate']				= (float) get_option('wps_salestax_rate');
 					$tax_data['amount']				= ($taxable_amount / 100) *  $tax_data['rate'];
 					$tax_data['shipping_taxable']	= (get_option('wps_salestax_onshipping') == 'No' ? 0 : 1);
@@ -63,10 +58,6 @@ function provide_tax_data($order,$taxable_amount){
 						
 						//calculate tax amount
 						//if voucher present - subtract before 
-						$vdata 		= $VOUCHER->subtract_voucher($taxable_amount,$order);
-						if($vdata['subtr_am'] > 0.00){
-							$taxable_amount = $taxable_amount - $vdata['subtr_am'];
-						}
 						$tax_data['amount']				= ($taxable_amount / 100) * (float) $row['SalesTaxRate'];
 						$tax_data['rate']				= $row['SalesTaxRate'];
 						$tax_data['shipping_taxable']	= $row['ShippingTaxable'];					
