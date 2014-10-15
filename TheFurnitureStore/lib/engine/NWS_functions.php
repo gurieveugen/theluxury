@@ -5,6 +5,30 @@
 //hide login errors
 //add_filter('login_errors',create_function('$a', "return null;"));
 
+function get_cart_url() {
+	global $OPTION;
+	return get_permalink($OPTION['wps_shopping_cart_page']);
+}
+
+function get_checkout_url() {
+	global $OPTION;
+	$checkout_url = get_permalink($OPTION['wps_checkout_page']);
+	if ($OPTION['wps_enforce_ssl'] == 'force_ssl') {
+		return str_replace('http:', 'https:', $checkout_url);
+	}
+	return $checkout_url;
+}
+
+function is_cart_page() {
+	global $OPTION;
+	return is_page($OPTION['wps_shopping_cart_page']);
+}
+
+function is_checkout_page() {
+	global $OPTION;
+	return is_page($OPTION['wps_checkout_page']);
+}
+
 //hide wordpress version
 add_filter( 'the_generator', create_function('$a', "return null;") );
 
@@ -1674,7 +1698,7 @@ function product_sort_filters() {
 function product_sort_filter_fields($fields) {
 	global $wpdb;
 
-	$psort = $_GET['psort'];
+	$psort = isset($_GET['psort']) ? $_GET['psort'] : '';
 	if(isset($_SESSION['psort']) && $_SESSION['psort'] != "")
 	{
 		$psort = $_SESSION['psort'];
@@ -1689,7 +1713,7 @@ function product_sort_filter_fields($fields) {
 
 function product_sort_filter_join($join) {
 	global $wpdb;
-	$psort = $_GET['psort'];
+	$psort = isset($_GET['psort']) ? $_GET['psort'] : '';
 	if(isset($_SESSION['psort']) && $_SESSION['psort'] != "")
 	{
 		$psort = $_SESSION['psort'];
@@ -1703,7 +1727,7 @@ function product_sort_filter_join($join) {
 
 function product_sort_filter_orderby($order) {
 	global $wpdb;
-	$psort = $_GET['psort'];
+	$psort = isset($_GET['psort']) ? $_GET['psort'] : '';
 	if(isset($_SESSION['psort']) && $_SESSION['psort'] != "")
 	{
 		$psort = $_SESSION['psort'];
@@ -1737,7 +1761,7 @@ function product_sort_process($args) {
 	add_filter('posts_orderby', 'product_sort_filter_orderby');
 	add_filter('posts_groupby', 'product_sort_filter_groupby');
 
-	/*$psort = $_GET['psort'];
+	/*$psort = isset($_GET['psort']) ? $_GET['psort'] : '';
 	if (strlen($psort)) {
 		switch ($psort) {
 			case "newest":
@@ -1760,6 +1784,7 @@ function product_sort_process($args) {
 }
 
 function product_sort_select() {
+	
 	global $OPTION;
 	// view per page params
 	$def_ppp = get_option('posts_per_page');
@@ -1828,16 +1853,7 @@ function product_sort_select() {
 				</ul>
 			</fieldset>
 		</form>
-	</div>
-	<div class="see-latest">
-	
-		<?php 
-		global $post;
-		$is_cats = array( 'all-handbags', 'all-clothes', 'all-jewelry', 'all-shoes', 'all-watches', 'all-accessories'); 
-		$is_cats = array_flip($is_cats);
-		?>		
-		<?php if (!is_page($OPTION['wps_reserved_bags_page']) && !is_category() && !isset($is_cats[$post->post_name]) && !is_user_logged_in()) { ?><a href="<?php echo get_permalink($OPTION['wps_reserved_bags_page']); ?>" onclick="get_latest_products(this); return false;" class="items-list-see-latest">See the latest products</a><?php } ?>
-	</div>
+	</div>	
 <?php
 }
 
@@ -1858,6 +1874,8 @@ function get_product_thumb($prod_id, $img_size = 64) {
 	} else if ($image_thumb = get_post_meta($prod_id, 'image_thumb', true)) {
 		$img_file = mkthumb($image_thumb,$resizedImg_src,$img_size,'width');
 		return get_option('siteurl').'/'.$resizedImg_src.'/'.$img_file;
+	} else if ($image_thumb = get_post_meta($prod_id, 'thumbnail_id', true)) {
+		return get_post_thumb($image_thumb, $img_size, $img_size, true);
 	}
 }
 
@@ -1983,16 +2001,28 @@ function update_item_inventory($ID_item, $amount, $hard = false, $tp = '') {
 		$wpdb->query(sprintf("UPDATE %swps_inventory SET amount = %s WHERE ID_item = '%s'", $wpdb->prefix, $amount, $ID_item));
 		$wpdb->query(sprintf("UPDATE %sposts SET inventory = %s WHERE ID = %s", $wpdb->prefix, $amount, $post_id));
 		// update sold out date
-		if ($item_amount > 0 && $amount == 0) {
-			update_post_meta($post_id, 'sold_date', time());
-		} else {
-			delete_post_meta($post_id, 'sold_date');
+		if ($tp == 'order') {
+			if ($item_amount > 0 && $amount == 0) {
+				update_post_meta($post_id, 'sold_date', time());
+				$wpdb->query(sprintf("UPDATE %sposts SET sold_date = %s WHERE ID = %s", $wpdb->prefix, time(), $post_id));
+			}
 		}
+		// inventory log
+		$insert = array();
+		$insert['ID_item'] = $ID_item;
+		$insert['amount'] = $amount;
+		$insert['change_date'] = current_time('mysql');
+		$insert['user_id'] = $current_user->ID;
+		$insert['comment'] = $tp;
+		$wpdb->insert($wpdb->prefix."wps_inventory_log", $insert);
 		// send inventory notifications
 		if ($item_amount == 0 && $amount > 0) {
 			update_post_meta($post_id, 'alert_send', '1');
 			inventory_notifications($ID_item);
 		}
+		// update inventory on channel advisor
+		$chadv = new ChannelAdvisor();
+		$chadv->update_inventory_and_price($post_id, $ID_item);
 	}
 }
 
@@ -2316,7 +2346,6 @@ function sellers_actions_init() {
 					$new_post_id = wp_insert_post($new_post);
 
 					$item_retail_price = sellers_to_usd_price($item_retail_price);
-					$item_sell_price = sellers_to_usd_price($item_sell_price);
 					$item_your_price = sellers_to_usd_price($item_your_price);
 
 					$item_sell_price = sellers_get_selling_price($item_your_price);
@@ -2325,8 +2354,8 @@ function sellers_actions_init() {
 					update_item_inventory($item_id, 1, true, 'Profseller added item');
 
 					update_post_meta($new_post_id, 'item_seller', 'p');
-					update_post_meta($new_post_id, 'price', $item_retail_price);
-					update_post_meta($new_post_id, 'new_price', $item_sell_price);
+					update_post_meta($new_post_id, 'price', $item_sell_price);
+					update_post_meta($new_post_id, 'item_retail_price', $item_retail_price);
 					update_post_meta($new_post_id, 'item_your_price', $item_your_price);
 
 					if ($item_condition_desc) {      update_post_meta($new_post_id, 'item_condition_desc', $item_condition_desc); }
@@ -2496,13 +2525,18 @@ function sellers_actions_init() {
 						wp_update_post($update);
 
 						$item_retail_price = sellers_to_usd_price($item_retail_price);
-						$item_sell_price = sellers_to_usd_price($item_sell_price);
 						$item_your_price = sellers_to_usd_price($item_your_price);
 
-						$item_sell_price = sellers_get_selling_price($item_your_price);
+						$adate = mktime(23, 59, 59, 11, 7, 2013); // 7th November 2013
+						$pdate = strtotime($post_data->post_date);
+						if ($pdate <= $adate) {
+							$item_sell_price = sellers_get_old_selling_price($item_your_price);
+						} else {
+							$item_sell_price = sellers_get_selling_price($item_your_price);
+						}
 
-						update_post_meta($post_id, 'price', $item_retail_price);
-						update_post_meta($post_id, 'new_price', $item_sell_price);
+						update_post_meta($post_id, 'price', $item_sell_price);
+						update_post_meta($post_id, 'item_retail_price', $item_retail_price);
 						update_post_meta($post_id, 'item_your_price', $item_your_price);
 
 						if ($item_condition_desc) {      update_post_meta($post_id, 'item_condition_desc', $item_condition_desc);
@@ -2916,17 +2950,19 @@ function sellers_actions_init() {
 							$item_your_quotation_price = $spost_tlc_quotation_price_high;
 						}
 
-						$item_new_price = sellers_get_selling_price($item_your_quotation_price);
+						$adate = mktime(23, 59, 59, 11, 7, 2013); // 7th November 2013
+						$pdate = strtotime($post_data->post_date);
+						if ($pdate <= $adate) {
+							$item_new_price = sellers_get_old_selling_price($item_your_quotation_price);
+						} else {
+							$item_new_price = sellers_get_selling_price($item_your_quotation_price);
+						}
 
 						$update = array();
 						$update['post_status'] = 'iseller_approved';
 						$wpdb->update($wpdb->prefix."posts", $update, array("ID" => $post_id));
 						update_post_meta($post_id, 'item_your_quotation_price', $item_your_quotation_price);
-						if (get_post_meta($post_id, 'new_price', true)) {
-							update_post_meta($post_id, 'new_price', $item_new_price);
-						} else {
-							update_post_meta($post_id, 'price', $item_new_price);
-						}
+						update_post_meta($post_id, 'new_price', $item_new_price);
 						update_post_meta($post_id, '_item_quotation_price', $item_your_quotation_price);
 						update_post_meta($post_id, '_item_quotation_currency_code', $_SESSION["currency-code"]);
 						update_post_meta($post_id, '_item_quotation_currency_rate', $_SESSION["currency-rate"]);
@@ -2962,16 +2998,17 @@ function sellers_actions_init() {
 
 							update_post_meta($post_id, 'item_your_price', $item_your_quotation_price);
 							update_post_meta($post_id, 'item_your_quotation_price', $item_your_price);
-							if (get_post_meta($post_id, 'new_price', true)) {
-								update_post_meta($post_id, 'new_price', $item_new_price);
-							} else {
-								update_post_meta($post_id, 'price', $item_new_price);
-							}
+							update_post_meta($post_id, 'new_price', $item_new_price);
 							update_post_meta($post_id, 'item_request_price', 'completed');
 							nws_update_post_prices_tax($post_id);
 							if (!$old_price) {
 								update_post_meta($post_id, 'old_price', $item_old_price);
 							}
+							// update post modified date
+							$update = array();
+							$update['post_modified'] = current_time('mysql');
+							$update['post_modified_gmt'] = current_time('mysql', 1);
+							$wpdb->update($wpdb->prefix."posts", $update, array("ID" => $post_id));
 							// add to sale category
 							$sale_ttid = $wpdb->get_var(sprintf("SELECT term_taxonomy_id FROM %sterm_taxonomy WHERE term_id = %s", $wpdb->prefix, $OPTION['wps_sale_category']));
 							if ($sale_ttid) {
@@ -3002,6 +3039,11 @@ function sellers_actions_init() {
 					if ($post_data && $post_data->post_author == $current_user->ID) {
 						$item_your_quotation_price = get_post_meta($post_id, 'item_your_quotation_price', true);
 						$item_suggested_your_quotation_price = get_post_meta($post_id, 'item_suggested_your_quotation_price', true);
+						$old_price = get_post_meta($post_id, 'old_price', true);
+						$item_old_price = get_post_meta($post_id, 'new_price', true);
+						if (!$item_old_price) {
+							$item_old_price = get_post_meta($post_id, 'price', true);
+						}
 						if ($item_suggested_your_quotation_price) {
 							$adate = mktime(23, 59, 59, 11, 7, 2013); // 7th November 2013
 							$pdate = strtotime($post_data->post_date);
@@ -3015,13 +3057,30 @@ function sellers_actions_init() {
 							update_post_meta($post_id, 'item_your_price', $item_your_quotation_price);
 							update_post_meta($post_id, 'item_request_price', 'completed');
 							update_post_meta($post_id, 'item_suggested_price', 'completed');
-							if (get_post_meta($post_id, 'new_price', true)) {
-								update_post_meta($post_id, 'new_price', $item_new_price);
-							} else {
-								update_post_meta($post_id, 'price', $item_new_price);
-							}
+							update_post_meta($post_id, 'new_price', $item_new_price);
 							delete_post_meta($post_id, 'item_suggested_your_quotation_price');
 							delete_post_meta($post_id, '_change_price_email');
+							nws_update_post_prices_tax($post_id);
+							if (!$old_price) {
+								update_post_meta($post_id, 'old_price', $item_old_price);
+							}
+							// update post modified date
+							$update = array();
+							$update['post_modified'] = current_time('mysql');
+							$update['post_modified_gmt'] = current_time('mysql', 1);
+							$wpdb->update($wpdb->prefix."posts", $update, array("ID" => $post_id));
+							// add to sale category
+							$sale_ttid = $wpdb->get_var(sprintf("SELECT term_taxonomy_id FROM %sterm_taxonomy WHERE term_id = %s", $wpdb->prefix, $OPTION['wps_sale_category']));
+							if ($sale_ttid) {
+								$check_item = $wpdb->get_var(sprintf("SELECT COUNT(object_id) FROM %sterm_relationships WHERE object_id = %s AND term_taxonomy_id = %s", $wpdb->prefix, $post_id, $sale_ttid));
+								if (!$check_item) {
+									$insert = array();
+									$insert['object_id'] = $post_id;
+									$insert['term_taxonomy_id'] = $sale_ttid;
+									$wpdb->insert($wpdb->prefix."term_relationships", $insert);
+									$wpdb->query(sprintf("UPDATE %sterm_taxonomy SET count = count + 1 WHERE term_taxonomy_id = %s", $wpdb->prefix, $sale_ttid));
+								}
+							}
 
 							// send notification
 							$subject = "Change Price Request (Individual Sellers)";
@@ -3690,6 +3749,7 @@ function sellers_send_completed_quotation_email($post_id) {
 	$message = apply_filters('the_content', $message);
 	$message = '<div style="font-family:Arial,Tahoma,Verdana;font-size:12px;">'.$message.'</div>';
 	$message = str_replace('{SELLER_NAME}', $seller_name, $message);
+	$message = str_replace('{SELLER_EMAIL}', $seller_email, $message);
 
 	$check_aq = $wpdb->get_var(sprintf("SELECT COUNT(ID) FROM %sposts WHERE post_author = %s AND post_status = 'iseller_draft'", $wpdb->prefix, $seller_id));
 	if ($check_aq == 0) {
@@ -3856,14 +3916,19 @@ function sellers_get_category_data($cid) {
 
 function sellers_assign_item_id($post_id, $user_id, $sl = 'i') {
 	global $wpdb, $OPTION;
-	$item_id = $OPTION['wps_sellers_indiv_item_id_prefix'];
-	if (!strlen($item_id)) { $item_id = 'LC'; }
 	if ($sl == 'p') {
 		$item_id = get_user_meta($user_id, 'seller_item_id_prefix', true);
+		if (!strlen($item_id)) {
+			$item_id = $OPTION['wps_sellers_prof_item_id_prefix'];
+			if (!strlen($item_id)) { $item_id = 'PL'; }
+		}
 		if (!strlen($item_id)) {
 			$user_login = $wpdb->get_var(sprintf("SELECT user_login FROM %susers WHERE ID = %s", $wpdb->prefix, $user_id));
 			$item_id = strtoupper(substr($user_login, 0, 2));
 		}
+	} else {
+		$item_id = $OPTION['wps_sellers_indiv_item_id_prefix'];
+		if (!strlen($item_id)) { $item_id = 'LC'; }
 	}
 	$item_id .= '-'.$user_id.'-'.$post_id;
 	update_post_meta($post_id, 'ID_item', $item_id);
@@ -4790,6 +4855,15 @@ function get_sc_item_category($item_id) {
 	} else if (in_category($OPTION['wps_men_limited_edition_category'], $item_id)) {
 		$item_category = 'Men - Limited Edition';
 	}
+	if (!strlen($item_category)) {
+		$post_cats = wp_get_post_categories($item_id);
+		if ($post_cats) {
+			$catdata = get_category($post_cats[0]);
+			if ($catdata) {
+				$item_category = $catdata->name;
+			}
+		}
+	}
 
 	return $item_category;
 }
@@ -5137,6 +5211,9 @@ function nws_save_post_actions($post_id) {
 		}
 		// set Prices taxonomy
 		nws_update_post_prices_tax($post_id);
+		// update price on channel advisor
+		$chadv = new ChannelAdvisor();
+		$chadv->update_inventory_and_price($post_id);
 	}
 	// page seo meta title save
 	if ($post->post_type == 'page') {
@@ -5206,7 +5283,7 @@ function shorturl($url) {
 
 function nws_subscribe_action($type, $data) {
 	// Mailchimp
-	$mergeVars = array('FNAME' => '', 'LNAME' => '');
+	/*$mergeVars = array('FNAME' => '', 'LNAME' => '');
 	if (strlen($data['gender'])) {
 		$mergeVars['GROUPINGS'] = array(0 => array('name' => 'Sex', 'groups' => $data['gender']));
 	}
@@ -5220,6 +5297,13 @@ function nws_subscribe_action($type, $data) {
 				return $api->errorMessage;
 			}
 		}
+	}*/
+
+	// Emarsys Service
+	$emr = new Emarsys();
+	$ecid = $emr->add_contact($data);
+	if (($type == 'register' || $type == 'profile') && $ecid && $data['user_id']) {
+		update_user_meta($data['user_id'], 'emarsys_contact_id', $ecid);
 	}
 
 	// Infusionsoft
@@ -5371,8 +5455,17 @@ function nws_additional_init() {
 		copy_follow_brands_to_alerts();
 		exit;
 	}
-	if ($_GET['hivista'] == 'test') {
-		var_dump(nws_subscribe_action('register', array('email' => 'aabbcc@mail.ru', 'gender' => 'Male')));
+	if ($_GET['hivista'] == 'date') {
+		$sdposts = $wpdb->get_results("SELECT * FROM wp_postmeta WHERE meta_key = 'sold_date'");
+		var_dump(count($sdposts));
+		if ($sdposts) {
+			foreach($sdposts as $sdpost) {
+				$sdate = $sdpost->meta_value;
+				if ($sdate) {
+					$wpdb->query(sprintf("UPDATE %sposts SET sold_date = %s WHERE ID = %s", $wpdb->prefix, $sdate, $sdpost->post_id));
+				}
+			}
+		}
 		exit;
 	}
 }

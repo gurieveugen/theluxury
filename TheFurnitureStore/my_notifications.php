@@ -56,7 +56,12 @@ $user_ID = $current_user->ID;
     </div>
     <?php } ?>
     <?php
-    $tax_brands = get_terms('brand');
+	$incl_brands = '';
+	if (strlen($OPTION['wps_alerts_favourite_brands'])) {
+		$incl_brands = unserialize($OPTION['wps_alerts_favourite_brands']);
+		$incl_brands = implode(',', $incl_brands);
+	}
+    $tax_brands = get_terms('brand', 'hide_empty=0&include='.$incl_brands);
 	if ($tax_brands) { $cnmb = 1; $nmb_in_col = ceil(count($tax_brands) / 5);
 		$user_top_brands = array();
 		$user_top_brands_alerts = $wpdb->get_var(sprintf("SELECT value FROM %swps_user_alerts WHERE type = 3 AND user_id = %s", $wpdb->prefix, $current_user->ID));

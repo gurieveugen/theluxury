@@ -123,7 +123,7 @@ $pricing_search_items_per_page = $OPTION['wps_sellers_pricing_search_items_per_p
 		</div>
 		<div class="view-section view-row"<?php if ($view == 'list') { echo ' style="display:none;"'; } ?>>
 			<?php if ($pricing_total) { ?>
-				<ul>
+				<ul class="psearch-details">
 				<?php
 					foreach($pricing_records as $pricing_record) {
 						$original_price = sellers_currency_price($pricing_record->original_price);

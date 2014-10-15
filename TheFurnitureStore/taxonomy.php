@@ -1,65 +1,83 @@
-<?php get_header();
-$WPS_tagCol			= $OPTION['wps_tagCol_option'];
-$WPS_sidebar		= $OPTION['wps_sidebar_option'];
-$term 				= get_term_by( 'slug', get_query_var( 'term' ), get_query_var( 'taxonomy' ) );
-$customTax 			= $term->taxonomy;
-if($term->taxonomy == 'brand')
+<?php 
+/**
+ * Template name: Filter
+ */
+get_header();
+
+$qo = get_queried_object();
+
+if($qo->taxonomy == 'category')
 {
-	echo '<input type="hidden" id="is_open_brands" name="is_open_brands" value="yes" data-value="'.$term->taxonomy.'">';	
+	$cat_parents = KostulQuery::countParents($qo)+1; 
+	$tax = 'tax_cat_'.$cat_parents;
 }
-switch($WPS_sidebar){
-	case 'alignRight':
-		$the_float_class 	= 'alignleft';
-	break;
-	case 'alignLeft':
-		$the_float_class 	= 'alignright';
-	break;
+else
+{
+	$taxonomies = array(
+		'colour'          => 'tax_colours',
+		'size'            => 'tax_sizes',
+		'ring-size'       => 'tax_ring_sizes',
+		'clothes-size'    => 'tax_clothes_sizes',
+		'selection'       => 'tax_selections',
+		'brand'           => 'tax_brands',
+		'style'           => 'tax_styles',
+		'price'           => 'tax_prices',
+		'seller-category' => 'tax_seller_category',
+	);
+	$tax = $taxonomies[$qo->taxonomy];
 }
 
-	if($OPTION['wps_teaser_enable_option']) {$the_eqcol_class = 'eqcol'; }
-	//which column option?
-	switch($WPS_tagCol){
-		case 'tagCol1':
-			$the_div_class 	= 'theTags clearfix tagCol1 '.$the_float_class.' '.$the_eqcol_class;
-			$counter = 1;      
+
+$DEFAULT = show_default_view();
+
+ if($DEFAULT){
+	$WPS_sidebar		= $OPTION['wps_sidebar_option'];
+	switch($WPS_sidebar){
+		case 'alignRight':
+			$the_float_class 	= 'alignleft';
 		break;
-		
-		case 'tagCol2':
-			$the_div_class 	= 'theTags clearfix tagCol2 '.$the_float_class.' '.$the_eqcol_class;
-			$counter = 2;      
+		case 'alignLeft':
+			$the_float_class 	= 'alignright';
 		break;
-		
-		case 'tagCol3':
-			$the_div_class 	= 'theTags clearfix tagCol3 '.$the_float_class.' '.$the_eqcol_class;
-			$counter = 3;      
-		break;
-			
-		case 'tagCol4':
-			$the_div_class 	= 'theTags clearfix tagCol4 '.$the_float_class.' '.$the_eqcol_class;
-			$counter = 4;      
-		break;
-	} ?>
-	<div id="main_col" class="<?php echo $the_float_class;?>">
-	
-		<?php $term_featured_image = get_field('featured_image', 'brand_'.$term->term_id);
-		if ($term_featured_image) { ?>
-		<div class="featuredTag">
-			<img src="<?php echo $term_featured_image['url']; ?>" alt="<?php echo $term->name; ?>" />
-		</div>
-		<?php } ?>
-		
-		<?php  if($OPTION['wps_termDescr_enable']) {
-			echo term_description();
-		} ?>
-		
+	}
+
+	$the_div_class 	= 'sidebar tag_sidebar category_sidebar noprint alignleft ';
+	if (is_sidebar_active('category_widget_area')) 
+	{
+		printf('<div class="%s" data-ttttt="">', $the_div_class );
+		dynamic_sidebar('category_widget_area');	
+		printf('</div><!-- category_sidebar -->');
+	} 
+	?>
+	<div class="alignright" id="main_col">
 		<?php
-		$_SESSION["ajax"]       = false;
-		product_sort_select(); ?>
-		<div class="<?php echo $the_div_class;?>" id="products-container">
-			<?php get_template_part('loop', 'products'); ?>		
-		</div><!-- theTags -->
-	</div><!-- main_col -->			
-	<?php
-	include (TEMPLATEPATH . '/widget_ready_areas.php');
+		product_sort_select();
 		
+		global $OPTION;
+		$_GET['cats'][$tax]    = $qo->term_id;
+		$kostul_query  = new KostulQuery();
+		$request       = $kostul_query->makeRequestFromArgs($_GET);
+		$columns       = intval(str_replace('tagCol', '', $OPTION['wps_tagCol_option']));
+		$html          = '';
+		$pagination    = new Pagination($request['count'], $request['last_args']['count'], $request['last_args']['offset']);
+		
+		if(is_array($request['posts']) AND count($request['posts']))
+		{
+			foreach ($request['posts'] as $p) 
+			{
+				$post = new KostulHTML($p, $columns, $OPTION);
+				$html.= $post->getHTML();
+			}
+		}
+		?>
+		<div id="products-container" class="theProds clearfix  alignright eqcol">
+			<script>
+				var last_args = <?php echo json_encode($request['last_args']); ?>;
+				var visible_terms = <?php echo json_encode($request['visible_terms']); ?>;
+			</script>
+			<?php echo $html.$pagination->getHTML(); ?>
+		</div>
+	</div>
+	<?php
+} 
 get_footer(); ?>

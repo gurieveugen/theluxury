@@ -664,7 +664,7 @@ jQuery(document).ready(function(){
 		var ddiv = jQuery(this).attr('rel');
 		jQuery('.row-view-details').html(jQuery('.'+ddiv).html());
 	});
-	jQuery('.view-row ul li a').colorbox({inline:true, href:'#row-view-details'});
+	jQuery('.psearch-details li a').colorbox({inline:true, href:'#row-view-details'});
 
 	// sell us
 	jQuery('.our-consignment-process').click(function(){
@@ -903,6 +903,14 @@ function seller_presubmit_form() {
 		jQuery('#item-category-type').val(scat_type);
 		jQuery('form.form-add').submit();
 		return true;
+	}
+}
+
+function indivseller_change_cat(n, val) {
+	jQuery('.item-brand-'+n+' .catop').removeAttr('selected').hide();
+	jQuery('.item-brand-'+n+' option').eq(0).attr('selected', 'selected');
+	if (val != '') {
+		jQuery('.item-brand-'+n+' .cid-'+val).show();
 	}
 }
 

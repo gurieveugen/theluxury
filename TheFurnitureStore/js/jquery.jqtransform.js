@@ -152,11 +152,11 @@
 				//do nothing if the original input is disabled
 				if($input.attr('disabled')){return false;}
 				//trigger the envents on the input object
-				$input.trigger('click').trigger("change");	
+				$input.trigger('click');	
 				return false;
 			});
 
-			// set the default state
+			// set the default state			
 			this.checked && aLink.addClass('jqTransformChecked');		
 		});
 	};

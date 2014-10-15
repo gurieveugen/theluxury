@@ -29,7 +29,8 @@ $cart_comp 	= cart_composition($_SESSION['cust_id']);
 //get shipping fees
 $shipping = 0;
 if($cart_comp != 'digi_only' && $_SESSION['layaway_order'] == 0){  // however the shipping option might be, no shipping for a digital product only
-	$shipping = calculate_shipping($order['d_option'],$CART['total_price'],$CART['total_weight'],$CART['total_item_num'],$order['country']);
+	$order_country = get_order_shipping_country($order['oid']);
+	$shipping = calculate_shipping($order['d_option'],$CART['total_price'],$CART['total_weight'],$CART['total_item_num'],$order_country);
 }
 //get tax
 $tax_amount = 0;
@@ -81,19 +82,19 @@ wps_shop_process_steps(4);
 		<?php } ?>
 		<div class="review-order">
 			<div class="box"<?php echo $dstyle; ?>>
-				<h3 class="heading"><?php echo $LANG['delivery']; ?> <a href="?orderNow=1"><?php echo $LANG['change']; ?></a></h3>
+				<h3 class="heading"><?php echo $LANG['delivery']; ?> <a href="<?php echo get_checkout_url(); ?>?orderNow=1"><?php echo $LANG['change']; ?></a></h3>
 				<div class="holder">
 					<p><?php echo $d_labels[$order['d_option']]; ?></p>
 				</div>
 			</div>
 			<div class="box">
-				<h3 class="heading"><?php echo $LANG['payment']; ?> <a href="?orderNow=1"><?php echo $LANG['change']; ?></a></h3>
+				<h3 class="heading"><?php echo $LANG['payment']; ?> <a href="<?php echo get_checkout_url(); ?>?orderNow=1"><?php echo $LANG['change']; ?></a></h3>
 				<div class="holder">
 					<p><?php echo $p_labels[$order['p_option']]; ?></p>
 				</div>
 			</div>
 			<div class="box">
-				<h3 class="heading"><?php echo $LANG['address_data']; ?> <a href="?orderNow=2&dpchange=1"><?php echo $LANG['change']; ?></a></h5>
+				<h3 class="heading"><?php echo $LANG['address_data']; ?> <a href="<?php echo get_checkout_url(); ?>?orderNow=2&dpchange=1"><?php echo $LANG['change']; ?></a></h5>
 				<div class="holder">
 					<?php
 					$ba_title = __('Billing and Shipping Address','wpShop');
@@ -123,7 +124,7 @@ wps_shop_process_steps(4);
 			</div>
 		</div>
 		<?php if($CART['status'] == 'filled') { ?>
-		<form class="order_form" action="?orderNow=3" style="margin-top: 0px;" method="POST">
+		<form class="order_form" action="<?php echo get_checkout_url(); ?>?orderNow=3" style="margin-top: 0px;" method="POST">
 			<table class='order_table white'>
 				<tr>
 					<th colspan="2">Item</th>
@@ -159,7 +160,11 @@ wps_shop_process_steps(4);
 					<?php // SHIPPING amount ?>
 					<tr class="sums">
 						<td colspan="2"><?php echo $LANG['shipping_fee_1']; ?></td>
-						<td colspan="2"><?php echo format_price($shipping * $_SESSION['currency-rate'], true); ?></td>
+						<?php if (is_flat_limit_shipping_free($CART['total_price'])) { ?>
+							<td colspan="2" style="color:#FF0000">FREE</td>
+						<?php } else { ?>
+							<td colspan="2"><?php echo format_price($shipping * $_SESSION['currency-rate'], true); ?></td>
+						<?php } ?>
 					</tr>
 					<?php // TAX amount ?>
 					<?php if($OPTION['wps_tax_enable'] && $tax_amount > 0) { // TAX ?>
@@ -203,7 +208,7 @@ wps_shop_process_steps(4);
 			include WP_CONTENT_DIR.'/themes/'.WPSHOP_THEME_NAME.'/lib/modules/payment/'.$order['p_option'].'/start.php';
 		} else {
 		?>
-			<form class="order_now" method="POST" action="?orderNow=complete" target="_top">
+			<form class="order_now" method="POST" action="<?php echo get_checkout_url(); ?>?orderNow=complete&oid=<?php echo $order['oid']; ?>" target="_top">
 				<input type="hidden" name="order_id" value="<?php echo $order['oid']; ?>" />
 				<input type="hidden" name="item_name" value="<?php echo $Your_Order.' - '.$date_order; ?>" />
 				<input type="hidden" name="amount" value="<?php echo $TOTAL_AM; ?>" />

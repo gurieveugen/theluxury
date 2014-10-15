@@ -3,7 +3,7 @@
 Template Name: Sell Us Page
 */
 global $OPTION, $current_user, $sellers_error, $wpdb;
-$soldnmb = $wpdb->get_var(sprintf("SELECT COUNT(sc.item_id) FROM %swps_shopping_cart sc LEFT JOIN %swps_orders o ON o.oid = sc.order_id WHERE o.level = '7'", $wpdb->prefix, $wpdb->prefix));
+$soldnmb = $wpdb->get_var(sprintf("SELECT COUNT(sc.item_id) FROM %swps_shopping_cart sc LEFT JOIN %swps_orders o ON o.oid = sc.order_id WHERE o.level IN ('6', '7')", $wpdb->prefix, $wpdb->prefix));
 ?>
 <?php get_header(); ?>
 
@@ -83,6 +83,24 @@ if ($_POST['SellersAction'] == 'indivseller_add_item') {
 if (!is_array($item_includes)) { $item_includes = array(); }
 $item_user_phone = get_user_meta($current_user->ID, 'phone', true);
 
+// item brands
+$item_brands = array();
+$tax_brands = get_terms('brand', 'hide_empty=0');
+if ($tax_brands) {
+	foreach($tax_brands as $tax_brand) {
+		$item_brands[$tax_brand->term_id] = $tax_brand->name;
+	}
+}
+
+$catbrands = array();
+$submission_form_brands = unserialize($OPTION['wps_submission_form_brands']);
+if ($submission_form_brands) {
+	foreach($submission_form_brands as $cid => $blist) {
+		foreach($blist as $bid) {
+			$catbrands[$cid][$bid] = $item_brands[$bid];
+		}
+	}
+}
 ?>
 	<form id="indivseller-add-item" method="POST" class="form-add add-item" enctype="multipart/form-data" onsubmit="return indivseller_presubmit_form();">
 		<input type="hidden" name="SellersAction" value="indivseller_add_item">
@@ -142,7 +160,7 @@ $item_user_phone = get_user_meta($current_user->ID, 'phone', true);
 								<div class="custom-select">
 									<?php $seller_categories = get_terms('seller-category', 'hide_empty=0&orderby=id&order=asc');
 									if ($seller_categories) { ?>
-									<select name="item_category[<?php echo $in; ?>]">
+									<select name="item_category[<?php echo $in; ?>]" onchange="indivseller_change_cat(<?php echo $in; ?>, this.value);">
 										<option value="">-- Select Category --</option>
 										<?php foreach($seller_categories as $seller_category) { $s = ''; if ($seller_category->term_id == $item_category) { $s = ' SELECTED'; } ?>
 										<option value="<?php echo $seller_category->term_id; ?>"<?php echo $s; ?>><?php echo $seller_category->name; ?></option>
@@ -154,12 +172,21 @@ $item_user_phone = get_user_meta($current_user->ID, 'phone', true);
 							<div class="column width-206 item-brand">
 								<label>Brand *</label>
 								<div class="custom-select">
-									<?php $tax_brands = get_terms('brand', 'hide_empty=0');
-									if ($tax_brands) { ?>
-									<select name="item_brand[<?php echo $in; ?>]">
+									<?php
+									if ($catbrands) { ?>
+									<select name="item_brand[<?php echo $in; ?>]" class="item-brand-<?php echo $in; ?>">
 										<option value="">-- Select Brand --</option>
-										<?php foreach($tax_brands as $tax_brand) { $s = ''; if ($tax_brand->term_id == $item_brand) { $s = ' SELECTED'; } ?>
-										<option value="<?php echo $tax_brand->term_id; ?>"<?php echo $s; ?>><?php echo $tax_brand->name; ?></option>
+										<?php foreach($catbrands as $cid => $tbrands) {
+											foreach($tbrands as $brand_id => $brand_name) {
+												$s = '';
+												$dnstyle = ' style="display:none;"';
+												if ($cid == $item_category) {
+													 $dnstyle = '';
+													if ($brand_id == $item_brand) { $s = ' SELECTED'; }
+												}
+												?>
+												<option value="<?php echo $brand_id; ?>" class="catop cid-<?php echo $cid; ?>"<?php echo $dnstyle.$s; ?>><?php echo $brand_name; ?></option>
+											<?php } ?>
 										<?php } ?>
 										<option value="other" style="margin-top:7px;">Other</option>
 									</select>
@@ -247,7 +274,7 @@ itemnmb = <?php echo $item_number; ?>;
 				<label>Category *</label>
 				<div class="custom-select">
 					<?php if ($seller_categories) { ?>
-					<select name="item_category[(IN)]">
+					<select name="item_category[(IN)]" onchange="indivseller_change_cat((IN), this.value);">
 						<option value="">-- Select Category --</option>
 						<?php foreach($seller_categories as $seller_category) { ?>
 						<option value="<?php echo $seller_category->term_id; ?>"><?php echo $seller_category->name; ?></option>
@@ -259,11 +286,18 @@ itemnmb = <?php echo $item_number; ?>;
 			<div class="column width-206 item-brand">
 				<label>Brand *</label>
 				<div class="custom-select">
-					<?php if ($tax_brands) { ?>
-					<select name="item_brand[(IN)]">
+					<?php if ($catbrands) { ?>
+					<select name="item_brand[(IN)]" class="item-brand-(IN)">
 						<option value="">-- Select Brand --</option>
-						<?php foreach($tax_brands as $tax_brand) { ?>
-						<option value="<?php echo $tax_brand->term_id; ?>"><?php echo $tax_brand->name; ?></option>
+						<?php foreach($catbrands as $cid => $tbrands) {
+							foreach($tbrands as $brand_id => $brand_name) {
+								$dnstyle = ' style="display:none;"';
+								if ($cid == $item_category) {
+									 $dnstyle = '';
+								}
+								?>
+								<option value="<?php echo $brand_id; ?>" class="catop cid-<?php echo $cid; ?>"<?php echo $dnstyle; ?>><?php echo $brand_name; ?></option>
+							<?php } ?>
 						<?php } ?>
 						<option value="other" style="margin-top:7px;">Other</option>
 					</select>

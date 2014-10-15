@@ -299,7 +299,7 @@ function wps_register_new_user() {
 	update_utm_params('users', $user_id);
 
 	// subscribe user
-	nws_subscribe_action('register', array('email' => $user->user_email, 'gender' => $gender));
+	nws_subscribe_action('register', array('user_id' => $user_id, 'email' => $user->user_email, 'gender' => $gender));
 
 	wp_register_notification( $user_id, isset($_POST['send_password']) ? $pass1 : '' );
 	return $user_id;
@@ -411,9 +411,6 @@ function ajax_login_init() {
 						} else {
 							setcookie('theluxury_log', '', time() - 3600);
 						}
-						if (strpos($callpg, 'alertslogin')) {
-							$_SESSION['alertslogin'] = 'true';
-						}
 						echo 'success';
 					}
 				}
@@ -437,9 +434,6 @@ function ajax_login_init() {
 						$errors = wps_get_wp_errors($user);
 						$error = implode(chr(10), $errors);
 					} else {
-						if (strpos($callpg, 'alertslogin')) {
-							$_SESSION['alertslogin'] = 'true';
-						}
 						echo 'success';
 					}
 				}
@@ -493,9 +487,6 @@ function ajax_login_init() {
 							$error = implode(chr(10), $errors);
 							echo $error;
 						} else {
-							if (strpos($callpg, 'alertslogin')) {
-								$_SESSION['alertslogin'] = 'true';
-							}
 							echo 'success';
 						}
 					}

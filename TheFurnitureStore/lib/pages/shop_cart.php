@@ -61,7 +61,7 @@ wps_shop_process_steps(1); ?>
 		if($CART['status'] == 'filled')
 		{
 			?>
-			<form class="<?php echo $form_class; ?>" action="?showCart=1" style="margin-top: 0px;" method="POST">
+			<form class="<?php echo $form_class; ?>" action="<?php echo get_cart_url(); ?>" style="margin-top: 0px;" method="POST">
 				<input type="hidden" name="cart" value="update">
 				<table class="order_table c_order" border="0">
 					<tr>
@@ -71,11 +71,19 @@ wps_shop_process_steps(1); ?>
 					</tr>
 					<?php loop_products($CART); ?>
 					<tr class="sums top">
-						<td colspan="2" style="text-align:right;">
-							<b><?php echo $LANG['subtotal_cart']; ?></b>
-							<?php
-							if ($_SESSION['layaway_order'] == 0) {
-								echo '<br/><br/>';
+						<td colspan="2" style="text-align:right;"><b><?php echo $LANG['subtotal_cart']; ?></b></td>
+						<td colspan="2"><b><?php echo format_price($CART['total_price'] * $_SESSION['currency-rate'], true); ?></b></td>
+					</tr>
+					<?php if (is_flat_limit_shipping_free($CART['total_price'])) { ?>
+						<tr class="sums">
+							<td colspan="2" style="text-align:right;"><b>Shipping:</b></td>
+							<td colspan="2"><b style="color:#FF0000">FREE</b></td>
+						</tr>
+					<?php } ?>
+					<?php if ($_SESSION['layaway_order'] == 0) { ?>
+						<tr class="sums">
+							<td colspan="2" style="text-align:right;">
+								<?php
 								if($OPTION['wps_tax_info_enable']) { show_cart_tax_info(); }
 								$cart_comp = cart_composition($_SESSION['cust_id']);
 								if ($cart_comp == 'mixed' || $cart_comp == 'digi_none') {
@@ -89,11 +97,10 @@ wps_shop_process_steps(1); ?>
 										</div>
 									<?php
 									}					
-								}
-							} ?>
-						</td>
-						<td colspan="2"><b><?php echo format_price($CART['total_price'] * $_SESSION['currency-rate'], true); ?></b></td>
-					</tr>
+								} ?>
+							</td>
+						</tr>
+					<?php } ?>
 					<?php
 					// Layaway next payment
 					if ($_SESSION['layaway_order'] > 0 && $CART['total_item_num'] == 1) {

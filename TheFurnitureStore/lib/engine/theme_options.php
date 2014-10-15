@@ -163,6 +163,18 @@ array ( 	"name" 	=> __('Design','wpShop'),
 								"vals" 	=> $wp_full_pages,
 								"std" 	=> "Select a Page"),
 
+					array(    	"name" 	=> __('Shopping Cart page','wpShop'),
+								"id" 	=> $CONFIG_WPS['shortname']."_shopping_cart_page",
+								"type" 	=> "pages",
+								"vals" 	=> $wp_full_pages,
+								"std" 	=> "Select a Page"),
+
+					array(    	"name" 	=> __('Checkout page','wpShop'),
+								"id" 	=> $CONFIG_WPS['shortname']."_checkout_page",
+								"type" 	=> "pages",
+								"vals" 	=> $wp_full_pages,
+								"std" 	=> "Select a Page"),
+
 					array(    	"name" 	=> __('Multiple and Single Product pages - Page Title','wpShop'),
 								"desc" 	=> __('Enter the Page Title you\'d like to appear in your shop when users are browsing these pages.','wpShop'),
 								"id" 	=> $CONFIG_WPS['shortname']."_store_pgs_title",
@@ -392,6 +404,11 @@ array ( 	"name" 	=> __('Design','wpShop'),
 								"type" 	=> "alert-itbags-items",
 								"std" 	=> "false"),
 
+					array(  	"name" 	=> __('Favourite Brands','wpShop'),
+								"id" 	=> $CONFIG_WPS['shortname']."_alerts_favourite_brands",
+								"type" 	=> "multi-brands",
+								"std" 	=> "false"),
+
 					array(  	"name" 	=> __('Alerts Notification Subject','wpShop'),
 								"desc" 	=> __('Subject of Alerts Notification Email.','wpShop'),
 								"id" 	=> $CONFIG_WPS['shortname']."_alerts_notification_subject",
@@ -586,6 +603,54 @@ array ( 	"name" 	=> __('Design','wpShop'),
 					array(  	"name" 	=> __('API Key','wpShop'),
 								"desc" 	=> __('InfusionSoft Api Key.','wpShop'),
 								"id" 	=> $CONFIG_WPS['shortname']."_infusionsoft_api_key",
+								"std" 	=> "",
+								"type" 	=> "text"),
+
+				array (    	"type" 	=> "close"),
+			array(   	"type" => "close"),
+
+			// Channel Advisor Settings
+			array( 		"name" 	=> __('Channel Advisor Settings','wpShop'),
+						"type" 	=> "title"),
+									
+				array(    	"type" 	=> "open"),
+
+					array(  	"name" 	=> __('Profile ID','wpShop'),
+								"id" 	=> $CONFIG_WPS['shortname']."_channel_advisor_profile_id",
+								"std" 	=> "",
+								"type" 	=> "text"),
+
+					array(  	"name" 	=> __('Developer Key','wpShop'),
+								"id" 	=> $CONFIG_WPS['shortname']."_channel_advisor_developer_key",
+								"std" 	=> "",
+								"type" 	=> "text"),
+
+					array(  	"name" 	=> __('Password','wpShop'),
+								"id" 	=> $CONFIG_WPS['shortname']."_channel_advisor_password",
+								"std" 	=> "",
+								"type" 	=> "text"),
+
+				array (    	"type" 	=> "close"),
+			array(   	"type" => "close"),
+
+			// Emarsys Settings
+			array( 		"name" 	=> __('Emarsys Settings','wpShop'),
+						"type" 	=> "title"),
+									
+				array(    	"type" 	=> "open"),
+
+					array(  	"name" 	=> __('API URL','wpShop'),
+								"id" 	=> $CONFIG_WPS['shortname']."_emarsys_url",
+								"std" 	=> "",
+								"type" 	=> "text"),
+
+					array(  	"name" 	=> __('API Username','wpShop'),
+								"id" 	=> $CONFIG_WPS['shortname']."_emarsys_username",
+								"std" 	=> "",
+								"type" 	=> "text"),
+
+					array(  	"name" 	=> __('API Password','wpShop'),
+								"id" 	=> $CONFIG_WPS['shortname']."_emarsys_password",
 								"std" 	=> "",
 								"type" 	=> "text"),
 
@@ -2066,7 +2131,13 @@ array ( 	"name" 	=> __('Shop','wpShop'),
 								"id" 	=> $CONFIG_WPS['shortname']."_delivery_label",
 								"type" 	=> "text",
 								"std" 	=> "Delivery (2-3 Business Days, Delivery Charges Apply)"),
-								
+
+					array(  	"name" 	=> __('"Delivery" FREE Label Text','wpShop'),
+								"desc" 	=> __('This will be used for the label text of the "Delivery" FREE Delivery Option','wpShop'),
+								"id" 	=> $CONFIG_WPS['shortname']."_delivery_free_label",
+								"type" 	=> "text",
+								"std" 	=> "Delivery (2-3 Business Days, Free Of Charge)"),
+
 					/*			
 					array(  	"name" 	=> __('"Delivery by Email" Label Text','wpShop'),
 								"desc" 	=> __('This will be used for the label text of the "Delivery by Email" Delivery Option','wpShop'),
@@ -2517,7 +2588,7 @@ array ( 	"name" 	=> __('Shop','wpShop'),
 								"desc" 	=> __('Enter this in your PayPal account under "Profile > Website Payment Preferences > Return Url"','wpShop'),
 								"id" 	=> $CONFIG_WPS['shortname']."_confirm_url",
 								"std" 	=> get_option('home') . '/?confirm=1',
-								"type" 	=> "pathinfo"),
+								"type" 	=> "text"),
 
 					array(    	"name" 	=> __('Path: IPN Notification Url','wpShop'),
 								"desc" 	=> __('Enter this in your PayPal account under "Profile > Instant Payment Notification Preferences > Notification Url"','wpShop'),
@@ -2757,7 +2828,7 @@ array ( 	"name" 	=> __('Shop','wpShop'),
 					array(    	"name" 	=> __('Path: Return Url','wpShop'),
 								"desc" 	=> __('Used to controll where the Continue Shopping button will send the customer when clicked"','wpShop'),
 								"id" 	=> $CONFIG_WPS['shortname']."_2checkout_return_url",
-								"std" 	=> get_option('home') . '/?showCart=1',
+								"std" 	=> get_cart_url(),
 								"type" 	=> "text"),
 
 					/*array(    	"name" 	=> __('Path: IPN Notification Url','wpShop'),
@@ -2803,7 +2874,7 @@ array ( 	"name" 	=> __('Shop','wpShop'),
 					array(    	"name" 	=> __('Path: Return Url','wpShop'),
 								"desc" 	=> __('Used to controll where the Continue Shopping button will send the customer when clicked "cancel"','wpShop'),
 								"id" 	=> $CONFIG_WPS['shortname']."_audi_return_url",
-								"std" 	=> get_option('home') . '/?showCart=1',
+								"std" 	=> get_cart_url(),
 								"type" 	=> "text"),
 					array(    	"name" 	=> __('Cancel URL','wpShop'),
 								"desc" 	=> __('Enter cancel page URL','wpShop'),
@@ -3061,8 +3132,7 @@ array ( 	"name" 	=> __('Shop','wpShop'),
 								"std" 	=> "mime",
 								"vals" 	=> array("mime", "txt")),
 								
-					array(  	"name" 	=> __('Send a copy of the customer confirmation mail to merchant?','wpShop'),
-								"desc" 	=> __('Select YES if you like to receive a dublicate of the confirmation email sent to the customer. Please note that the merchant already receives an email informing him that a new order had been placed! This email will be in addition.','wpShop'),
+					array(  	"name" 	=> __('Send a copy of the customer confirmation mail to admin?','wpShop'),
 								"id" 	=> $CONFIG_WPS['shortname']."_email_confirmation_dbl",
 								"type" 	=> "select",
 								"std" 	=> "mime",
@@ -3592,6 +3662,11 @@ array ( 	"name" 	=> __('Shop','wpShop'),
 								"type" 	=> "text",
 								"std" 	=> "LC"),
 
+					array(  	"name" 	=> __('Prof Seller Item_ID Prefix','wpShop'),
+								"id" 	=> $CONFIG_WPS['shortname']."_sellers_prof_item_id_prefix",
+								"type" 	=> "text",
+								"std" 	=> "PL"),
+
 					array(  	"name" 	=> __('Admin Files Items per page','wpShop'),
 								"id" 	=> $CONFIG_WPS['shortname']."_sellers_admin_files_items_per_page",
 								"type" 	=> "text",
@@ -3990,6 +4065,19 @@ array ( 	"name" 	=> __('Shop','wpShop'),
 
 				array(   	"type" => "close"),
 			array(   	"type" => "close"),
+
+			array ( 	"name" 	=> __('Submission form Brands','wpShop'),
+						"type" 	=> "title"),
+
+				array(    	"type" 	=> "open"),
+
+					array(  	"name" 	=> __('Brands','wpShop'),
+								"id" 	=> $CONFIG_WPS['shortname']."_submission_form_brands",
+								"std" 	=> "",
+								"type" 	=> "submission_form_brands"),					
+
+				array(   	"type" => "close"),
+			array(   	"type" => "close"),
 		array (		"type" 	=> "fieldset_end"),	
 //###############################################################################################################
 	array (		"type" 	=> "section_end"),
@@ -4184,7 +4272,7 @@ array ( 	"name" 	=> __('Support','wpShop'),
 
 function NWS_theme_admin()
 {
-    global $CONFIG_WPS,$wpdb,$options,$useSection,$install_status,$OPTION,$current_user;
+    global $CONFIG_WPS,$wpdb,$options,$useSection,$install_status,$OPTION,$current_user,$voucher_errors;
 	$section = str_replace('#',NULL,$_GET['section']); 	
 	switch($section)
 	{	
@@ -4304,8 +4392,10 @@ function NWS_theme_admin()
 							<option value='5'><?php _e('Shipped Orders','wpShop'); ?></option>
 							<option value='6'><?php _e('Payment Received','wpShop'); ?></option>
 							<option value='7'><?php _e('Completed Orders','wpShop'); ?></option>
+							<?php if ($_GET['otab'] != 'cancelled') { ?>
 							<option value='0'><?php _e('Cancelled Orders','wpShop'); ?></option>
 							<option class="error" value='delete'><?php _e('Delete','wpShop'); ?></option>
+							<?php } ?>
 						</select>
 						<?php $order_cancel_reasons = get_order_cancel_reasons(); ?>
 						<select name="cancel_reason" class="order-cancel-reason" style="width:175px; display:none;">
@@ -4435,7 +4525,8 @@ function NWS_theme_admin()
 					// = means: are all the articles with all possible attr. combos saved?					
 				inventory_article_check();	
 			}
-			$items_on_sale = $wpdb->get_var(sprintf("SELECT COUNT(iid) FROM %swps_inventory WHERE amount > 0", $wpdb->prefix));
+			//$items_on_sale = $wpdb->get_var(sprintf("SELECT COUNT(iid) FROM %swps_inventory WHERE amount > 0", $wpdb->prefix));
+			$items_on_sale = $wpdb->get_var(sprintf("SELECT COUNT(ID) FROM %sposts WHERE post_type = 'post' AND post_status = 'publish' AND inventory = 1", $wpdb->prefix));
 			echo make_section_header('inventory'); ?>
 			<div class="tablenav" style="margin-bottom:25px;">
 				<div class="alignleft actions">
@@ -4557,60 +4648,72 @@ function NWS_theme_admin()
 			echo  make_section_footer();
 		break;
 		case 'vouchers':
+			$vtypes = array('1' => 'Single-Use', '2' => 'Multi-Use');
 			$voptions = array('P' => 'Percentage, %', 'A' => 'Fixed amount, $');
 			echo make_section_header('vouchers'); ?>
 			<h3>Create Voucher Code</h3>
+			<?php if (strlen($voucher_errors)) { ?><div style="color:#FF0000;padding-bottom:10px;"><?php echo $voucher_errors; ?></div><?php } ?>
 			<form action="admin.php?page=functions.php&section=vouchers&voucher_action=create" method="POST">
 				<table>
 					<tr>
 						<td>Voucher Code:</td>
-						<td><input type="text" name="voucher_code" maxlength="100" style="width:247px;" /></td>
+						<td><input type="text" name="voucher_code" maxlength="100" style="width:247px;" value="<?php echo $_POST['voucher_code']; ?>" /></td>
+					</tr>
+					<tr>
+						<td>Voucher Type:</td>
+						<td>
+							<select name="voucher_type" style="width:247px;">
+								<?php foreach($vtypes as $vtkey => $vtname) { $s = ''; if ($vtkey == $_POST['voucher_type']) { $s = ' SELECTED'; } ?>
+								<option value="<?php echo $vtkey; ?>"<?php echo $s; ?>><?php echo $vtname; ?></option>
+								<?php } ?>
+							</select>
+						</td>
 					</tr>
 					<tr>
 						<td>Voucher Option:</td>
 						<td>
 							<select name="voucher_option" style="width:247px;">
-								<?php foreach($voptions as $vokey => $voname) { ?>
-								<option value="<?php echo $vokey; ?>"><?php echo $voname; ?></option>
+								<?php foreach($voptions as $vokey => $voname) { $s = ''; if ($vokey == $_POST['voucher_option']) { $s = ' SELECTED'; } ?>
+								<option value="<?php echo $vokey; ?>"<?php echo $s; ?>><?php echo $voname; ?></option>
 								<?php } ?>
 							</select>
 						</td>
 					</tr>
 					<tr>
 						<td>Amount:</td>
-						<td><input type="text" name="voucher_amount" maxlength="5" style="width:247px;" /></td>
+						<td><input type="text" name="voucher_amount" maxlength="5" style="width:247px;" value="<?php echo $_POST['voucher_amount']; ?>" /></td>
 					</tr>
 					<tr>
 						<td>Expired Date:</td>
 						<td>
 							<select name="voucher_expired_dd" style="padding:1px;width:42px;height:26px;">
 								<option value="">D</option>
-								<?php for($d=1; $d<=31; $d++) { $dv = sprintf("%02d", $d); ?>
-								<option value="<?php echo $dv; ?>"><?php echo $dv; ?></option>
+								<?php for($d=1; $d<=31; $d++) { $dv = sprintf("%02d", $d); $s = ''; if ($d == $_POST['voucher_expired_dd']) { $s = ' SELECTED'; } ?>
+								<option value="<?php echo $dv; ?>"<?php echo $s; ?>><?php echo $dv; ?></option>
 								<?php } ?>
 							</select>
 							<select name="voucher_expired_mm" style="padding:1px;width:42px;height:26px;">
 								<option value="">M</option>
-								<?php for($m=1; $m<=12; $m++) { $mv = sprintf("%02d", $m); ?>
-								<option value="<?php echo $mv; ?>"><?php echo $mv; ?></option>
+								<?php for($m=1; $m<=12; $m++) { $mv = sprintf("%02d", $m); $s = ''; if ($m == $_POST['voucher_expired_mm']) { $s = ' SELECTED'; } ?>
+								<option value="<?php echo $mv; ?>"<?php echo $s; ?>><?php echo $mv; ?></option>
 								<?php } ?>
 							</select>
 							<select name="voucher_expired_yy" style="padding:1px;width:60px;height:26px;">
 								<option value="">YYYY</option>
-								<?php $cy = (int)date("Y"); for($y=$cy; $y<=$cy+5; $y++) { ?>
-								<option value="<?php echo $y; ?>"><?php echo $y; ?></option>
+								<?php $cy = (int)date("Y"); for($y=$cy; $y<=$cy+5; $y++) { $s = ''; if ($y == $_POST['voucher_expired_yy']) { $s = ' SELECTED'; } ?>
+								<option value="<?php echo $y; ?>"<?php echo $s; ?>><?php echo $y; ?></option>
 								<?php } ?>
 							</select>
 							<select name="voucher_expired_hh" style="padding:1px;width:42px;height:26px;">
 								<option value="">H</option>
-								<?php for($h=0; $h<=23; $h++) { $hv = sprintf("%02d", $h); ?>
-								<option value="<?php echo $hv; ?>"><?php echo $hv; ?></option>
+								<?php for($h=0; $h<=23; $h++) { $hv = sprintf("%02d", $h); $s = ''; if ($h == $_POST['voucher_expired_hh']) { $s = ' SELECTED'; } ?>
+								<option value="<?php echo $hv; ?>"<?php echo $s; ?>><?php echo $hv; ?></option>
 								<?php } ?>
 							</select>
 							<select name="voucher_expired_ii" style="padding:1px;width:42px;height:26px;">
 								<option value="">I</option>
-								<?php for($i=0; $i<60; $i=$i+15) { $iv = sprintf("%02d", $i); ?>
-								<option value="<?php echo $iv; ?>"><?php echo $iv; ?></option>
+								<?php for($i=0; $i<60; $i=$i+15) { $iv = sprintf("%02d", $i); $s = ''; if ($i == $_POST['voucher_expired_ii']) { $s = ' SELECTED'; } ?>
+								<option value="<?php echo $iv; ?>"<?php echo $s; ?>><?php echo $iv; ?></option>
 								<?php } ?>
 							</select>
 						</td>
@@ -4620,8 +4723,8 @@ function NWS_theme_admin()
 						<td>
 							<select name="voucher_zone" style="width:247px;">
 								<option value="">-- None --</option>
-								<?php for($z=1; $z<=6; $z++) { ?>
-								<option value="<?php echo $z; ?>">Zone <?php echo $z; ?></option>
+								<?php for($z=1; $z<=6; $z++) { $s = ''; if ($z == $_POST['voucher_zone']) { $s = ' SELECTED'; } ?>
+								<option value="<?php echo $z; ?>"<?php echo $s; ?>>Zone <?php echo $z; ?></option>
 								<?php } ?>
 							</select>
 						</td>
@@ -4662,6 +4765,7 @@ function NWS_theme_admin()
 			<table class="widefat">
 				<tr>
 					<th style="border-bottom:1px solid #E4E5E5;">Voucher Code</th>
+					<th style="border-bottom:1px solid #E4E5E5;">Type</th>
 					<th style="border-bottom:1px solid #E4E5E5;">Option</th>
 					<th style="border-bottom:1px solid #E4E5E5;">Amount</th>
 					<th style="border-bottom:1px solid #E4E5E5;">Expired</th>
@@ -4675,6 +4779,7 @@ function NWS_theme_admin()
 						if (strlen($voucher->expired) && $voucher->expired != '0000-00-00 00:00:00') { $voucher_expired = date("d.m.Y H:i", strtotime($voucher->expired)); } ?>
 						<tr>
 							<td><?php echo $voucher->code; ?></td>
+							<td><?php echo $vtypes[$voucher->type]; ?></td>
 							<td><?php echo $opvals[$voucher->option]; ?></td>
 							<td><?php echo $voucher->amount; ?></td>
 							<td><?php echo $voucher_expired; ?></td>
@@ -4684,14 +4789,20 @@ function NWS_theme_admin()
 						</tr>
 					<?php } ?>
 				<?php } else { ?>
-					<tr><td colspan="7">No found vouchers.</td></tr>
+					<tr><td colspan="8">No found vouchers.</td></tr>
 				<?php } ?>
 			</table>
 			<?php if ($vouchers_total_pages > 1) { ?>
 			<div class="tablenav">
 				<div class="tablenav-pages">
 					<a style="text-decoration:none;" href="?page=functions.php&amp;section=vouchers&amp;voucher_search=<?php echo $voucher_search; ?>&amp;vpage=<?php echo ($vpage - 1); ?>" class="prev<?php if ($vpage == 1) { echo ' disabled'; } ?>">&laquo;</a>
-					<span class="page-numbers current"><?php echo $vpage; ?></span>
+					<?php for($p=1; $p<=$vouchers_total_pages; $p++) { ?>
+						<?php if ($p == $vpage) { ?>
+							<span class="page-numbers current"><?php echo $vpage; ?></span>
+						<?php } else { ?>
+							<a href="admin.php?page=functions.php&amp;section=vouchers&amp;voucher_search=<?php echo $voucher_search; ?>&amp;vpage=<?php echo $p; ?>" class="page-numbers"><?php echo $p; ?></a>
+						<?php } ?>
+					<?php } ?>
 					<a style="text-decoration:none;" href="admin.php?page=functions.php&amp;section=vouchers&amp;voucher_search=<?php echo $voucher_search; ?>&amp;vpage=<?php echo ($vpage + 1); ?>" class="next<?php if ($vpage >= $vouchers_total_pages) { echo ' disabled'; } ?>">&raquo;</a>
 				</div>
 			</div>
@@ -5247,7 +5358,8 @@ function NWS_theme_admin()
 											?>
 											<style>
 											.multi-brands-box {height:350px;overflow:auto;}
-											.multi-brands-box ul {list-style:none;}
+											.multi-brands-box ul {width:810px;list-style:none;}
+											.multi-brands-box ul li {float:left;width:200px;}
 											</style>
 											<div class="multi-brands-box">
 												<ul>
@@ -5325,6 +5437,47 @@ function NWS_theme_admin()
 													</div></td>
 												</tr>
 											</table>
+										</td>
+									</tr>
+									<tr><td colspan="2">&nbsp;</td></tr>
+								<?php break;
+
+								case "submission_form_brands":
+									$taxbrands = get_terms('brand', 'hide_empty=0');
+									$taxscategories = get_terms('seller-category', 'hide_empty=0');
+
+									$svals = get_option($value['id']);
+									if (!$taxbrands) { $taxbrands = array(); }
+									if (!$taxscategories) { $taxscategories = array(); }
+									if (!is_array($svals)) { $svals = array(); }
+									?>
+									<tr>
+										<td>
+											<style>
+											.sf-brands .brlist{
+												width:146px;
+												height:300px;
+												overflow:auto;
+											}
+											</style>
+											<div class="sf-brands">
+												<table width="100%">
+													<tr>
+														<?php foreach($taxscategories as $taxscategory) { ?>
+														<td><strong><?php echo $taxscategory->name; ?></strong></td>
+														<?php } ?>
+													</tr>
+													<tr>
+														<?php foreach($taxscategories as $taxscategory) { ?>
+														<td><div class="brlist">
+															<?php foreach($taxbrands as $taxbrand) { ?>
+															<input type="checkbox" name="<?php echo $value['id']; ?>[<?php echo $taxscategory->term_id; ?>][]" value="<?php echo $taxbrand->term_id; ?>"<?php if (@in_array($taxbrand->term_id, $svals[$taxscategory->term_id])) { echo ' CHECKED'; } ?>> <?php echo $taxbrand->name; ?><br />
+															<?php } ?>
+														</div></td>
+														<?php } ?>
+													</tr>
+												</table>
+											</div>
 										</td>
 									</tr>
 									<tr><td colspan="2">&nbsp;</td></tr>
@@ -5721,6 +5874,7 @@ function NWS_theme_admin()
 						'order_cancel' => 'Order Cancelled',
 						'order_delete' => 'Order Deleted',
 						'order_return' => 'Order Returned',
+						'order_received' => 'Order Received',
 						'inventory_update' => 'Inventory Updated'
 					);
 					$logs = $wpdb->get_results(sprintf("SELECT * FROM %swps_log_actions WHERE log_desc LIKE '%s' ORDER BY log_id", $wpdb->prefix, '%'.$item_id.'%'));
@@ -5965,7 +6119,9 @@ function NWS_theme_staff()
 							<option value='5'><?php _e('Shipped Orders','wpShop'); ?></option>
 							<option value='6'><?php _e('Payment Received','wpShop'); ?></option>
 							<option value='7'><?php _e('Completed','wpShop'); ?></option>
+							<?php if ($_GET['otab'] != 'cancelled') { ?>
 							<option value='0'><?php _e('Cancelled Orders','wpShop'); ?></option>
+							<?php } ?>
 						</select>
 						<?php $order_cancel_reasons = get_order_cancel_reasons(); ?>
 						<select name="cancel_reason" class="order-cancel-reason" style="width:175px; display:none;">

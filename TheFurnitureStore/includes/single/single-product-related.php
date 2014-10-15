@@ -1,10 +1,10 @@
 <div class="accordion">
 <?php
-global $wp_query;
 // ---------------------------------------------------------------
 // YOU MAY ALSO LIKE
 // ---------------------------------------------------------------
 $ymal_posts = array();
+$ymal_ex_posts = array();
 $post_brand_id = $wpdb->get_var(sprintf("SELECT tt.term_id FROM %sterm_taxonomy tt LEFT JOIN %sterm_relationships tr ON tr.term_taxonomy_id = tt.term_taxonomy_id WHERE tr.object_id = %s AND tt.taxonomy = 'brand' LIMIT 0, 1", $wpdb->prefix, $wpdb->prefix, $post->ID));
 // find items with such all tags
 $post_tags = wp_get_post_terms($post->ID, 'post_tag');
@@ -24,14 +24,31 @@ if ($post_tags) {
 	$recently_where = true;
 	add_filter('posts_where', 'recently_added_where');
 	$ymal_posts = get_posts($args);
-	// find items with such tags and brand
-	if (count($ymal_posts) < 3 && $post_brand_id) {
-		if ($post_brand_id) {
-		$ppp = $OPTION['wps_tag_relatedProds_num'] - count($ymal_posts);
+	if (!$ymal_posts) {
 		$args = array(
 			'tag__in' 		   => $tag_ids,
 			'post__not_in' 	   => array($post->ID),
-			'posts_per_page'   => $ppp,
+			'posts_per_page'   => $OPTION['wps_tag_relatedProds_num'], 
+			'orderby' 		   => 'date',
+			'order' 		   => 'DESC',
+			'suppress_filters' => false
+		);
+		$recently_where = true;
+		add_filter('posts_where', 'recently_added_where');
+		$ymal_posts = get_posts($args);
+	}
+	if ($ymal_posts) {
+		foreach($ymal_posts as $ymal_post) {
+			$ymal_ex_posts[] = $ymal_post->ID;
+		}
+	}
+	// find items with such tags and brand
+	if (count($ymal_posts) < 3 && $post_brand_id) {
+		if ($post_brand_id) {
+		$args = array(
+			'tag__in' 		   => $tag_ids,
+			'post__not_in' 	   => array($post->ID),
+			'posts_per_page'   => $OPTION['wps_tag_relatedProds_num'],
 			'orderby' 		   => 'date',
 			'order' 		   => 'DESC',
 			'suppress_filters' => false,
@@ -47,7 +64,10 @@ if ($post_tags) {
 		$tags_and_brands_posts = get_posts($args);
 		if ($tags_and_brands_posts) {
 			foreach($tags_and_brands_posts as $tags_and_brands_post) {
-				$ymal_posts[] = $tags_and_brands_post;
+				if (!in_array($tags_and_brands_post->ID, $ymal_ex_posts) && count($ymal_posts) < 3) {
+					$ymal_posts[] = $tags_and_brands_post;
+					$ymal_ex_posts[] = $tags_and_brands_post->ID;
+				}
 			}
 		}
 	}
@@ -57,7 +77,7 @@ if (count($ymal_posts) < 3) {
 	$ppp = $OPTION['wps_tag_relatedProds_num'] - count($ymal_posts);
 	$args = array(
 		'post__not_in' 	   => array($post->ID),
-		'posts_per_page'   => $ppp,
+		'posts_per_page'   => $OPTION['wps_tag_relatedProds_num'],
 		'orderby' 		   => 'date',
 		'order' 		   => 'DESC',
 		'suppress_filters' => false,
@@ -73,7 +93,10 @@ if (count($ymal_posts) < 3) {
 	$brands_posts = get_posts($args);
 	if ($brands_posts) {
 		foreach($brands_posts as $brands_post) {
-			$ymal_posts[] = $brands_post;
+			if (!in_array($brands_post->ID, $ymal_ex_posts) && count($ymal_posts) < 3) {
+				$ymal_posts[] = $brands_post;
+				$ymal_ex_posts[] = $brands_post->ID;
+			}
 		}
 	}
 }

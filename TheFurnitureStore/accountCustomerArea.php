@@ -411,7 +411,7 @@ $the_div_class 	= 'narrow '. $the_float_class;
 				<?php } 
 				
 					if($_GET['transfer'] == 'OK'){
-						$basket_url = get_option('home') .'?showCart=1&cPage='. current_page(3);
+						$basket_url = get_permalink($OPTION['wps_shopping_cart_page']).'?cPage='. current_page(3);
 						if($OPTION['wps_shop_mode'] =='Inquiry email mode'){ ?>
 							<div class='success'><?php printf(__ ('Your item has been successfully added to your %s!','wpShop'), $OPTION['wps_pgNavi_inquireOption'])?><a href="<?php echo $basket_url;?>"><?php printf(__ (' View %s','wpShop'), $OPTION['wps_pgNavi_inquireOption'])?></a></div>
 						<?php } elseif ($OPTION['wps_shop_mode']=='Normal shop mode'){ ?>
@@ -420,7 +420,7 @@ $the_div_class 	= 'narrow '. $the_float_class;
 					}
 					
 					if($_GET['transfer'] == 'NOK'){
-						$basket_url = get_option('home') .'?showCart=1&cPage='. current_page(3);
+						$basket_url = get_permalink($OPTION['wps_shopping_cart_page']).'?cPage='. current_page(3);
 						if($OPTION['wps_shop_mode'] =='Inquiry email mode'){ ?>
 							<div class='success'><?php printf(__ ('Sorry! Your item is out of stock so it could not be added to your %s!','wpShop'), $OPTION['wps_pgNavi_inquireOption'])?></div>
 						<?php } elseif ($OPTION['wps_shop_mode']=='Normal shop mode'){ ?>

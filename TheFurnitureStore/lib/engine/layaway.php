@@ -29,7 +29,7 @@ function layaway_set_session() {
 	$_SESSION['layaway_amount'] = $layaway_amount;
 	$_SESSION['layaway_currency_code'] = $_SESSION['currency-code'];
 	if ($minerror) {
-		$basket_url = get_option('home').'?showCart=1&minerror=1';
+		$basket_url = get_cart_url().'?minerror=1';
 		wp_redirect($basket_url);
 		exit();
 	}
@@ -132,22 +132,27 @@ function layaway_process_action($order) {
 		$wpdb->insert($otable, $new_order);
 		$order_id = $wpdb->insert_id;
 
-		$scdata = $wpdb->get_row(sprintf("SELECT * FROM %s WHERE who = '%s'", $sctable, $order['who']));
-		if ($scdata) {
-			$sc_new = array();
-			$sc_new['item_id'] = $scdata->item_id;
-			$sc_new['postID'] = $scdata->postID;
-			$sc_new['item_name'] = $scdata->item_name;
-			$sc_new['item_amount'] = $scdata->item_amount;
-			$sc_new['item_price'] = $scdata->item_price;
-			$sc_new['item_weight'] = $scdata->item_weight;
-			$sc_new['item_thumb'] = $scdata->item_thumb;
-			$sc_new['item_file'] = $scdata->item_file;
-			$sc_new['item_attributs'] = $scdata->item_attributs;
-			$sc_new['item_personal'] = $scdata->item_personal;
-			$sc_new['who'] = $who;
-			$sc_new['level'] = $scdata->level;
-			$wpdb->insert($sctable, $sc_new);
+		$scdatas = $wpdb->get_results(sprintf("SELECT * FROM %s WHERE who = '%s'", $sctable, $order['who']));
+		if ($scdatas) {
+			foreach($scdatas as $scdata) {
+				$sc_new = array();
+				$sc_new['order_id'] = $order_id;
+				$sc_new['item_id'] = $scdata->item_id;
+				$sc_new['postID'] = $scdata->postID;
+				$sc_new['item_name'] = $scdata->item_name;
+				$sc_new['item_amount'] = $scdata->item_amount;
+				$sc_new['item_price'] = $scdata->item_price;
+				$sc_new['item_weight'] = $scdata->item_weight;
+				$sc_new['item_thumb'] = $scdata->item_thumb;
+				$sc_new['item_file'] = $scdata->item_file;
+				$sc_new['item_attributs'] = $scdata->item_attributs;
+				$sc_new['item_personal'] = $scdata->item_personal;
+				$sc_new['item_category'] = $scdata->item_category;
+				$sc_new['seller_price'] = $scdata->seller_price;
+				$sc_new['who'] = $who;
+				$sc_new['level'] = $scdata->level;
+				$wpdb->insert($sctable, $sc_new);
+			}
 		}
 
 		// update layaway order id

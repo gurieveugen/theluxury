@@ -121,7 +121,7 @@ class Wishlist{
 		$url = get_permalink($post_id).'?added=OK&l=wl';
 
 		if ($_GET['fpg'] == 'cart') {
-			$url = site_url('/?showCart=1&wltransfer=OK');
+			$url = get_cart_url().'/?wltransfer=OK';
 			$cid = $_GET['cid'];
 			if ($cid > 0) {
 				$table 	= is_dbtable_there('shopping_cart');

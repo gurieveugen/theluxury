@@ -157,6 +157,6 @@ if (is_page() && !is_page('The Luxury Closet Promise') && !$page_obj->post_paren
 	</h1>
 	
 <?php 
-} elseif (($_GET['showCart'] == '1') || ($_GET['orderNow'] == '1') || ($_GET['orderNow'] == '2') || ($_GET['orderNow'] == '3') || ($_GET['orderNow'] == '4') || ($_GET['orderNow'] == '5') || ($_GET['orderNow'] == '6') || ($_GET['orderNow'] == '7') || ($_GET['orderNow'] == '8') || ($_GET['orderNow'] == '81') || ($_GET['confirm'] == '1') || ($_GET['confirm'] == '2') || ($_GET['confirm'] == '3') || ($_GET['showTerms'] == '1') || ($_GET['showMap'] == 1) || ($_GET['checkOrderStatus'] == 1)) {
+} elseif (is_cart_page() || ($_GET['orderNow'] == '1') || ($_GET['orderNow'] == '2') || ($_GET['orderNow'] == '3') || ($_GET['orderNow'] == '4') || ($_GET['orderNow'] == '5') || ($_GET['orderNow'] == '6') || ($_GET['orderNow'] == '7') || ($_GET['orderNow'] == '8') || ($_GET['orderNow'] == '81') || ($_GET['confirm'] == '1') || ($_GET['confirm'] == '2') || ($_GET['confirm'] == '3') || ($_GET['showTerms'] == '1') || ($_GET['showMap'] == 1) || ($_GET['checkOrderStatus'] == 1)) {
 	include( TEMPLATEPATH . "/lib/pages/page_titles.php" );
 } else {} // end "Page Titles" section ?>

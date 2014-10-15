@@ -8,7 +8,8 @@ global $wpdb;
 <?php get_header(); ?>
 
 <?php
-$stock_amount = get_item_inventory($post->ID);
+//$stock_amount = get_item_inventory($post->ID);
+$stock_amount = $post->inventory;
 $attr_option = get_custom_field("add_attributes"); // attributes - simple or configurable price?
 
 $custom_title_attr = get_post_meta($post->ID, 'general_images_title', true);
@@ -83,7 +84,7 @@ jQuery(document).ready(function() {
 					<?php
 					$active = ' class="active"';
 					foreach($post_images as $post_image) { ?>
-						<a<?php echo $active; ?> href="<?php echo get_post_thumb($post_image); ?>" rel="zoom-id:zoom1" rev="<?php echo get_post_thumb($post_image, 605, 605, true); ?>"><img src="<?php echo get_post_thumb($post_image, 61, 61, true); ?>" alt="<?php echo get_custom_alt_title('alt', $post_image, $custom_alt_attr); ?>" title="<?php echo get_custom_alt_title('title', $post_image, $custom_title_attr); ?>" /></a>
+						<a<?php echo $active; ?> href="<?php echo get_post_thumb($post_image); ?>" rel="zoom-id:zoom1" rev="<?php echo get_post_thumb($post_image, 605, 605, true); ?>"><img src="<?php echo get_post_thumb($post_image, 61, 61, true); ?>" alt="<?php echo get_custom_alt_title('alt', $post_image, $custom_alt_attr); ?>" title="<?php echo get_custom_alt_title('title', $post_image, $custom_title_attr); ?>" style="width:61px;height:61px;" /></a>
 						<?php
 						$active = '';
 					} ?>
@@ -146,7 +147,7 @@ jQuery(document).ready(function() {
 									<?php if (layaway_is_enabled()) {
 										$days = layaway_get_product_days($post->ID, get_the_date('F j, Y g:i:s a'));
 										if ($days < 8) { $days_left = 8 - $days; ?>
-											<img src="<?php bloginfo('template_url'); ?>/images/product/btn-buy-installments-avail<?php echo $days_left; ?>.png" class="btn-installments-avail" />
+										<strong class="btn-grey no-btn btn-1">Available for installments in <?php echo $days_left; ?> day<?php if ($days_left > 1) { echo 's'; } ?></strong>
 										<?php } else { ?>
 											<button class="btn-grey" id="installments-button">Buy In Installments</button>
 											<!--<input type="image" src="<?php bloginfo('template_url'); ?>/images/product/btn-buy-installments.png" class="btn-installments" id="installments-button" />-->
@@ -189,9 +190,9 @@ jQuery(document).ready(function() {
 									<input type="hidden" name="request_value" value="<?php the_title(); ?>" id="request-this-product-value" />
 									<!--<a href="#request" class="btn-request" id="request-this-product">Request this product</a>-->
 								<?php } ?>
-								<?php if($OPTION['wps_lrw_yes']) { ?>
-									<a class="link-wishlist" href="<?php echo site_url('index.php?wishlist=add&fpg=single&pid='.$post->ID); ?>">Add to Wishlist</a>
-								<?php } ?>
+							<?php } ?>
+							<?php if($OPTION['wps_lrw_yes']) { ?>
+								<a class="link-wishlist" href="<?php echo site_url('index.php?wishlist=add&fpg=single&pid='.$post->ID); ?>">Add to Wishlist</a>
 							<?php } ?>
 						<?php } ?>
 					</div>
@@ -217,7 +218,7 @@ jQuery(document).ready(function() {
 					<li><a href="http://www.facebook.com/share.php?u=<?php the_permalink(); ?>&t=<?php the_title(); ?>" class="link-facebook" target="_blank">facebook</a></li>
 					<li><a href="http://twitter.com/share?text=Check out <?php the_title(); ?> at @TheLuxuryCloset&url=<?php echo shorturl(get_permalink($post->ID)); ?>" class="link-twitter" target="_blank">twitter</a></li>
 					<li><a href="https://plus.google.com/share?url=<?php the_permalink(); ?>&title=<?php the_title(); ?>" class="link-google" target="_blank">google+</a></li>
-					<li class="pinit" style="display:none;"><a href="http://www.pinterest.com/pin/create/link/?url=<?php echo urlencode(get_permalink()); ?>&description=<?php the_title(); ?>&media=<?php echo get_post_thumb($post_images[0]); ?>" class="pinterest" target="_blank" data-pin-do="buttonPin" data-pin-config="above">pinterest</a></li>
+					<li class="pinit" style="position:relative;"><a href="#" class="pinterest pinmask"></a><span style="position:absolute;left:-10000px;"><a href="http://www.pinterest.com/pin/create/link/?url=<?php echo urlencode(get_permalink()); ?>&description=<?php the_title(); ?>&media=<?php echo get_post_thumb($post_images[0]); ?>" target="_blank" data-pin-do="buttonPin" data-pin-config="above">pinterest</a></span></li>
 					<script type="text/javascript" async src="//assets.pinterest.com/js/pinit.js"></script>
 				</ul>
 			</div>
@@ -377,45 +378,48 @@ jQuery(document).ready(function() {
 								<p><strong>Men's Shoes</strong></p>
 								<p><i>Men's designer shoes sold on the Luxury Closet use European Sizing. To determine your correct size, take your heel to toe measurement, and using the following table, convert into your European or U.S. size.</i></p>
 								<table class="shoes-sizes">
-									<tr><td width="30%">Inches</td><td>European Size</td><td width="30%">US size</td></tr>
-									<tr><td>9.375"</td><td>37</td><td>5</td></tr>
-									<tr><td>9.5"</td><td>37.5</td><td>5.5</td></tr>
-									<tr><td>9.625"</td><td>38</td><td>6</td></tr>
-									<tr><td>9.75</td><td>38.5</td><td>6.5</td></tr>
-									<tr><td>9.875</td><td>39</td><td>7</td></tr>
-									<tr><td>10</td><td>40</td><td>7.5</td></tr>
-									<tr><td>10.125</td><td>41</td><td>8</td></tr>
-									<tr><td>10.25</td><td>42</td><td>8.5</td></tr>
-									<tr><td>10.375</td><td>43</td><td>9</td></tr>
-									<tr><td>10.5</td><td>43.5</td><td>9.5</td></tr>
-									<tr><td>10.625</td><td>44</td><td>10</td></tr>
-									<tr><td>10.75</td><td>44.5</td><td>10.5</td></tr>
-									<tr><td>10.875</td><td>45</td><td>11</td></tr>
-									<tr><td>11</td><td>45.5</td><td>11.5</td></tr>
-									<tr><td>11.125</td><td>46</td><td>12</td></tr>
-									<tr><td>11.25</td><td>46.5</td><td>12.5</td></tr>
-									<tr><td>11.375</td><td>47</td><td>13</td></tr>
-									<tr><td>11.5</td><td>47.5</td><td>13.5</td></tr>
-									<tr><td>11.625</td><td>48.5</td><td>14</td></tr>
+									<tr><td width="30%">Inches</td><td width="25%">EUR</td><td width="25%">USA</td><td width="25%">UK</td></tr>
+									<tr><td>9.31"</td><td>39</td><td>6</td><td>5</td></tr>
+									<tr><td>9.50"</td><td>39,5</td><td>6.5</td><td>5.5</td></tr>
+									<tr><td>9.69"</td><td>40</td><td>7</td><td>6</td></tr>
+									<tr><td>9.81"</td><td>40,5</td><td>7.5</td><td>6.5</td></tr>
+									<tr><td>10.00"</td><td>41</td><td>8</td><td>7</td></tr>
+									<tr><td>10.19"</td><td>41,5</td><td>8.5</td><td>7.5</td></tr>
+									<tr><td>10.31"</td><td>42</td><td>9</td><td>8</td></tr>
+									<tr><td>10.50"</td><td>42,5</td><td>9.5</td><td>8.5</td></tr>
+									<tr><td>10.69"</td><td>43</td><td>10</td><td>9</td></tr>
+									<tr><td>10.81"</td><td>43,5</td><td>10.5</td><td>9.5</td></tr>
+									<tr><td>11.00"</td><td>44</td><td>11</td><td>10</td></tr>
+									<tr><td>11.19"</td><td>44,5</td><td>11.5</td><td>10.5</td></tr>
+									<tr><td>11.31"</td><td>45</td><td>12</td><td>11</td></tr>
+									<tr><td>11.50"</td><td>45,5</td><td>12.5</td><td>11.5</td></tr>
+									<tr><td>11.69"</td><td>46</td><td>13</td><td>12</td></tr>
+									<tr><td>11.81"</td><td>46,5</td><td>13.5</td><td>12.5</td></tr>
+									<tr><td>12.00"</td><td>47</td><td>14</td><td>13</td></tr>
 								</table>
 							<?php } else { ?>
 								<p><strong>Women's Shoes</strong></p>
 								<p><i>Women's designer shoes sold on the Luxury Closet use European Sizing. To determine your correct size, take your heel to toe measurement, and using the following table, convert into your European or U.S. size.</i></p>
 								<table class="shoes-sizes">
-									<tr><td width="30%">Inches</td><td>European Size</td><td width="30%">US size</td></tr>
-									<tr><td>8.5"</td><td>35.5</td><td>5</td></tr>
-									<tr><td>8.75"</td><td>36</td><td>5.5</td></tr>
-									<tr><td>8.875"</td><td>36.5</td><td>6</td></tr>
-									<tr><td>9.0625"</td><td>37</td><td>6.5</td></tr>
-									<tr><td>9.25"</td><td>37.5</td><td>7</td></tr>
-									<tr><td>9.375"</td><td>38</td><td>7.5</td></tr>
-									<tr><td>9.5"</td><td>38.5</td><td>8</td></tr>
-									<tr><td>9.6875"</td><td>39</td><td>8.5</td></tr>
-									<tr><td>9.875"</td><td>39.5</td><td>9</td></tr>
-									<tr><td>10"</td><td>40</td><td>9.5</td></tr>
-									<tr><td>10.1875"</td><td>40.5</td><td>10</td></tr>
-									<tr><td>10.3125"</td><td>41</td><td>10.5</td></tr>
-									<tr><td>10.5</td><td>41.5</td><td>11</td></tr>
+									<tr><td width="30%">Inches</td><td width="25%">EUR</td><td width="25%">USA</td><td width="25%">UK</td></tr>
+									<tr><td>8.50"</td><td>35</td><td>4.5</td><td>2</td></tr>
+									<tr><td>8.63"</td><td>35.5</td><td>5</td><td>2.5</td></tr>
+									<tr><td>8.88"</td><td>36</td><td>5.5</td><td>3</td></tr>
+									<tr><td>9.00"</td><td>36.5</td><td>6</td><td>3.5</td></tr>
+									<tr><td>9.13"</td><td>37</td><td>6.5</td><td>4</td></tr>
+									<tr><td>9.38"</td><td>37.5</td><td>7</td><td>4.5</td></tr>
+									<tr><td>9.50"</td><td>38</td><td>7.5</td><td>5</td></tr>
+									<tr><td>9.625"</td><td>38.5</td><td>8</td><td>5.5</td></tr>
+									<tr><td>9.875"</td><td>39</td><td>8.5</td><td>6</td></tr>
+									<tr><td>10.00"</td><td>40</td><td>9</td><td>6.5</td></tr>
+									<tr><td>10.125"</td><td>41</td><td>9.5</td><td>7</td></tr>
+									<tr><td>10.25"</td><td>42</td><td>10</td><td>7.5</td></tr>
+									<tr><td>10.375"</td><td>43</td><td>10.5</td><td>8</td></tr>
+									<tr><td>10.50"</td><td>43.5</td><td>11</td><td>8.5</td></tr>
+									<tr><td>10.625"</td><td>44</td><td>11.5</td><td>9</td></tr>
+									<tr><td>10.875"</td><td>44.5</td><td>12</td><td>10</td></tr>
+									<tr><td>11.00"</td><td>45</td><td>12.5</td><td>10.5</td></tr>
+									<tr><td>11.125"</td><td>46</td><td>13</td><td>11</td></tr>
 								</table>
 							<?php } ?>
 						</div>
@@ -478,15 +482,15 @@ jQuery(document).ready(function() {
 							<div class="content">
 								<table class="shoes-sizes">
 									<tr><td>Size</td><td>USA</td><td>UK</td><td>Italy</td><td>France</td><td>Jeans</td></tr>
-									<tr><td>XXS</td><td>00</td><td>4</td><td>36</td><td>32</td><td>23</td></tr>
-									<tr><td>XXS-XS</td><td>0</td><td>6</td><td>38</td><td>34</td><td>24-25</td></tr>
-									<tr><td>XS-S</td><td>2-4</td><td>8</td><td>40</td><td>36</td><td>26-27</td></tr>
-									<tr><td>S-M</td><td>4-6</td><td>10</td><td>42</td><td>38</td><td>27-28</td></tr>
-									<tr><td>M-L</td><td>8</td><td>12</td><td>44</td><td>40</td><td>29-30</td></tr>
-									<tr><td>L-XL</td><td>10</td><td>14</td><td>46</td><td>42</td><td>31-32</td></tr>
-									<tr><td>XL-XXL</td><td>12</td><td>16</td><td>48</td><td>44</td><td>32-33</td></tr>
-									<tr><td>XXL-XXXL</td><td>14</td><td>18</td><td>50</td><td>46</td><td>&nbsp;</td></tr>
-									<tr><td>XXXL</td><td>16</td><td>20</td><td>52</td><td>48</td><td>&nbsp;</td></tr>
+									<tr><td>XS</td><td>0</td><td>4</td><td>36</td><td>32</td><td>23</td></tr>
+									<tr><td>S</td><td>0</td><td>6</td><td>38</td><td>34</td><td>24-25</td></tr>
+									<tr><td>S</td><td>2-4</td><td>8</td><td>40</td><td>36</td><td>26-27</td></tr>
+									<tr><td>M</td><td>4-6</td><td>10</td><td>42</td><td>38</td><td>27-28</td></tr>
+									<tr><td>M</td><td>8</td><td>12</td><td>44</td><td>40</td><td>29-30</td></tr>
+									<tr><td>L</td><td>10</td><td>14</td><td>46</td><td>42</td><td>31-32</td></tr>
+									<tr><td>L</td><td>12</td><td>16</td><td>48</td><td>44</td><td>32-33</td></tr>
+									<tr><td>XL</td><td>14</td><td>18</td><td>50</td><td>46</td><td>&nbsp;</td></tr>
+									<tr><td>XL</td><td>16</td><td>20</td><td>52</td><td>48</td><td>&nbsp;</td></tr>
 								</table>
 							</div>
 						<?php } ?>

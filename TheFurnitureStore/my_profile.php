@@ -26,6 +26,14 @@ if(!empty($_POST['action'])) {
 	} else {
 		$errmsg = '<div class="box-red">' . $errmsg . '</div>';
 	}
+	// subscribe user
+	$params = array(
+		'user_id' => $current_user->ID,
+		'email' => trim($_POST['email']),
+		'first_name' => trim($_POST['first_name']),
+		'last_name' => trim($_POST['last_name'])
+	);
+	nws_subscribe_action('profile', $params);
 }
 $userdata = get_userdata($user_ID);
 

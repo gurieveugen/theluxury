@@ -322,7 +322,7 @@ jQuery(document).ready(function(){
 			jQuery(this).parent().toggleClass('open');
 		});
 	});
-	// jQuery('.widget-filter .f-row').jqTransform();
+	jQuery('.widget-filter .f-row').jqTransform();
 	jQuery('.shop-by-category .jqTransformCheckbox').click(function(){
 		show_size_filter(false);
 	});

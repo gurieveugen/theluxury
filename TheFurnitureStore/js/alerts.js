@@ -374,35 +374,45 @@ jQuery(document).ready(function(){
 });
 
 function init_alerts_action() {
-	jQuery('.search-filter-form .f-block .jqTransformCheckbox').each(function(){
+	jQuery('.search-filter-form .jqTransformCheckbox').each(function(){
 		var sfid = jQuery(this).parent().find('input').attr('id');
 		var sfname = jQuery(this).parent().parent().find('label').attr('title');
 		if (jQuery(this).hasClass('jqTransformChecked')) {
 			create_alert_action(sfid, sfname);
 		}
 	});
-	if (alertslogin == 'true') {
-		jQuery('.sidebar-create-alert-button').trigger('click');
-		setTimeout(function(){ jQuery('#cboxLoadingOverlay, #cboxLoadingGraphic').hide(); }, 500);
-		alertslogin = '';
+}
+
+function alertslogin_action() {
+	var wl = window.location + '';
+	if (wl.indexOf('alertslogin') > 0) {
+		setTimeout(function(){
+			jQuery('.sidebar-create-alert-button').trigger('click');
+			setTimeout(function(){ jQuery('#cboxLoadingOverlay, #cboxLoadingGraphic').hide(); }, 500);
+		}, 1000);
 	}
 }
 
 function create_alert_action(sfid, sfname) {
-	sfname = sfname.replace('--', '');
-	sfname = sfname.replace('-', '');
+	if (sfname.substring(0, 2) == '--') {
+		sfname = sfname.substring(2);
+	}
+	if (sfname.substring(0, 2) == '-') {
+		sfname = sfname.substring(1);
+	}
 	if (!jQuery('.alert-requests-list li.'+sfid).size()) {
 		jQuery('.alert-requests-list').append('<li class="'+sfid+'" rel="'+sfname+'">'+sfname+'<span class="delete" onclick="delete_alert_action(\''+sfid+'\')"></span></li>');
 		jQuery('.widget-selection .holder').mCustomScrollbar('update');
 	}
 }
 function delete_alert_action(sfid) {
+	if(sfid == 'search-val')
+	{
+		filter_properties.args['s'] = '';
+	}
 	jQuery('.alert-requests-list li.'+sfid).remove();
 	jQuery('#'+sfid).attr('checked', false).parent().find('a.jqTransformCheckbox').removeClass('jqTransformChecked');
-	if(typeof(is_search_page) == 'undefined') 
-	{		
-		launchFilter('#'+sfid);
-	}
+	launchFilter('#'+sfid);	
 	jQuery('.widget-selection .holder').mCustomScrollbar('update');
 	setTimeout(function(){ jQuery('.create-alert-widget .mCSB_container').css('top', '0px'); }, 500);
 }

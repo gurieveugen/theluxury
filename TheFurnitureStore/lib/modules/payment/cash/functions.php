@@ -12,7 +12,7 @@ function cas_response(){
 	$feedback['who']	  = $_SESSION['cust_id'];
 
 	// Update DB 
-	$order = process_payment($feedback,'cas');
+	$order = process_payment($feedback,'cash');
 	
 	if($order == FALSE) { expulsion(); } // if customer refreshes last confirmation page -> redirect
 	

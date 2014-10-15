@@ -23,6 +23,7 @@ $TOTAL_AM = str_replace(',', '', $TOTAL_AM);
 	<input type="hidden" name="no_shipping" value="1" />
 	<input type="hidden" name="lc" value="<?php echo $lc; ?>" /> 		
 	<input type="hidden" name="bn" value="ButtonFactory.PayPal.001" />
+	<input type='hidden' name="return" value="<?php echo $OPTION['wps_confirm_url']; ?>&oid=<?php echo $order['oid']; ?>" />
 	<input type="hidden" name="notify_url" value="<?php echo $OPTION['wps_ipn_url']; ?>" />
 	<div class="button-right">
 		<input type="submit" class="shop-button" name="add" value="Place Order" />

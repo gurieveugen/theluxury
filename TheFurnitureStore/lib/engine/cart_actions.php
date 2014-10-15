@@ -2,28 +2,6 @@
 ##################################################################################################################################
 //												SHOPPING-CART FUNCTIONS																			
 ##################################################################################################################################
-add_action('init', 'shop_cart_init');
-function shop_cart_init() {
-	global $OPTION;
-	if ($_POST['proceed2Checkout'] == 'true') {
-		layaway_set_session();
-		// redirect to login if user not logged and selected layaway option
-		if (!is_user_logged_in() && $_POST['layaway_process'] == 1) {
-			$login_page = get_page_by_title('Login');
-			if ($login_page) {
-				$login_url = get_permalink($login_page->ID).'?redirect_to='.urlencode($_SERVER['REQUEST_URI']);
-			} else {
-				$login_url = wp_login_url(urlencode($_SERVER['REQUEST_URI']));
-			}
-			$login_url .= '&installments=1';
-			wp_redirect($login_url);
-			exit();
-		}
-		wp_redirect(get_real_base_url($OPTION['wps_enforce_ssl']).'?orderNow=1');
-		exit();
-	}
-}
-
 // Customer gets a unique identifier 
 function create_customer_id(){
 
@@ -35,9 +13,6 @@ function create_customer_id(){
 
 	if(!isset($_SESSION['cust_id'])){	
 		$_SESSION['cust_id'] 	= time().'-'.substr(md5(time()),22);
-		if(($OPTION['wps_inventory_cleaning_method'] == 'internal')&&($OPTION['wps_track_inventory'] == 'active')&&($OPTION['wps_shop_mode'] == 'Normal shop mode')){
-			xl_clean_inventory();
-		}
 	}
 }
 
@@ -81,7 +56,7 @@ function add_toCart(){
 	global $OPTION, $wpdb;
 
 	create_customer_id();
-		
+
 	$table 	= is_dbtable_there('shopping_cart');
 	$table2 = is_dbtable_there('shopping_cart_log');	
 	
@@ -151,7 +126,7 @@ function add_toCart(){
 			if($OPTION['wps_track_inventory'] == 'active' && $loid == 0) {
 				$stock = get_item_inventory($_POST['postID']);
 			}
-			
+
 			if($stock > 0) {
 				if($already_there == 0){
 					// add as new item in table 
@@ -182,7 +157,7 @@ function add_toCart(){
 					if(isset($_POST['item_file'])){
 					$column_array[]	= 'item_file';		$value_array[]	= $_POST['item_file'];
 					}
-										
+
 					db_insert($table,$column_array, $value_array);	
 
 					//get the inserted ID from table 
@@ -214,6 +189,7 @@ function add_toCart(){
 					$column_array[]	= 'item_file';		$value_array[]	= $_POST['item_file'];
 					}
 					db_insert($table2,$column_array, $value_array);
+					$_SESSION['added_to_cart'] = array('item_id' => $_POST['item_id'], 'item_price' => sprintf("%01.2f", $_POST['amount']), 'item_qty' => 1);
 				} else {	
 					//digital goods : update only if lkeys are activated			
 					$qStr77 		= "SELECT item_file FROM $table WHERE item_id = '$_POST[item_id]' AND who = '$_SESSION[cust_id]' LIMIT 0,1";
@@ -252,6 +228,10 @@ function add_toCart(){
 			}
 		}
 		update_cart_activity_date();
+
+		// update cookies cart items
+		update_cookie_cart_items();
+
 		$installments_buy = $_POST['installments_buy'];
 		//\change.9.9
 		// to avoid unitentional reposts
@@ -259,7 +239,7 @@ function add_toCart(){
 		$url 	= current_page(3);	
 		//change.9.9
 		if ($OPTION['wps_send_to_view_cart'] ) {
-			$url = get_option('home').'?showCart=1&cPage='. $url;
+			$url = get_cart_url().'?cPage='.$url;
 		} else {			
 			$url 	= str_replace ('?added=OK&l=cart','',$url);		
 			//in case of no add to cart we need message for single product page
@@ -632,6 +612,10 @@ function update_cart(){
 		}				
 	}
 	update_cart_activity_date();
+
+	// update cookies cart items
+	update_cookie_cart_items();
+
 	// redirect to same page + stock control
 	$url 	= current_page(3).$url_add;
 	if($_GET['updateQty'] == '1'){
@@ -669,6 +653,8 @@ function order_review_update(){
 			$wpdb->query("DELETE FROM $table2 WHERE cid = $cid");
 		}				
 	}
+	// update cookies cart items
+	update_cookie_cart_items();
 }
 
 function loop_products($CART, $order_review = false){
@@ -1167,6 +1153,23 @@ function order_exists($table){
 	}
 	
 return $feedback;
+}
+
+function get_order_shipping_country($oid) {
+	global $wpdb;
+	$otable = is_dbtable_there('orders');
+	$order_data = $wpdb->get_row(sprintf("SELECT * FROM %s WHERE oid = %s", $otable, $oid));
+	$shipping_country = $order_data->country;
+	if ($order_data->d_addr == 1) {
+		$atable = is_dbtable_there('delivery_addr');
+		$addr_data = $wpdb->get_row(sprintf("SELECT * FROM %s WHERE who = '%s'", $atable, $order_data->who));
+		if ($addr_data) {
+			if (strlen($addr_data->country)) {
+				$shipping_country = $addr_data->country;
+			}
+		}
+	}
+	return $shipping_country;
 }
 
 function address_form_labels(){
@@ -1961,6 +1964,17 @@ function calculate_shipping($d_option,$subtotal,$weight,$num_items,$country='US'
 	return sprintf("%01.2f", $sFee);
 }
 
+function is_flat_limit_shipping_free($subtotal) {
+	global $OPTION;
+	if ($OPTION['wps_shipping_method'] == 'FLAT_LIMIT') {
+		$flparams = explode("|", $OPTION['wps_shipping_flatlimit_parameter']);
+		$lprice = $flparams[1];
+		if ($subtotal >= $lprice) {
+			return true;
+		}
+	}
+	return false;
+}
 
 function update_order($weight, $shipping, $subtotal, $voucher=0, $tax=0){
 	global $current_user;
@@ -2007,431 +2021,306 @@ function check_cart_items() {
 	return $wpdb->get_var(sprintf("SELECT COUNT(cid) FROM %s WHERE who = '%s'", $table, $_SESSION['cust_id']));
 }
 
-function process_payment($feedback,$option){
+function process_payment($feedback, $option){
 	global $wpdb, $OPTION, $current_user;
 		// update orders table according to payment status
-		$table 					= is_dbtable_there('orders');
-		$column_value_array 	= array();
-		$where_conditions 		= array();
+		$table 				= is_dbtable_there('orders');
+		$column_value_array = array();
+		$where_conditions 	= array();
 
 		if (!strlen($_SESSION['cust_id'])) { $_SESSION['cust_id'] = $feedback['who']; }
 
-		if (!check_cart_items()) {
-			return;
-		}
+		if (!check_cart_items()) { return; }
 
-		switch($option){
+		$who = $_SESSION['cust_id'];
+
+		$p_option = $option;
+		if ($option == 'bt') { $p_option = 'transfer'; }
+		$column_value_array['p_option'] = $p_option;
+
+		switch($option) {
 								
 			case 'paypal':
-				$parts	= explode("-",$_SESSION['cust_id']);
-				$txn_id = $feedback['txn_id'];
-				if($feedback['payment_status'] == 'Completed'){
-					$column_value_array['txn_id'] 		= $txn_id;
-					$column_value_array['tracking_id'] 	= $parts[0];
-					$column_value_array['order_time'] 	= time();
-											
-					$cart_comp = cart_composition($_SESSION['cust_id']);
+				$parts	= explode("-", $who);
+
+				$column_value_array['txn_id'] 		= $feedback['txn_id'];
+				$column_value_array['tracking_id'] 	= $parts[0];
+				$column_value_array['order_time'] 	= time();
+
+				if($feedback['payment_status'] == 'Completed') {
+					$cart_comp = cart_composition($who);
 					if($cart_comp == 'digi_only'){
-						$column_value_array['level'] 	= '7';
+						$column_value_array['level'] = '7';
 					} else {
-						$column_value_array['level'] 	= '4';
+						$column_value_array['level'] = '4';
 					}
-				}
-				elseif($feedback['payment_status'] == 'Pending'){
-					$column_value_array['txn_id'] 		= $txn_id;
-					$column_value_array['tracking_id'] 	= $parts[0];
-					$column_value_array['order_time'] 	= time();
-					$column_value_array['pending_r']	= 'na';
-					$column_value_array['level'] 		= '8';
-				}
-				elseif($feedback['payment_status'] == 'free'){
-					$column_value_array['txn_id'] 		= $txn_id;
-					$column_value_array['tracking_id'] 	= $parts[0];
-					$column_value_array['order_time'] 	= time();
-					$column_value_array['level'] 		= '7';
+				} elseif($feedback['payment_status'] == 'Pending') {
+					$column_value_array['pending_r'] = 'na';
+					$column_value_array['level'] = '8';
+				} elseif($feedback['payment_status'] == 'free') {
+					$column_value_array['level'] = '7';
 				}
 
-				$where_conditions[0]				= "who = '$_SESSION[cust_id]'";
+				$where_conditions[0] = "who = '$who'";
 
 				db_update($table, $column_value_array, $where_conditions);	
-
-				$qStr 	= "SELECT * FROM $table WHERE who = '$_SESSION[cust_id]' LIMIT 1";
-				$res 	= mysql_query($qStr);
-				$order 	= mysql_fetch_assoc($res);
-
 			break;	
-				
-									
-			case 'authn':						
-					
-				// we need to get the 'who' token 
-				$qStr 	= "SELECT who FROM $table WHERE txn_id = '$feedback[temp_txn_id]' LIMIT 1";
-				$res 	= mysql_query($qStr);
-				$row 	= mysql_fetch_assoc($res);	
-				$parts	= explode("-",$row[who]);
-				
-				if($feedback['status'] == 1){
-					$column_value_array['txn_id'] 		= $feedback['trans_id'];
-					$column_value_array['tracking_id'] 	= $parts[0];	
-					$column_value_array['order_time'] 	= time();
-											
-					$cart_comp = cart_composition($row['who']);
-					if($cart_comp == 'digi_only'){
-						$column_value_array['level'] 			= '7';						
-					}
-					else{						
-						$column_value_array['level'] 			= '4';
-					}
-				}
-				elseif($payment_status == 'Pending'){
-					$column_value_array['txn_id'] 		= $txn_id;
-					$column_value_array['tracking_id'] 	= $parts[0];	
-					$column_value_array['order_time'] 	= time();
-					$column_value_array['pending_r']		= $pending_r; 
-					$column_value_array['level'] 			= '8';					
-				}
-				else {}
-				
-			
-				$where_conditions[0]				= "txn_id = '$feedback[temp_txn_id]'";
-																			
-				db_update($table, $column_value_array, $where_conditions);	
-				
-				$qStr 	= "SELECT * FROM $table WHERE txn_id = '$feedback[trans_id]' LIMIT 1";
-				$res 	= mysql_query($qStr);
-				$order 	= mysql_fetch_assoc($res);				
-			
-			break;
-			
-			case 'audi':	
-				$parts	= explode("-", $_SESSION[cust_id]);
+
+			case 'audi':
+				$parts	= explode("-", $who);
 				$column_value_array['txn_id'] 		= $feedback['trans_id'];
 				$column_value_array['order_time'] 	= time();
 				$column_value_array['tracking_id'] 	= $parts[0];
 				$column_value_array['level'] 		= '4';
-			
-				$where_conditions[0]				= "who = '$_SESSION[cust_id]'";
+
+				$where_conditions[0]				= "who = '$who'";
 																			
 				db_update($table, $column_value_array, $where_conditions);	
-				
-				$qStr 	= "SELECT * FROM $table WHERE who = '$_SESSION[cust_id]' LIMIT 1";
-				$res 	= mysql_query($qStr);
-				$order 	= mysql_fetch_assoc($res);
-			
 			break;				
-			
-			case 'g2p_authn':						
-				
-				$qStr 	= "SELECT who FROM $table WHERE txn_id = '$feedback[temp_txn_id]' LIMIT 1";
-				$res 	= mysql_query($qStr);
-				$row 	= mysql_fetch_assoc($res);	
-				$parts	= explode("-",$row[who]);		
-				$where_conditions[0]				= "txn_id = '$feedback[temp_txn_id]'";
-				// we need to get the 'who' token 
-				if($feedback['status'] == 1){
-					$column_value_array['txn_id'] 		= $feedback['trans_id'];
-					$column_value_array['tracking_id'] 	= $parts[0];	
-					$column_value_array['order_time'] 	= time();
-											
-					$cart_comp = cart_composition($row['who']);
-					if($cart_comp == 'digi_only'){
-						$column_value_array['level'] 			= '7';						
-					}
-					else{						
-						$column_value_array['level'] 			= '4';
-					}
-				}
-				elseif($payment_status == 'Pending'){
-					$column_value_array['txn_id'] 		= $txn_id;
-					$column_value_array['tracking_id'] 	= $parts[0];	
-					$column_value_array['order_time'] 	= time();
-					$column_value_array['pending_r']		= $pending_r; 
-					$column_value_array['level'] 			= '8';					
-				}
-				else {}
-				db_update($table, $column_value_array, $where_conditions);	
-				
-				$qStr 	= "SELECT * FROM $table WHERE txn_id = '$feedback[trans_id]' LIMIT 1";
-				$res 	= mysql_query($qStr);
-				$order 	= mysql_fetch_assoc($res);				
-			
-			break;
-			case 'wpay': 
-			
-				if($feedback[status] == 'Y'){					
-				
-					// we need to get the 'who' token 
-					$qStr 	= "SELECT who FROM $table WHERE txn_id = '$feedback[temp_txn_id]' LIMIT 1";
-					$res 	= mysql_query($qStr);
-					$row 	= mysql_fetch_assoc($res);	
-					$parts	= explode("-",$row[who]);	
-				
-				
-					$column_value_array['txn_id'] 		= $feedback['trans_id'];
-					$column_value_array['tracking_id'] 	= $parts[0];
-					$column_value_array['order_time'] 	= time();
-											
-					$cart_comp = cart_composition($row['who']);
-					if($cart_comp == 'digi_only'){
-						$column_value_array['level'] 			= '7';						
-					}
-					else{						
-						$column_value_array['level'] 			= '4';
-					}
-				}
-				elseif($payment_status == 'Pending'){
-					$column_value_array['txn_id'] 		= $txn_id;
-					$column_value_array['tracking_id'] 	= $parts[0];
-					$column_value_array['order_time'] 	= time();
-					$column_value_array['pending_r']		= $pending_r; 
-					$column_value_array['level'] 			= '8';					
-				}
-				else {}
-				
-			
-				$where_conditions[0]				= "txn_id = '$feedback[temp_txn_id]'";
-																			
-				db_update($table, $column_value_array, $where_conditions);	
-				
-				$qStr 	= "SELECT * FROM $table WHERE txn_id = '$feedback[trans_id]' LIMIT 1";
-				$res 	= mysql_query($qStr);
-				$order 	= mysql_fetch_assoc($res);				
-			
-			break;
-			case 'alertpay':
-			
-				if($feedback['status'] == 'Success'){					
-				
-					// we need to get the 'who' token 
-					$qStr 	= "SELECT who FROM $table WHERE who = '$feedback[temp_txn_id]' LIMIT 1";
-					$res 	= mysql_query($qStr);
-					$row 	= mysql_fetch_assoc($res);	
-					$parts	= explode("-",$row[who]);	
-				
-				
-					$column_value_array['txn_id'] 		= $feedback['trans_id'];
-					$column_value_array['tracking_id'] 	= $parts[0];
-					$column_value_array['order_time'] 	= time();
-											
-					$cart_comp = cart_composition($row['who']);
-					if($cart_comp == 'digi_only'){
-						$column_value_array['level'] 			= '7';						
-					}
-					else{						
-						$column_value_array['level'] 			= '4';
-					}
-				}
-				elseif($payment_status == 'Pending'){
-					$column_value_array['txn_id'] 		= $txn_id;
-					$column_value_array['tracking_id'] 	= $parts[0];
-					$column_value_array['order_time'] 	= time();
-					$column_value_array['pending_r']		= $pending_r; 
-					$column_value_array['level'] 			= '8';					
-				}
-				else {}
-				
-			
-				$where_conditions[0]				= " who = '$feedback[temp_txn_id]'";
-																			
-				db_update($table, $column_value_array, $where_conditions);	
-				
-				$qStr 	= "SELECT * FROM $table WHERE txn_id = '$feedback[trans_id]' LIMIT 1";
-				$res 	= mysql_query($qStr);
-				$order 	= mysql_fetch_assoc($res);				
-			
-			break;
-			case '2checkout':
-			
-				if($feedback['status'] == 'Success'){					
-				
-					// we need to get the 'who' token 
-					$qStr 	= "SELECT who FROM $table WHERE who = '$feedback[temp_txn_id]' LIMIT 1";
-					$res 	= mysql_query($qStr);
-					$row 	= mysql_fetch_assoc($res);	
-					$parts	= explode("-",$row['who']);	
-				
-				
-					$column_value_array['txn_id'] 		= $feedback['trans_id'];
-					$column_value_array['tracking_id'] 	= $parts[0];
-					$column_value_array['order_time'] 	= time();
-											
-					$cart_comp = cart_composition($row['who']);
-					if($cart_comp == 'digi_only'){
-						$column_value_array['level'] 			= '7';						
-					}
-					else{						
-						$column_value_array['level'] 			= '4';
-					}
-				}
-				elseif($payment_status == 'Pending'){
-					$column_value_array['txn_id'] 		= $txn_id;
-					$column_value_array['tracking_id'] 	= $parts[0];
-					$column_value_array['order_time'] 	= time();
-					$column_value_array['pending_r']		= $pending_r; 
-					$column_value_array['level'] 			= '8';					
-				}
-				else {}
-				
-			
-				$where_conditions[0]				= " who = '$feedback[temp_txn_id]'";
-																			
-				db_update($table, $column_value_array, $where_conditions);	
-				
-				$qStr 	= "SELECT * FROM $table WHERE txn_id = '$feedback[trans_id]' LIMIT 1";
-				$res 	= mysql_query($qStr);
-				$order 	= mysql_fetch_assoc($res);				
-			
-			break;
-			
-			
+
 			case 'bt':
-			
-				$parts	= explode("-",$_SESSION[cust_id]);
-			
-				if($feedback['status'] == 'Completed'){
-					$column_value_array['txn_id'] 		= md5(microtime());
-					$column_value_array['tracking_id'] 	= $parts[0];
-					$column_value_array['order_time'] 	= time();
-					$column_value_array['level'] 			= '4';
+				$parts	= explode("-", $who);
+
+				$column_value_array['txn_id'] 		= md5(microtime());
+				$column_value_array['tracking_id'] 	= $parts[0];
+				$column_value_array['order_time'] 	= time();
+
+				if($feedback['status'] == 'Completed') {
+					$column_value_array['level'] 	= '4';
+				} elseif($payment_status == 'Pending') {
+					$column_value_array['pending_r']= $pending_r; 
+					$column_value_array['level'] 	= '8';					
+				} elseif($payment_status == 'free') {
+					$column_value_array['level'] 	= '7';							
 				}
-				elseif($payment_status == 'Pending'){
-					$column_value_array['txn_id'] 		= $txn_id;
-					$column_value_array['tracking_id'] 	= $parts[0];
-					$column_value_array['order_time'] 	= time();
-					$column_value_array['pending_r']		= $pending_r; 
-					$column_value_array['level'] 			= '8';					
-				}
-				elseif($payment_status == 'free'){
-					$column_value_array['txn_id'] 		= $txn_id;
-					$column_value_array['tracking_id'] 	= $parts[0];
-					$column_value_array['order_time'] 	= time();
-					$column_value_array['level'] 			= '7';							
-				}
-				else {}
-				
 			
-				$where_conditions[0]				= "who = '$_SESSION[cust_id]'";
+				$where_conditions[0]				= "who = '$who'";
 																			
 				db_update($table, $column_value_array, $where_conditions);	
-				
-				$qStr 	= "SELECT * FROM $table WHERE who = '$_SESSION[cust_id]' LIMIT 1";
-				$res 	= mysql_query($qStr);
-				$order 	= mysql_fetch_assoc($res);				
-			
 			break;
-			
-			
-			case 'cas':
-			
-				$parts	= explode("-",$_SESSION[cust_id]);
-			
-				if($feedback['status'] == 'Completed'){
-					$column_value_array['txn_id'] 		= md5(microtime());
-					$column_value_array['tracking_id'] 	= $parts[0];
-					$column_value_array['order_time'] 	= time();											
-					$column_value_array['level'] 			= '4';
-					
+
+			case 'cash':
+				$parts	= explode("-", $who);
+
+				$column_value_array['txn_id'] 	= md5(microtime());
+				$column_value_array['tracking_id'] 	= $parts[0];
+				$column_value_array['order_time'] 	= time();
+
+				if($feedback['status'] == 'Completed') {
+					$column_value_array['level'] 	= '4';
+				} elseif($payment_status == 'Pending') {
+					$column_value_array['pending_r']= $pending_r; 
+					$column_value_array['level'] 	= '8';					
+				} elseif($payment_status == 'free') {
+					$column_value_array['level'] 	= '7';							
 				}
-				elseif($payment_status == 'Pending'){
-					$column_value_array['txn_id'] 		= $txn_id;
-					$column_value_array['tracking_id'] 	= $parts[0];
-					$column_value_array['order_time'] 	= time();
-					$column_value_array['pending_r']		= $pending_r; 
-					$column_value_array['level'] 			= '8';					
-				}
-				elseif($payment_status == 'free'){
-					$column_value_array['txn_id'] 		= $txn_id;
-					$column_value_array['tracking_id'] 	= $parts[0];
-					$column_value_array['order_time'] 	= time();
-					$column_value_array['level'] 			= '7';							
-				}
-				else {}
-				
-			
-				$where_conditions[0]				= "who = '$_SESSION[cust_id]'";
+
+				$where_conditions[0]				= "who = '$who'";
 																			
 				db_update($table, $column_value_array, $where_conditions);	
-				
-				$qStr 	= "SELECT * FROM $table WHERE who = '$_SESSION[cust_id]' LIMIT 1";
-				$res 	= mysql_query($qStr);
-				$order 	= mysql_fetch_assoc($res);				
-			
 			break;			
 			
 			case 'cod':
+				$parts	= explode("-", $who);
 			
-				$parts	= explode("-",$_SESSION['cust_id']);
+				$column_value_array['txn_id'] 	= md5(microtime());
+				$column_value_array['tracking_id'] 	= $parts[0];
+				$column_value_array['order_time'] 	= time();
+
+				if($feedback['status'] == 'Completed') {
+					$column_value_array['level'] 	= '4';
+				} elseif($payment_status == 'Pending') {
+					$column_value_array['pending_r']= $pending_r;
+					$column_value_array['level'] 	= '8';
+				} elseif($payment_status == 'free') {
+					$column_value_array['level'] 	= '7';
+				}
 			
-				if($feedback['status'] == 'Completed'){
-					$column_value_array['txn_id'] 		= md5(microtime());
-					$column_value_array['tracking_id'] 	= $parts[0];
-					$column_value_array['order_time'] 	= time();											
-					$column_value_array['level'] 			= '4';
-					
-				}
-				elseif($payment_status == 'Pending'){
-					$column_value_array['txn_id'] 		= $txn_id;
-					$column_value_array['tracking_id'] 	= $parts[0];
-					$column_value_array['order_time'] 	= time();
-					$column_value_array['pending_r']		= $pending_r; 
-					$column_value_array['level'] 			= '8';					
-				}
-				elseif($payment_status == 'free'){
-					$column_value_array['txn_id'] 		= $txn_id;
-					$column_value_array['tracking_id'] 	= $parts[0];
-					$column_value_array['order_time'] 	= time();
-					$column_value_array['level'] 			= '7';							
-				}
-				else {}
-				
-			
-				$where_conditions[0]				= "who = '$_SESSION[cust_id]'";
+				$where_conditions[0]				= "who = '$who'";
 																			
 				db_update($table, $column_value_array, $where_conditions);	
-				
-				$qStr 	= "SELECT * FROM $table WHERE who = '$_SESSION[cust_id]' LIMIT 1";
-				$res 	= mysql_query($qStr);
-				$order 	= mysql_fetch_assoc($res);				
-			
 			break;				
-			
-			
+
 			case 'paypal_pro':
-			
-				$parts	= explode("-",$_SESSION[cust_id]);
-			
-				if($feedback['status'] == 'Completed'){
-					$column_value_array['txn_id'] 		= md5(microtime());
-					$column_value_array['tracking_id'] 	= $parts[0];
-					$column_value_array['order_time'] 	= time();
-					$column_value_array['level'] 			= '4';
+				$parts	= explode("-", $who);
+
+				$column_value_array['txn_id'] 	= md5(microtime());
+				$column_value_array['tracking_id'] 	= $parts[0];
+				$column_value_array['order_time'] 	= time();
+				$column_value_array['p_option'] 	= 'paypal_pro';
+
+				if($feedback['status'] == 'Completed') {
+					$column_value_array['level'] 	= '4';
+				} elseif($payment_status == 'Pending') {
+					$column_value_array['pending_r']= $pending_r;
+					$column_value_array['level'] 	= '8';
+				} elseif($payment_status == 'free') {
+					$column_value_array['level'] 	= '7';
 				}
-				elseif($payment_status == 'Pending'){
-					$column_value_array['txn_id'] 		= $txn_id;
-					$column_value_array['tracking_id'] 	= $parts[0];
-					$column_value_array['order_time'] 	= time();
-					$column_value_array['pending_r']		= $pending_r; 
-					$column_value_array['level'] 			= '8';					
-				}
-				elseif($payment_status == 'free'){
-					$column_value_array['txn_id'] 		= $txn_id;
-					$column_value_array['tracking_id'] 	= $parts[0];
-					$column_value_array['order_time'] 	= time();
-					$column_value_array['level'] 			= '7';							
-				}
-				else {}
-				
 			
-				$where_conditions[0]				= "who = '$_SESSION[cust_id]'";
+				$where_conditions[0]				= "who = '$who'";
 																			
 				db_update($table, $column_value_array, $where_conditions);	
-				
-				$qStr 	= "SELECT * FROM $table WHERE who = '$_SESSION[cust_id]' LIMIT 1";
-				$res 	= mysql_query($qStr);
-				$order 	= mysql_fetch_assoc($res);				
-			
 			break;				
+
+			case 'authn':						
+				// we need to get the 'who' token 
+				$qStr 	= "SELECT who FROM $table WHERE txn_id = '$feedback[temp_txn_id]' LIMIT 1";
+				$res 	= mysql_query($qStr);
+				$row 	= mysql_fetch_assoc($res);	
+				$parts	= explode("-", $row['who']);
+
+				$column_value_array['txn_id'] 		= $feedback['trans_id'];
+				$column_value_array['tracking_id'] 	= $parts[0];	
+				$column_value_array['order_time'] 	= time();
+
+				if($feedback['status'] == 1) {
+					$cart_comp = cart_composition($row['who']);
+					if($cart_comp == 'digi_only'){
+						$column_value_array['level'] = '7';						
+					} else {
+						$column_value_array['level'] = '4';
+					}
+				} elseif($payment_status == 'Pending') {
+					$column_value_array['pending_r'] = $pending_r;
+					$column_value_array['level'] 	 = '8';
+				}
+
+				$where_conditions[0]				= "txn_id = '$feedback[temp_txn_id]'";
+																			
+				db_update($table, $column_value_array, $where_conditions);	
+
+				$who = $feedback['trans_id'];
+			break;
+
+			case 'g2p_authn':						
+				$qStr 	= "SELECT who FROM $table WHERE txn_id = '$feedback[temp_txn_id]' LIMIT 1";
+				$res 	= mysql_query($qStr);
+				$row 	= mysql_fetch_assoc($res);	
+				$parts	= explode("-", $row['who']);		
+
+				$column_value_array['tracking_id'] 	= $parts[0];	
+				$column_value_array['order_time'] 	= time();
+
+				if($feedback['status'] == 1) {
+					$column_value_array['txn_id'] 	= $feedback['trans_id'];
+											
+					$cart_comp = cart_composition($row['who']);
+					if($cart_comp == 'digi_only') {
+						$column_value_array['level']= '7';						
+					} else {
+						$column_value_array['level']= '4';
+					}
+				} elseif($payment_status == 'Pending') {
+					$column_value_array['txn_id'] 	= $txn_id;
+					$column_value_array['pending_r']= $pending_r;
+					$column_value_array['level'] 	= '8';
+				}
+
+				$where_conditions[0]				= "txn_id = '$feedback[temp_txn_id]'";
+
+				db_update($table, $column_value_array, $where_conditions);	
+
+				$who = $feedback['trans_id'];
+			break;
+
+			case 'wpay': 
+				$qStr 	= "SELECT who FROM $table WHERE txn_id = '$feedback[temp_txn_id]' LIMIT 1";
+				$res 	= mysql_query($qStr);
+				$row 	= mysql_fetch_assoc($res);	
+				$parts	= explode("-", $row['who']);	
+
+				$column_value_array['tracking_id'] 	= $parts[0];
+				$column_value_array['order_time'] 	= time();
+
+				if($feedback['status'] == 'Y') {
+					$column_value_array['txn_id'] 		= $feedback['trans_id'];
+											
+					$cart_comp = cart_composition($row['who']);
+					if($cart_comp == 'digi_only') {
+						$column_value_array['level'] = '7';						
+					} else {
+						$column_value_array['level'] = '4';
+					}
+				} elseif($payment_status == 'Pending') {
+					$column_value_array['txn_id'] 	 = $txn_id;
+					$column_value_array['pending_r'] = $pending_r; 
+					$column_value_array['level'] 	 = '8';					
+				}
+
+				$where_conditions[0]				= "txn_id = '$feedback[temp_txn_id]'";
+																			
+				db_update($table, $column_value_array, $where_conditions);	
+
+				$who = $feedback['trans_id'];
+			break;
+
+			case 'alertpay':
+				$qStr 	= "SELECT who FROM $table WHERE who = '$feedback[temp_txn_id]' LIMIT 1";
+				$res 	= mysql_query($qStr);
+				$row 	= mysql_fetch_assoc($res);	
+				$parts	= explode("-", $row['who']);	
+
+				$column_value_array['tracking_id'] 	= $parts[0];
+				$column_value_array['order_time'] 	= time();
+
+				if($feedback['status'] == 'Success') {					
+					$column_value_array['txn_id'] 	= $feedback['trans_id'];
+											
+					$cart_comp = cart_composition($row['who']);
+					if($cart_comp == 'digi_only'){
+						$column_value_array['level']= '7';						
+					} else {
+						$column_value_array['level']= '4';
+					}
+				} elseif($payment_status == 'Pending') {
+					$column_value_array['txn_id'] 	= $txn_id;
+					$column_value_array['pending_r']= $pending_r;
+					$column_value_array['level'] 	= '8';
+				}
+			
+				$where_conditions[0]				= " who = '$feedback[temp_txn_id]'";
+																			
+				db_update($table, $column_value_array, $where_conditions);	
+
+				$who = $feedback['trans_id'];
+			break;
+
+			case '2checkout':
+				$qStr 	= "SELECT who FROM $table WHERE who = '$feedback[temp_txn_id]' LIMIT 1";
+				$res 	= mysql_query($qStr);
+				$row 	= mysql_fetch_assoc($res);	
+				$parts	= explode("-", $row['who']);	
+
+				$column_value_array['tracking_id'] 	= $parts[0];
+				$column_value_array['order_time'] 	= time();
+
+				if($feedback['status'] == 'Success') {					
+					$column_value_array['txn_id'] 	= $feedback['trans_id'];
+											
+					$cart_comp = cart_composition($row['who']);
+					if($cart_comp == 'digi_only') {
+						$column_value_array['level']= '7';						
+					} else {
+						$column_value_array['level']= '4';
+					}
+				} elseif($payment_status == 'Pending') {
+					$column_value_array['txn_id'] 	= $txn_id;
+					$column_value_array['pending_r']= $pending_r;
+					$column_value_array['level'] 	= '8';
+				}
+			
+				$where_conditions[0]				= " who = '$feedback[temp_txn_id]'";
+																			
+				db_update($table, $column_value_array, $where_conditions);	
+
+				$who = $feedback['trans_id'];
+			break;
 		}
+
+		$qStr 	= "SELECT * FROM $table WHERE who = '$who' LIMIT 1";
+		$res 	= mysql_query($qStr);
+		$order 	= mysql_fetch_assoc($res);
 
 		// layaway order
 		if ($order['layaway_process'] == 1 || $order['layaway_order'] > 0) {
@@ -2442,6 +2331,10 @@ function process_payment($feedback,$option){
 			$order 	= mysql_fetch_assoc($res);
 		}
 
+		// send order to channel advisor
+		//$chadv = new ChannelAdvisor();
+		//$chadv->submit_order($order['oid']);
+
 		// update products inventory
 		$sctable = is_dbtable_there('shopping_cart');
 		$cart_products = $wpdb->get_results(sprintf("SELECT * FROM %s WHERE who = '%s'", $sctable, $order['who']));
@@ -2450,7 +2343,7 @@ function process_payment($feedback,$option){
 				$current_inventory = get_item_inventory($cart_product->postID, $cart_product->item_id);
 				$amount = $current_inventory - $cart_product->item_amount;
 				if ($amount < 0) { $amount = 0; }
-				update_item_inventory($cart_product->item_id, $amount, true, 'Order completed - oid = '.$order['oid']);
+				update_item_inventory($cart_product->item_id, $amount, true, 'order');
 			}
 		}
 
@@ -2464,21 +2357,23 @@ function process_payment($feedback,$option){
 		// subscribe user
 		nws_subscribe_action('checkout', array('email' => $order['email']));
 
+		// update cookies cart items
+		update_cookie_cart_items();
+
 	return $order;
 }
 
 function get_chosen_doption(){
-				
-					$table = is_dbtable_there('orders');
-						
-					$d_op 				= array(); 	
-					$qStr 				= "SELECT * FROM $table WHERE who = '$_SESSION[cust_id]' LIMIT 1";
-					$res 				= mysql_query($qStr);
-					$row 				= mysql_fetch_assoc($res);
-					$d_op[method]		= $row[d_option];
-					$d_op[tracking_id]	= $row[tracking_id];
+	$table = is_dbtable_there('orders');
+		
+	$d_op 				= array(); 	
+	$qStr 				= "SELECT * FROM $table WHERE who = '$_SESSION[cust_id]' LIMIT 1";
+	$res 				= mysql_query($qStr);
+	$row 				= mysql_fetch_assoc($res);
+	$d_op[method]		= $row[d_option];
+	$d_op[tracking_id]	= $row[tracking_id];
 
-return $d_op;
+	return $d_op;
 }
 
 function url_be($option='orders'){
@@ -4328,14 +4223,16 @@ function google_analytics($profile_id='1111'){
 
 $code = "
 	<script type=\"text/javascript\">
-	var gaJsHost = ((\"https:\" == document.location.protocol) ? \"https://\" : \"http://\");
-	document.write(unescape(\"%3Cscript src='\" + gaJsHost + \"stats.g.doubleclick.net/dc.js' type='text/javascript'%3E%3C/script%3E\"));
+	var _gaq = _gaq || [];
+	_gaq.push(['_setAccount', '".$profile_id."']);
+	_gaq.push(['_trackPageview']);
+
+	(function() {
+	var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+	ga.src = ('https:' == document.location.protocol ? 'https://' : 'http://') + 'stats.g.doubleclick.net/dc.js';
+	var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+	})();
 	</script>
-	<script type=\"text/javascript\">
-	try {
-	var pageTracker = _gat._getTracker(\"$profile_id\");
-	pageTracker._trackPageview();
-	} catch(err) {}</script>
 ";
 
 return $code ;
@@ -5267,6 +5164,8 @@ function clean_shopping_cart($act = '') {
 		}
 		$wpdb->query(sprintf("DELETE FROM %s WHERE level IS NULL OR (level = '1' AND (created <= %s OR created IS NULL))", $table1, $cdate));
 	}
+	// update cookies cart items
+	update_cookie_cart_items();
 }
 
 // clean shopping cart after 30 min no user activity
@@ -5317,10 +5216,10 @@ function calculate_tax($order, $cart_total) {
 function wps_shop_process_steps($step = 1) {
 	$siteurl = get_bloginfo('url');
 	$steps = array(
-		1 => array('title' => 'Your Order', 'url' => $siteurl.'/?showCart=1'),
-		2 => array('title' => 'Payment &amp; Delivery Options', 'url' => $siteurl.'/?orderNow=1'),
-		3 => array('title' => 'Delivery &amp; Billing', 'url' => $siteurl.'/?orderNow=2&dpchange=1'),
-		4 => array('title' => 'Order Review', 'url' => $siteurl.'/?orderNow=3'),
+		1 => array('title' => 'Your Order', 'url' => get_cart_url()),
+		2 => array('title' => 'Payment &amp; Delivery Options', 'url' => get_checkout_url().'/?orderNow=1'),
+		3 => array('title' => 'Delivery &amp; Billing', 'url' => get_checkout_url().'/?orderNow=2&dpchange=1'),
+		4 => array('title' => 'Order Review', 'url' => get_checkout_url().'/?orderNow=3'),
 		5 => array('title' => 'Confirmation', 'url' => '')
 	);
 ?>
@@ -5363,11 +5262,21 @@ function nws_check_voucher($code) {
 function nws_get_voucher_data($code) {
 	global $wpdb;
 	if (strlen($code)) {
-		$voucher_data = $wpdb->get_row(sprintf("SELECT * FROM %swps_vouchers WHERE code = '%s'", $wpdb->prefix, $code));
+		$voucher_data = $wpdb->get_row(sprintf("SELECT * FROM %swps_vouchers WHERE code = '%s' AND (type = 2 OR (type = 1 AND used = 0))", $wpdb->prefix, $code));
 		if ($voucher_data) {
 			return $voucher_data;
 		}
 	}
 	return false;
+}
+
+function update_cookie_cart_items() {
+	global $wpdb;
+	$table 	= is_dbtable_there('shopping_cart');
+	$total_cart_items = 0;
+	if ($_SESSION['cust_id']) {
+		$total_cart_items = $wpdb->get_var(sprintf("SELECT SUM(item_amount) FROM %s WHERE who = '%s'", $table, $_SESSION['cust_id']));
+	}
+	setcookie('thelux_cart_items', $total_cart_items, time() + ((60 * 60 * 24) * 300), '/');
 }
 ?>

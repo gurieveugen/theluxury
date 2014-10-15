@@ -37,7 +37,7 @@ if(isset($_GET['orderNow'])){
 			$num 	= mysql_num_rows($res);
 			
 			if($num == 0){
-				$go2Url = get_option('home').'/?showCart=1';
+				$go2Url = get_cart_url();
 				header('Location: '.$go2Url);
 			}
 			else{

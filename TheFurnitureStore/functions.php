@@ -49,10 +49,13 @@ require_once(WPSHOP_LIB . 'engine/NWS_widgets.php');
 require_once(WPSHOP_LIB . 'engine/nws-email-formats.php');
 require_once(WPSHOP_LIB . 'engine/nws-sell-questions.php');
 require_once(WPSHOP_LIB . 'engine/class.rhinosupport.php');
+require_once(WPSHOP_LIB . 'engine/class.channel.advisor.php');
+require_once(WPSHOP_LIB . 'engine/class.emarsys.php');
 require_once(WPSHOP_LIB . 'engine/layaway.php');
 require_once($_SERVER['DOCUMENT_ROOT'] . '/prelaunch/common.php');
 require_once(TEMPLATEPATH . '/geoplugin.class.php');
 require_once(TEMPLATEPATH . '/functions/search-ajax.php');
+require_once(TEMPLATEPATH . '/functions/Kostul.php');
 require_once(TEMPLATEPATH . '/menu-walker.php' ); 
 
 // register payment+delivery modules
@@ -254,6 +257,8 @@ function NWS_theme_init(){
 	$_SESSION['currency-code'] = $currency_code;
 	$_SESSION['currency-rate'] = $currency_rate;
 
+	update_cookie_cart_items();
+
 	// logout
 	if ($_GET['logout'] == 'true') {
 		wps_user_logout();
@@ -268,30 +273,56 @@ function NWS_theme_init(){
 	}
 	// SHOPPING CART ACTIONS
 	// add to cart
+//	var_dump($_SESSION); exit;
 	if(isset($_POST['cmd']) && $_POST['cmd'] == 'add'){
 		add_toCart();
 	}
 	// shopping cart update
-	if ($_GET['showCart'] == '1' && $_POST['cart'] == 'update') {
+	if (isset($_POST['cart']) && $_POST['cart'] == 'update') {
 		update_cart();
 	}
 	// ORDER ACTIONS
+	if ($_POST['proceed2Checkout'] == 'true') {
+		layaway_set_session();
+		// redirect to login if user not logged and selected layaway option
+		if (!is_user_logged_in() && $_POST['layaway_process'] == 1) {
+			$login_page = get_page_by_title('Login');
+			if ($login_page) {
+				$login_url = get_permalink($login_page->ID).'?redirect_to='.urlencode($_SERVER['REQUEST_URI']);
+			} else {
+				$login_url = wp_login_url(urlencode($_SERVER['REQUEST_URI']));
+			}
+			$login_url .= '&installments=1';
+			wp_redirect($login_url);
+			exit();
+		}
+		wp_redirect(get_checkout_url().'?orderNow=1');
+		exit();
+	}
 	// order steps action
 	if ($_POST['order_step'] == 1) {
+		if (!check_cart_items()) {
+			wp_redirect(get_cart_url());
+			exit;
+		}
 		process_order();
 	} else if ($_POST['order_step'] == 2) {
+		if (!check_cart_items()) {
+			wp_redirect(get_cart_url());
+			exit;
+		}
 		$feedback = check_address_form();
 		if($feedback['error'] == 0) {
 			process_order(2);
-			wp_redirect('/?orderNow=3');
+			wp_redirect(get_checkout_url().'?orderNow=3');
 			exit;
 		}
 	} else if ($_POST['order_step'] == 3 || isset($_GET['confirm'])) {
-		if (!check_cart_items()) {
-			wp_redirect('/?showCart=1');
-			exit;
-		}
 		if ($_POST['order_step'] == 3) {
+			if (!check_cart_items()) {
+				wp_redirect(get_cart_url());
+				exit;
+			}
 			$p_option = $_POST['p_option'];
 			include WP_CONTENT_DIR.'/themes/'.WPSHOP_THEME_NAME.'/lib/modules/payment/'.$p_option.'/functions.php';
 			switch ($p_option) {
@@ -319,7 +350,7 @@ function NWS_theme_init(){
 			}
 		}
 		$_SESSION['order_payment_data'] = $payment_feedback;
-		wp_redirect('/?orderNow=confirm');
+		wp_redirect(get_checkout_url().'/?orderNow=confirm&oid='.$_GET['oid']);
 		exit;
 	}
 	if ($_GET['orderNow'] == '3' && $_POST['order_review'] == 'update') {
@@ -362,6 +393,13 @@ function NWS_theme_init(){
 				}
 			}
 			echo $urcurrency;
+		} else if ($_POST['FormAction'] == 'get-total-cart-items') {
+			$total_item_num = 0;
+			$CART = show_cart();
+			if(is_array($CART) && $CART['status'] == 'filled') {
+				$total_item_num = $CART['total_item_num'];
+			}
+			echo $total_item_num;
 		} else if ($_POST['FormAction'] == 'popup-subscribe') {
 			// subscribe user
 			nws_subscribe_action('popup', array('email' => $_POST['email'], 'gender' => $_POST['gender']));
@@ -383,8 +421,26 @@ add_action('init', 'NWS_theme_init');
 
 add_action('template_redirect', 'nws_template_redirect');
 function nws_template_redirect() {
+	global $OPTION;
+	$slp = '';
 	if (is_page('login') || is_page('register')) {
-		wp_redirect(site_url().'/?slp=true');
+		$slp = site_url();
+	}
+	if (!is_user_logged_in()) {
+		if (is_page($OPTION['wps_indvseller_my_items_page'])) {
+			$slp = get_permalink($OPTION['wps_indvseller_my_items_page']);
+		} else if (is_page($OPTION['wps_account_my_profile_page'])) {
+			$slp = get_permalink($OPTION['wps_account_my_profile_page']);
+		} else if (is_page($OPTION['wps_account_my_purchases_page'])) {
+			$slp = get_permalink($OPTION['wps_account_my_purchases_page']);
+		} else if (is_page($OPTION['wps_account_my_alerts_page'])) {
+			$slp = get_permalink($OPTION['wps_account_my_alerts_page']);
+		} else if (is_page($OPTION['wps_account_my_wishlist_page'])) {
+			$slp = get_permalink($OPTION['wps_account_my_wishlist_page']);
+		}
+	}
+	if (strlen($slp)) {
+		wp_redirect(site_url().'/?slp=true&r='.$slp);
 		wp_exit();
 	}
 }
@@ -429,14 +485,10 @@ function cron_schedules_add_cutom($schedules) {
 	return $schedules;
 }
 
-add_action('my_fifteen_event', 'do_this_fifteen');
 add_action('cron_clean_shopping_cart_event', 'cron_clean_shopping_cart');
 add_action('cron_update_inventory_in_posts', 'cron_update_inventory');
 
 function custom_cron_activation() {
-	if ( !wp_next_scheduled( 'my_fifteen_event' ) ) {
-		wp_schedule_event( time(), 'fifteen', 'my_fifteen_event');
-	}
 	if ( !wp_next_scheduled( 'cron_clean_shopping_cart_event' ) ) {
 		wp_schedule_event( time(), 'five', 'cron_clean_shopping_cart_event');
 	}
@@ -448,16 +500,6 @@ function custom_cron_activation() {
 	}
 }
 add_action('wp', 'custom_cron_activation');
-
-function do_this_fifteen() {
-	$cdate = date("YmdHi");
-	$cron_cinv_date = get_option('cron_cinv_date');
-	$df = $cdate - $cron_cinv_date;
-	if ($df >= 5) {
-		xl_clean_inventory();
-		update_option('cron_cinv_date', $cdate);
-	}
-}
 
 function cron_clean_shopping_cart() {
 	$cdate = date("YmdHi");
@@ -509,6 +551,11 @@ function get_post_thumb($attach_id, $width = 30000, $height = 30000, $crop = fal
 	if (is_numeric($attach_id)) {
 		$image_src = wp_get_attachment_image_src($attach_id, 'full');
 		$file_path = get_attached_file($attach_id);
+		if (!$image_src[1]) {
+			$imagesize = getimagesize($image_src[0]);
+			$image_src[1] = $imagesize[0];
+			$image_src[2] = $imagesize[1];
+		}
 	} else {
 		$imagesize = getimagesize($attach_id);
 		$image_src[0] = $attach_id;
@@ -563,7 +610,7 @@ add_action('wp_enqueue_scripts', 'scripts_method');
 
 function js_get_currency_reload() {
 	$js_currency_reload = 'false';
-	if (isset($_GET['showCart']) || isset($_GET['orderNow'])) {
+	if (is_cart_page() || is_checkout_page()) {
 		$js_currency_reload = 'true';
 	}
 	if (strpos($_SERVER['REQUEST_URI'], 'sell') || strpos($_SERVER['REQUEST_URI'], 'prof') || strpos($_SERVER['REQUEST_URI'], 'tlc-admin-files') || strpos($_SERVER['REQUEST_URI'], 'seller-summary') || strpos($_SERVER['REQUEST_URI'], 'pricing-search')) {
@@ -646,10 +693,215 @@ function mfields_facebook_meta()
 }
 add_action( 'wp_head', 'mfields_facebook_meta' );
 
+// wp email functions
+$thelux_from = array();
+add_filter('wp_mail_from_name', 'thelux_wp_mail_from_name');
+function thelux_wp_mail_from_name($from_name) {
+	global $thelux_from;
+	if (!$from_name) {
+		$from_name = $thelux_from['from_name'];
+	}
+	return $from_name;
+}
+
+add_filter('wp_mail_from', 'thelux_wp_mail_from');
+function thelux_wp_mail_from($mail_from) {
+	global $thelux_from;
+	if ($mail_from == 'Message from  The Luxury Closet info@theluxurycloset.com') {
+		$mail_from = $thelux_from['from_email'];
+	}
+	return $mail_from;
+}
+
+add_filter('wp_mail', 'thelux_wp_mail_filter');
+function thelux_wp_mail_filter($args) {
+	global $thelux_from;
+	$thelux_from = array();
+	if (strpos($args['headers'], 'From:') !== false) {
+		$from = substr($args['headers'], strpos($args['headers'], 'From:'));
+		$from = substr($from, 0, strpos($from, chr(10)));
+
+		$from_email = substr($from, strpos($from, '<') + 1);
+		$from_email = substr($from_email, 0, strpos($from_email, '>'));
+
+		$from_name = str_replace("From: ", "", $from);
+		$from_name = trim(str_replace("<".$from_email.">", "", $from_name));
+		$thelux_from = array('from_name' => $from_name, 'from_email' => $from_email);
+	}
+	return $args;
+}
+
+// emarsys functions
+function emarsys_script() {
+	global $post, $current_user;
+	$emscr = false;
+?>
+	<script type="text/javascript">
+	<?php if (is_user_logged_in()) { ?>
+		// set email of logged in user
+		ScarabQueue.push(['setEmail', '<?php echo $current_user->user_email; ?>']);
+		ScarabQueue.push(['go']);
+	<?php } ?>
+	<?php if (is_search() && strlen($_GET['s'])) { $emscr = true; ?>
+		ScarabQueue.push(['searchTerm', '<?php echo str_replace("'", "\'", $_GET['s']); ?>']);
+	<?php } ?>
+	<?php if (is_category()) { $emscr = true; ?>
+		ScarabQueue.push(['category', '<?php echo str_replace("'", "\'", emarsys_categories()); ?>']);
+	<?php } ?>
+	<?php if (is_single()) { $emscr = true; $item_id = get_post_meta($post->ID, 'ID_item', true); ?>
+		ScarabQueue.push(['view', '<?php echo $item_id; ?>']);
+	<?php } ?>
+	<?php if (isset($_SESSION['added_to_cart'])) { $emscr = true; $cdata = $_SESSION['added_to_cart']; unset($_SESSION['added_to_cart']); ?>
+		ScarabQueue.push(['cart', [{item: '<?php echo $cdata['item_id']; ?>', price: <?php echo $cdata['item_price']; ?>, quantity: <?php echo $cdata['item_qty']; ?>}]]);
+	<?php } ?>
+	<?php if ($_GET['orderNow'] == 'confirm') {
+		if (!is_user_logged_in()) {
+			$order_email = emarsys_get_order_email();
+			if (strlen($order_email)) { ?>
+				ScarabQueue.push(['setEmail', '<?php echo $order_email; ?>']);
+				ScarabQueue.push(['go']);
+			<?php
+			}
+		}
+		$emcheckout = emarsys_checkout();
+		if (strlen($emcheckout)) {
+			$emscr = true; ?>
+			ScarabQueue.push(<?php echo $emcheckout; ?>);
+		<?php } ?>
+	<?php } ?>
+	<?php if ($emscr) { ?>
+		ScarabQueue.push(['go']);
+	<?php } ?>
+	</script>
+<?php
+}
+
+function emarsys_categories() {
+	$cats = '';
+	$cat_id = get_query_var('cat');
+	$cat_parents = get_ancestors($cat_id, 'category');
+	if ($cat_parents) {
+		array_reverse($cat_parents);
+		foreach($cat_parents as $cp_id) {
+			$cats .= get_cat_name($cp_id).' > ';
+		}
+	}
+	$cats .= get_cat_name($cat_id);
+	return $cats;
+}
+
+function emarsys_checkout() {
+	global $wpdb;
+	$checkout_line = '';
+	$oid = $_GET['oid'];
+	if (!$oid && strlen($_GET['orderInfo'])) { // for audi response
+		$oid = substr($_GET['orderInfo'], strlen($OPTION['wps_order_no_prefix']));
+	}
+	if (strlen($oid)) {
+		$sctable = is_dbtable_there('shopping_cart');
+		$order_items = $wpdb->get_results(sprintf("SELECT * FROM %s WHERE order_id = '%s' ORDER BY cid DESC", $sctable, $oid));
+		if ($order_items) {
+			foreach($order_items as $order_item) {
+				$checkout_line .= $sep."['checkOut', '".$order_item->item_id."', ".$order_item->item_amount.", ".$order_item->item_price."]";
+				$sep = ', ';
+			}
+		}
+	}
+	return $checkout_line;
+}
+
+function emarsys_get_order_email() {
+	global $wpdb;
+	$order_email = '';
+	$oid = $_GET['oid'];
+	if (!$oid && strlen($_GET['orderInfo'])) { // for audi response
+		$oid = substr($_GET['orderInfo'], strlen($OPTION['wps_order_no_prefix']));
+	}
+	if (strlen($oid)) {
+		$otable = is_dbtable_there('orders');
+		$order_data = $wpdb->get_row(sprintf("SELECT * FROM %s WHERE oid = '%s'", $otable, $oid));
+		if ($order_data) {
+			$order_email = $order_data->email;
+		}
+	}
+	return $order_email;
+}
+
 add_action('init', 'init_hivista');
 function init_hivista() {
-	if ($_GET['hivista'] == 'init') {
-		layaway_reminder_send();
+	global $wpdb;
+	if ($_GET['hivista'] == 'vouchers') {
+		$vouchers = $wpdb->get_results("SELECT * FROM wp_wps_vouchers2 ORDER BY vid");
+		if ($vouchers) {
+			foreach($vouchers as $voucher) {
+				$vid = $voucher->vid;
+				$code = $voucher->vcode;
+				$option = $voucher->voption;
+				$amount = $voucher->vamount;
+				$used = $voucher->used;
+				$time_issued = $voucher->time_issued;
+				$user_id = $voucher->user_Id;
+
+				$expired = '';
+				if (strlen($time_issued)) { $expired = date("Y-m-d H:i:s", strtotime($time_issued)); }
+
+				$insert = array();
+				$insert['vid'] = $vid;
+				$insert['code'] = $code;
+				$insert['option'] = $option;
+				$insert['amount'] = $amount;
+				$insert['expired'] = $expired;
+				$insert['zone'] = 0;
+				$insert['used'] = $used;
+				$insert['created'] = current_time('mysql');
+				$insert['user_id'] = $user_id;
+				$wpdb->insert($wpdb->prefix."wps_vouchers", $insert);
+			}
+		}
+		exit;
+	}
+	if ($_GET['hivista'] == 'ptest') {
+		var_dump(get_post_thumb('http://luxclosettest.wpengine.com/wp-content/uploads/miu-miu-flower-patchwork-shoulder-bag-lc-47911-142150-1-6.jpg', 61, 61, true));
+		exit;
 	}
 }
+
+function copy_image($filename, $tofolder)
+{
+  $size = @getimagesize($filename);
+  if ($size) {
+	if ($size['mime'] == 'image/jpeg') {
+      $source = imagecreatefromjpeg($filename);
+	  $itype = 1;
+	}
+	else if ($size['mime'] == 'image/gif') {
+      $source = imagecreatefromgif($filename);
+	  $itype = 2;
+	}
+	else if ($size['mime'] == 'image/png') {
+      $source = imagecreatefrompng($filename);
+	  $itype = 3;
+	}
+
+    if ($source) {
+	    $newimage = $tofolder.basename($filename);
+	    // create new image
+	    $rgb = 0xFFFFFF;
+        $target = imagecreatetruecolor($size[0], $size[1]);
+        imagefill($target, 0, 0, $rgb);
+        imagecopyresized($target,$source,0,0,0,0,$size[0],$size[1],$size[0],$size[1]);
+        if ($itype == 1) {
+          imagejpeg($target, $newimage, 100);
+        } else if ($itype == 2) {
+          imagegif($target, $newimage, 100);
+	    } else {
+          imagepng($target, $newimage, 100);
+        }
+        imagedestroy($target);
+        imagedestroy($source);
+		return $newimage;
+	}
+  }
+}
+
 ?>

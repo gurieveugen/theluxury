@@ -172,7 +172,7 @@
 			$order_tax = $order_data->tax;
 			$order_voucher = $order_data->voucher_amount;
 			$order_delivery = $order_data->d_option;
-			$order_country = $order_data->country;
+			$order_country = get_order_shipping_country($order_id);
 			$return_flag = false;
 
 			// select order items
@@ -273,18 +273,25 @@
 		if ($order->level != 0) {
 			if ($inventory_return) {
 				$sc_items = $wpdb->get_results(sprintf("SELECT * FROM %s WHERE order_id = '%s'", $table2, $order_id));
+				if (!$sc_items && $order->layaway_process == 1) {
+					$moid = $wpdb->get_var(sprintf("SELECT oid FROM %s WHERE layaway_order = '%s' AND oid < %s", $table, $order_id, $order_id));
+					$sc_items = $wpdb->get_results(sprintf("SELECT * FROM %s WHERE order_id = '%s'", $table2, $moid));
+				}
 				if ($sc_items) {
 					foreach($sc_items as $sc_item) {
 						$cid = $sc_item->cid;
 						$item_id = $sc_item->item_id;
 						$item_amount = $sc_item->item_amount;
+
 						// update inventory
-						update_item_inventory($item_id, $item_amount, true, 'Total order delete - oid = '.$order_id);
+						if ($item_amount > 0) {
+							update_item_inventory($item_id, $item_amount, true, 'Total order delete - oid = '.$order_id);
+						}
 
 						// update shopping cart qty
 						$wpdb->query(sprintf("UPDATE %s SET item_amount = item_amount - %s WHERE cid = %s", $table2, $item_amount, $cid));
 
-						log_action($action, 'Order ID: '.$order_id.'; Item ID: '.$item_id.'; Qty: '.$item_amount.'; User ID: '.$current_user->ID);
+						log_action('order_delete', 'Order ID: '.$order_id.'; Item ID: '.$item_id.'; Qty: '.$item_amount.'; User ID: '.$current_user->ID);
 					}
 				}
 			}
@@ -324,27 +331,19 @@
 						
 						echo "
 						<tr>
-							<td $style><input type='checkbox' name='$order[oid]' value='move' /></td>";
-							echo "
-							<td $style id='torder_id'>$OPTION[wps_order_no_prefix]$order[oid]</td> 
+							<td $style><input type='checkbox' name='$order[oid]' value='move' /></td>
+							<td $style id='torder_id'>".$OPTION['wps_order_no_prefix'].$order['oid']."</td> 
 							<td $style>$date
 							<input type='hidden' name='order_id' id='order_id' value='$order[oid]' />
 							</td>
 							<td $style>";
 								echo address_format($order);
-								if ($status == 4) {
-									if ($current_user->ID == 1) {
-										echo "<br/>".$order[email];
-										echo "<br/><a href='mailto:$order[email]'>".__('Send email','wpShop')."</a>";
-										if(strlen($order['telephone'])){
-											echo "<br/>".__('Tel:','wpShop'). $order['telephone'];
-										}
-									}
-								} else {
-									echo "<br/><a href='mailto:$order[email]'>".__('Send email','wpShop')."</a>";
-									if(strlen($order['telephone'])){
-										echo "<br/>".__('Tel:','wpShop'). $order['telephone'];
-									}
+								if ($status == 4 && $current_user->ID == 1) {
+									echo "<br/>".$order['email'];
+								}
+								echo "<br/><a href='mailto:$order[email]'>".__('Send email','wpShop')."</a>";
+								if(strlen($order['telephone'])){
+									echo "<br/>".__('Tel:','wpShop'). $order['telephone'];
 								}
 							echo "</td>";
 							
@@ -374,9 +373,12 @@
 								if($status == 1) $return_link = '&nbsp;&nbsp;|&nbsp;&nbsp;<a class="return" href="#">Returned this Order?</a>';
 								else $return_link = '';
 								echo __('Track-ID:','wpShop').' '.$order['tracking_id'].$return_link;
-								
+								if ($status == 7 && $order['layaway_process'] == 1) {
+									echo '&nbsp;&nbsp;<font style="color:#FF0000">Installment order</font>';
+								}
+
 								if(strlen($order['voucher']) && $order['voucher'] != 'non'){
-									echo '<br />Voucher: '.$order['voucher'].' Amount: $'.format_price($order['voucher_amount']);
+									echo '<br />Voucher: <strong>'.$order['voucher'].'</strong>; Amount: $'.format_price($order['voucher_amount']).' redeemed.';
 								}
 								if(digital_in_cart($order[who]) === TRUE){
 									echo "<a href = '?page=functions.php&section=orders&subsection=dlinks&token=$order[who]'>".__('Send D-Links','wpShop')."</a>$dl_sent_info";
@@ -2265,6 +2267,7 @@ function csv_export_actions() {
 				$inlevel = "'0'";
 				$csv_name = "cancelled-orders-export.csv";
 				$csvdata .= tocsv('TrackingOption2');
+				$csvdata .= tocsv('InstallmentOrder');
 				$csvdata .= tocsv('CancelReason', $eol);
 			} else {
 				$inlevel = "'3','4','5','6','7','8'";
@@ -2318,6 +2321,7 @@ function csv_export_actions() {
 					$csvdata .= tocsv('Shipping Method');
 					if ($_GET['otype'] == 'cancelled') {
 						$csvdata .= tocsv($csvorder->d_option);
+						$csvdata .= tocsv($csvorder->layaway_process);
 						$csvdata .= tocsv($csvorder->cancel_reason, $eol);
 					} else {
 						$csvdata .= tocsv($csvorder->d_option, $eol);
@@ -2354,6 +2358,7 @@ function csv_export_actions() {
 							$csvdata .= tocsv('');
 							$csvdata .= tocsv('');
 							if ($_GET['otype'] == 'cancelled') {
+								$csvdata .= tocsv('');
 								$csvdata .= tocsv('');
 								$csvdata .= tocsv('', $eol);
 							} else {
@@ -2577,32 +2582,39 @@ function post_created_modified_date_metabox() {
 
 add_action('init', 'backend_actions_init');
 function backend_actions_init() {
-	global $wpdb, $current_user;
+	global $wpdb, $current_user, $voucher_errors;
 	// VOUCHER ACTIONS
 	if (isset($_GET['voucher_action'])) {
 		if ($_GET['voucher_action'] == 'create') {
 			if (strlen(trim($_POST['voucher_code']))) {
-				$voucher_expired = '';
-				if (strlen($_POST['voucher_expired_dd']) && strlen($_POST['voucher_expired_mm']) && strlen($_POST['voucher_expired_yy'])) {
-					$yy = $_POST['voucher_expired_yy'];
-					$mm = $_POST['voucher_expired_mm'];
-					$dd = $_POST['voucher_expired_dd'];
-					$hh = $_POST['voucher_expired_hh'];
-					$ii = $_POST['voucher_expired_hh'];
-					$ss = 00;
-					if (!$hh) { $hh = '00'; }
-					if (!$ii) { $ii = '00'; }
-					$voucher_expired = $yy.'-'.$mm.'-'.$dd.' '.$hh.':'.$ii.':'.$ss;
+				$check_voucher_code = $wpdb->get_var(sprintf("SELECT COUNT(vid) FROM %swps_vouchers WHERE code = '%s'", $wpdb->prefix, $_POST['voucher_code']));
+				if (!$check_voucher_code) {
+					$voucher_expired = '';
+					if (strlen($_POST['voucher_expired_dd']) && strlen($_POST['voucher_expired_mm']) && strlen($_POST['voucher_expired_yy'])) {
+						$yy = $_POST['voucher_expired_yy'];
+						$mm = $_POST['voucher_expired_mm'];
+						$dd = $_POST['voucher_expired_dd'];
+						$hh = $_POST['voucher_expired_hh'];
+						$ii = $_POST['voucher_expired_hh'];
+						$ss = 00;
+						if (!$hh) { $hh = '00'; }
+						if (!$ii) { $ii = '00'; }
+						$voucher_expired = $yy.'-'.$mm.'-'.$dd.' '.$hh.':'.$ii.':'.$ss;
+					}
+					$insert = array();
+					$insert['code'] = trim($_POST['voucher_code']);
+					$insert['option'] = $_POST['voucher_option'];
+					$insert['amount'] = trim($_POST['voucher_amount']);
+					$insert['expired'] = $voucher_expired;
+					$insert['zone'] = $_POST['voucher_zone'];
+					$insert['created'] = current_time('mysql');
+					$insert['user_id'] = $current_user->ID;
+					$wpdb->insert($wpdb->prefix."wps_vouchers", $insert);
+				} else {
+					$voucher_errors = 'Such Voucher Code already exists.';
 				}
-				$insert = array();
-				$insert['code'] = trim($_POST['voucher_code']);
-				$insert['option'] = $_POST['voucher_option'];
-				$insert['amount'] = trim($_POST['voucher_amount']);
-				$insert['expired'] = $voucher_expired;
-				$insert['zone'] = $_POST['voucher_zone'];
-				$insert['created'] = current_time('mysql');
-				$insert['user_id'] = $current_user->ID;
-				$wpdb->insert($wpdb->prefix."wps_vouchers", $insert);
+			} else {
+				$voucher_errors = 'Please enter Voucher Code.';
 			}
 		} else if ($_GET['voucher_action'] == 'remove') {
 			$vid = $_GET['vid'];
@@ -2610,8 +2622,10 @@ function backend_actions_init() {
 				$wpdb->query(sprintf("DELETE FROM %swps_vouchers WHERE vid = %s", $wpdb->prefix, $vid));
 			}
 		}
-		wp_redirect('admin.php?page=functions.php&section=vouchers');
-		wp_exit();
+		if (!strlen($voucher_errors)) {
+			wp_redirect('admin.php?page=functions.php&section=vouchers');
+			wp_exit();
+		}
 	}
 }
 ?>

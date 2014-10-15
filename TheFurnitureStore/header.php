@@ -162,7 +162,7 @@ $lostPass	= get_page_by_title($OPTION['wps_passLostPg']);
 	</head>	
 	<?php 
 	// am I viewing the shopping cart? || going through checkout? || on confirmation page? || reading the terms and conditions? etc...
-	if($_GET['showCart'] == '1') { ?>
+	if(is_cart_page()) { ?>
 		<body class="shopping_cart">
 	<?php } elseif (($_GET['orderNow'] == '1') || ($_GET['orderNow'] == '2') || ($_GET['orderNow'] == '3') || ($_GET['orderNow'] == '4') || ($_GET['orderNow'] == '5') || ($_GET['orderNow'] == '6') || ($_GET['orderNow'] == '7') || ($_GET[orderNow] == '8') || ($_GET[orderNow] == '81')){ ?>
 		<body class="shopping_cart order_checkout">
@@ -200,7 +200,7 @@ $lostPass	= get_page_by_title($OPTION['wps_passLostPg']);
 					<span class="passhelp"> <?php _e('I lost my password. Please','wpShop');?> <a href="<?php echo get_permalink($lostPass->ID); ?>"><?php _e('email it to me','wpShop');?></a></span>
 					
 					<?php
-					if(isset($_GET['showCart']) || isset($_GET['orderNow'])){
+					if(is_cart_page() || is_checkout_page()){
 						$slash 		= (substr(get_real_base_url(),-1,1) == '/' ? '?' : '/?');
 						$urlAdd 	= $_SERVER['REQUEST_URI'];
 						$urlParts 	= explode("?",$urlAdd);

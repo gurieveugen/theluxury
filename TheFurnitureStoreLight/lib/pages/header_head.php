@@ -50,8 +50,7 @@ if(isset($_GET['orderNow']))
 			$res 	= mysql_query($qStr);
 			$num2 	= mysql_num_rows($res);
 			if($num2 == 0){
-				$go2Url = get_option('home').'/?showCart=1';
-				header('Location: '.$go2Url);
+				header('Location: '.get_cart_url());
 				exit;
 			}
 			break;
@@ -64,8 +63,7 @@ if(isset($_GET['orderNow']))
 			$res 	= mysql_query($qStr);
 			$num2 	= mysql_num_rows($res);
 			if($num2 == 0){
-				$go2Url = get_option('home').'/?showCart=1';
-				header('Location: '.$go2Url);
+				header('Location: '.get_cart_url());
 			}
 			// if no record at all - we bounce user back to shopping cart 
 			$table 	= (get_option('wps_shop_mode') == 'Inquiry email mode' ? is_dbtable_there('inquiries') : is_dbtable_there('orders'));
@@ -74,8 +72,7 @@ if(isset($_GET['orderNow']))
 			$num 	= mysql_num_rows($res);
 			
 			if($num == 0){
-				$go2Url = get_option('home').'/?showCart=1';
-				header('Location: '.$go2Url);
+				header('Location: '.get_cart_url());
 			}
 			else{
 				// is there a chosen d_option + p_option? No --> back to step 1

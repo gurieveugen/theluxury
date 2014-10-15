@@ -77,9 +77,9 @@ get_header();
 			);
 			
 			add_filter('posts_where', 'reserved_posts_where');
-			$args                             = product_sort_process($args);			
-			$_SESSION['custom_args']          = $args;
-			$_SESSION['show_latest_products'] = TRUE;
+			$args                             = product_sort_process($args);	
+			$OPTION['custom_args'] 			  = $args;		
+			//add_filter( 'posts_where', 'filter_where' );			
 			get_template_part('loop', 'products');
 			?>
 			

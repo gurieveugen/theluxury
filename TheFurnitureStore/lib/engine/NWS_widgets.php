@@ -4076,6 +4076,7 @@ class ShopRecentlyAddedWidget extends WP_Widget {
 		extract($args);
 		$title 		= apply_filters('widget_title', $instance['title'] );
 		$cats = $instance['cats'];
+		$brands = $instance['brands'];
 		$number = $instance['number'];
 		if (!$number) { $number = 5; }
 
@@ -4086,6 +4087,14 @@ class ShopRecentlyAddedWidget extends WP_Widget {
 		$args = array('post_type' => 'post', 'showposts' => $number);
 		if (strlen($cats)) {
 			$args['category__in'] = explode(",", str_replace(' ', '', $cats));
+		}
+		if (strlen($brands)) {
+			$args['tax_query'] = array(
+				array(
+					'taxonomy' => 'brand',
+					'terms'    => explode(",", str_replace(' ', '', $brands)),
+				),
+			);
 		}
 		$recently_where = true;
 		add_filter('posts_where', 'recently_added_where');
@@ -4149,6 +4158,7 @@ class ShopRecentlyAddedWidget extends WP_Widget {
 		$instance = $old_instance;
 		$instance['title'] 	= strip_tags($new_instance['title']);
 		$instance['cats'] = $new_instance['cats'];
+		$instance['brands'] = $new_instance['brands'];
 		$instance['number'] = $new_instance['number'];
 		return $instance;
 	}
@@ -4169,8 +4179,12 @@ class ShopRecentlyAddedWidget extends WP_Widget {
 			<input id="<?php echo $this->get_field_id( 'cats' ); ?>" name="<?php echo $this->get_field_name( 'cats' ); ?>" value="<?php echo $instance['cats']; ?>" style="width:97%;" />
 		</p>
 		<p>
+			<label for="<?php echo $this->get_field_id( 'brands' ); ?>"><?php _e('From Brands:', 'wpShop'); ?></label>
+			<input id="<?php echo $this->get_field_id( 'brands' ); ?>" name="<?php echo $this->get_field_name( 'brands' ); ?>" value="<?php echo $instance['brands']; ?>" style="width:97%;" />
+		</p>
+		<p>
 			<label for="<?php echo $this->get_field_id( 'number' ); ?>"><?php _e('Number:', 'wpShop'); ?></label>
-			<input id="<?php echo $this->get_field_id( 'number' ); ?>" name="<?php echo $this->get_field_name( 'number' ); ?>" value="<?php echo $instance['number']; ?>" style="width:7%;" />
+			<input id="<?php echo $this->get_field_id( 'number' ); ?>" name="<?php echo $this->get_field_name( 'number' ); ?>" value="<?php echo $instance['number']; ?>" style="width:17%;" />
 		</p>
 	<?php
 	}
@@ -4474,52 +4488,36 @@ class ShopSearchFilterWidget extends WP_Widget {
 		<form class="search-filter-form" action="<?php echo get_permalink($instance['search_page']); ?>">
 			<?php
 
-			$queried_object = get_queried_object();
+			$queried_object = get_queried_object();					
+			if(is_null($queried_object) OR is_page()) $queried_object = get_term_by('id', 86, 'brand');
 
-			if($queried_object->taxonomy == 'category')
+			$parents = getParents($queried_object->term_id, $queried_object->taxonomy);
+			$father = get_category('id', 0, 'category');
+			if($parents)
 			{
-				switch ($queried_object->term_id) 
-				{
-					case 156:
-						$cargs       = strlen($instance['exclude-category']) ? 'exclude='.$instance['exclude-category'].', 266' : '';			
-						$cargs      .= '&order=DESC';			
-						$shop_cats   = get_categories($cargs);				
-						break;
-					case 266:
-						$cargs       = strlen($instance['exclude-category']) ? 'exclude='.$instance['exclude-category'].', 156' : '';			
-						$cargs      .= '&order=DESC';			
-						$shop_cats   = get_categories($cargs);				
-						break;
-					
-					default:
-						$all_cats   = get_categories(array('child_of' => $queried_object->parent, 'exclude' => $instance['exclude-category'])) + get_categories(array('child_of' => $queried_object->term_id, 'exclude' => $instance['exclude-category']));												
-						$this->getAllParentNodes($queried_object, $all_cats);
-						// if(strpos($queried_object->slug, 'mens-') !== false) $all_cats[] = get_category(156, false);
-						// if(strpos($queried_object->slug, 'women') !== false) $all_cats[] = get_category(266, false);
-						$all_cats = $this->arrayUnique($all_cats);
-						$shop_cats  = $all_cats;
-						break;
-				}
-			}
-			else
-			{
-				$cargs       = strlen($instance['exclude-category']) ? 'exclude='.$instance['exclude-category'].'' : '';			
-				$cargs      .= '&order=DESC';			
-				$shop_cats   = get_categories($cargs);	
-			}
-			
-			
-			$filter_cats  = array();
-			$child_nodes  = $this->getAllChildNodes($shop_cats);	
+				$parents = array_reverse($parents);
+				$father = $parents[0];
+			}			
 
-			$display_tree = $this->dispalyAllNodes($child_nodes, 0);
-			if($display_tree)
+			$shop_cats = array_merge($parents, get_categories(array('child_of' => $queried_object->parent, 'exclude' => $instance['exclude-category'], 'order' => 'DESC')));
+			
+			$filter_cats    = array();
+			$child_nodes    = $this->getAllChildNodes($shop_cats);							
+			$child_ids      = $this->getAllChilds($queried_object->term_id, $queried_object->taxonomy);
+			$display_cats   = getParentsIDs($queried_object->term_id, $queried_object->taxonomy);			
+			$display_cats   = array_merge($display_cats, $child_ids);
+			$display_cats   = ($queried_object->taxonomy != 'category') ? array() : $display_cats;
+			$display_cats   = (count($child_ids) < 1) ? array() : $display_cats; 			
+		
+			$display_tree   = $this->dispalyAllNodes($child_nodes, $father->parent, 0, '<div class="sub-category" style="%s">', "</div>", '<div class="f-row %s" %s>', "</div>", $display_cats);
+			
+			if(is_array($display_tree))
 			{				
 				$display_tree = implode(' ', $display_tree);
 			}
 
 			?>
-			<div class="f-block shop-by-category open">
+			<div class="shop-by-category open">
 				<div class="holder">
 					<h4><span><?php echo $instance['title-category']; ?></span></h4>
 					<div class="f-container">						
@@ -4537,41 +4535,14 @@ class ShopSearchFilterWidget extends WP_Widget {
 		?>
 		<script type="text/javascript">
 			// =========================================================
-			// Hide not needed
-			// =========================================================
-			if(typeof(default_categories) != 'undefined')
-			{     
-			  hideAllRows('');
-			  displayRows(default_categories.categories);  
-			  removeBlockDisables(default_categories.taxonomy);
-			  hideNotNeeded();
-			}
-			// =========================================================
 			// STYLIZE CHECKBOX
 			// =========================================================
 			jQuery('.widget-filter .f-row').jqTransform();
-
-			// =========================================================
-			// SHOP BY CATEGORY default open tree node
-			// =========================================================
-			jQuery('.shop-by-category input:checkbox:checked').each(function(){
-			  if(jQuery(this).parent().parent().parent().hasClass('sub-category')) jQuery(this).parent().parent().parent().css({'display' : 'block'});
-			});
-
-			if(jQuery('#is_open_brands').val() == "yes")
-			{
-			  jQuery('.shop-by-brand').addClass('open');
-			}
-			jQuery('.shop-by-category').addClass('open');   
-
-			//jQuery('.f-block .f-container, .shop-by-category, .widget-selection .holder').mCustomScrollbar('destroy');
 			jQuery('.f-block .f-container, .shop-by-category, .widget-selection .holder').mCustomScrollbar({
 				scrollButtons:{
 					enable: true
 				}
-			});			
-
-
+			});	
 		</script>
 		
 		<?php
@@ -4597,6 +4568,30 @@ class ShopSearchFilterWidget extends WP_Widget {
 		return $new_arr;
 	}
 
+	function getAllChilds($id, $tax)
+	{
+		$ids  = array();
+		$args = array(
+			'type'                     => 'post',
+			'child_of'                 => $id,
+			'parent'                   => '',
+			'orderby'                  => 'name',
+			'order'                    => 'ASC',
+			'hide_empty'               => 1,
+			'hierarchical'             => 1,
+			'exclude'                  => '',
+			'include'                  => '',
+			'number'                   => '',
+			'taxonomy'                 => $tax,
+			'pad_counts'               => false); 
+		$categories = get_categories( $args );
+		foreach ($categories as &$cat) 
+		{
+			$ids[] = $cat->term_id;
+		}
+		return $ids;
+	}
+
 	/**
 	 * Display all child nodes from Adjacency List
 	 * @param  array $data          - MySQL data
@@ -4608,8 +4603,8 @@ class ShopSearchFilterWidget extends WP_Widget {
 	 * @param  string $after_node   - After Node HTML
 	 * @return string               - HTML
 	 */
-	function dispalyAllNodes($child_nodes, $parent_id, $depth = 0, $before_nodes = '<div class="sub-category" style="%s">', $after_nodes = "</div>", $before_node = '<div class="f-row open" %s>', $after_node = "</div>")
-	{
+	function dispalyAllNodes($child_nodes, $parent_id, $depth = 0, $before_nodes = '<div class="sub-category" style="%s">', $after_nodes = "</div>", $before_node = '<div class="f-row %s" %s>', $after_node = "</div>", $display_cats = array())
+	{		
 		$queried_object = get_queried_object();		
 		$str            = "";		
 		$arr            = array();
@@ -4621,17 +4616,20 @@ class ShopSearchFilterWidget extends WP_Widget {
 		    {
 
 				$cat            = get_category($id);		    			        
-				$child_dn       = self::dispalyAllNodes($child_nodes, $id, ($depth+1), $before_nodes, $after_nodes, $before_node, $after_node);
+				$child_dn       = self::dispalyAllNodes($child_nodes, $id, ($depth+1), $before_nodes, $after_nodes, $before_node, $after_node, $display_cats);
 				$checked        = (is_category($cat->name)) ? 'checked' : '';
+				$checked        = $this->isNodeCheck($cat->term_id) ? 'checked' : $checked;
 				$rel            = '';
 				$rel            = (strpos($cat->slug, 'shoes') !== false) ? 'shoes' : $cat->slug;
 				$rel            = (strpos($cat->slug, 'clothes') !== false) ? 'clothes' : $rel;
 				$rel            = (strpos($cat->slug, 'rings') !== false) ? 'rings' : $rel;
 				
-				$input          = ($depth > 0) ? '<input data-block="shop-by-category" type="checkbox" name="filter-category[]" value="'.$cat->slug.'" id="category-'.$cat->term_id.'" rel="'.$rel.'" '.$checked.' />' : '';
+				$input          = ($depth > 0) ? '<input data-block="shop-by-category" autocomplete="off" onchange="filter.filter(event, this)" type="checkbox" name="filter-category[]" data-depth="'.$depth.'" value="'.$cat->slug.'" id="category-'.$cat->term_id.'" rel="'.$rel.'" '.$checked.' />' : '';
 				$search_replace = array('Women\'s ', 'Men\'s ');
 				$name           = str_replace($search_replace, '', $cat->name);
-				$display_block  = ($queried_object->term_id == $cat->term_id) ? 'display: block;' : 'display: none;';
+				$parent_ids     = getParentsIDs($queried_object->term_id, $queried_object->taxonomy);
+				$display_block  = ($queried_object->term_id == $cat->term_id) ? 'display: block;' : 'display: none;';				
+				$display_block  = in_array($cat->term_id, $parent_ids) ? 'display: block;' : $display_block;
 
 		        if($child_dn)
 		        {
@@ -4646,11 +4644,50 @@ class ShopSearchFilterWidget extends WP_Widget {
 		        }
 		        
 				$wrap_node       = $this->getWrapNode($depth, $has_drop, $cat->name);
-				$arr[$cat->slug] = sprintf($before_node, 'id="row-'.$cat->term_id.'" data-tax="'.$cat->taxonomy.'" data-id="'.$cat->term_id.'"').$input.$wrap_node['start'].$name.$wrap_node['end'].$nodes.$after_node;            
+				$hide_row        = in_array($id, $display_cats) ? '' : 'hide';
+				$hide_row        = count($display_cats) > 0 ? $hide_row : '';
+				$arr[$cat->slug] = sprintf($before_node, $hide_row, 'id="row-'.$cat->term_id.'" data-tax="'.$cat->taxonomy.'" data-id="'.$cat->term_id.'"').$input.$wrap_node['start'].$name.$wrap_node['end'].$nodes.$after_node;            
 		    }
 		}
 		return $arr;
 	}	
+
+	function isNodeCheck($id)
+	{
+		$qo = get_queried_object();
+		$cats[] = intval($qo->term_id);
+		$defaults = array(
+			'tax_cat_1',
+			'tax_cat_2',	
+			'tax_cat_3',	
+			'tax_cat_4',	
+			'tax_cat_5',
+			'tax_sale',
+			'tax_colours',
+			'tax_sizes',
+			'tax_ring_sizes',
+			'tax_clothes_sizes',
+			'tax_selections',
+			'tax_brands',
+			'tax_styles',
+			'tax_prices',
+			'tax_seller_category'
+		);
+		
+		if(is_array($_GET))
+		{
+			foreach ($defaults as $key) 
+			{
+				if(isset($_GET['cats'][$key]))
+				{
+					$cats = array_merge($cats, explode(',', $_GET['cats'][$key]));
+				}
+			}
+		}
+		if(in_array($id, $cats)) return true;
+		
+		return false;
+	}
 
 	/**
 	 * Get Node Wrap
@@ -4660,8 +4697,9 @@ class ShopSearchFilterWidget extends WP_Widget {
 	 */
 	function getWrapNode($index, $class = '', $title = '')
 	{		
-		$depth_wrap[0]  = array('start' => '<label class="'.$class.'" title="'.$title.'" data-depth="'.$index.'"><strong>', 'end' => '</strong></label>');
-		$depth_wrap[-1] = array('start' => '<label class="'.$class.'" title="'.$title.'" data-depth="'.$index.'">', 'end' => '</label>');
+		$arrow = $class == '' ? '' : '<div class="arrow has-drop" style="display:inline; cursor: pointer" onclick="hasDrop(event, this)"></div>';
+		$depth_wrap[0]  = array('start' => '<label title="'.$title.'" data-depth="'.$index.'"><strong>', 'end' => '</strong></label>'.$arrow);
+		$depth_wrap[-1] = array('start' => '<label title="'.$title.'" data-depth="'.$index.'">', 'end' => '</label>'.$arrow);
 
 		if(isset($depth_wrap[$index]))
 		{
@@ -4681,10 +4719,11 @@ class ShopSearchFilterWidget extends WP_Widget {
 		if($data)
 		{
 			foreach ($data as $key => $value) 
-			{
+			{	
 				$child_nodes[$value->parent][] = $value->term_id;
 			}
 		}
+
 		return $child_nodes;
 	}
 
@@ -4783,7 +4822,7 @@ class ShopSearchFilterWidget extends WP_Widget {
 						'gently-used' => 'Gently Used- GU',
 						'well-used'   => 'Well Used- WU'));
 				}
-				//var_dump($cust_taxs);
+				
 				if ($cust_taxs) 
 				{	
 					if(is_array($display_cats))
@@ -4799,8 +4838,13 @@ class ShopSearchFilterWidget extends WP_Widget {
 					$block = '<div class="f-block shop-by-'.$custom_tax.'">';					
 					if (strpos($custom_tax, 'size') !== false) $block.= '<div class="size-guide-link"><a href="#size-guide" rel="'.$custom_tax.'">Size guide</a></div>';
 					$block.= '<h4><span>'.$instance['title-'.$custom_tax].'</span></h4>';
+					if($custom_tax == 'brand')
+					{
+						$block .= $this->getSearchInBrands();
+					}
 					$block.= '<div class="f-container">';
 					$block.= '<div class="f-holder">';
+					
 					foreach($cust_taxs as $cust_tax) 
 					{		
 						if($cust_tax->term_id != NULL)
@@ -4808,29 +4852,72 @@ class ShopSearchFilterWidget extends WP_Widget {
 							$block.='<div id="row-'.$cust_tax->term_id.'" class="f-row" data-tax="'.$cust_tax->taxonomy.'" data-id="'.$cust_tax->term_id.'">';
 							if ($custom_tax == 'price')
 							{
+								$currency_factor = array(
+									'data-usd' => 1,
+									'data-jod' => 0.708749872,
+									'data-lbp' => 1512.8593,
+									'data-qar' => 3.64150146,
+									'data-sar' => 3.75089553,
+									'data-aed' => 3.67309458,
+									'data-omr' => 0.385100018
+								);
+
 								$currency_rate = (!$_SESSION["currency-rate"]) ? $_SESSION["currency-rate"] : 1;
 								$ctsarray      = explode('-', $cust_tax->slug);
 								$ctname        = $ctsarray[0] * $currency_rate;
+
 								if (count($ctsarray) > 1) 
 								{
 									$ctname .= ' - '.$ctsarray[1] * $currency_rate;
+
+									$currency_list['data-usd'] = round(($ctsarray[0] * $currency_factor['data-usd'])).' - '.round(($ctsarray[1] * $currency_factor['data-usd']));
+									$currency_list['data-jod'] = round(($ctsarray[0] * $currency_factor['data-jod'])).' - '.round(($ctsarray[1] * $currency_factor['data-jod']));
+									$currency_list['data-lbp'] = round(($ctsarray[0] * $currency_factor['data-lbp'])).' - '.round(($ctsarray[1] * $currency_factor['data-lbp']));
+									$currency_list['data-qar'] = round(($ctsarray[0] * $currency_factor['data-qar'])).' - '.round(($ctsarray[1] * $currency_factor['data-qar']));
+									$currency_list['data-sar'] = round(($ctsarray[0] * $currency_factor['data-sar'])).' - '.round(($ctsarray[1] * $currency_factor['data-sar']));
+									$currency_list['data-aed'] = round(($ctsarray[0] * $currency_factor['data-aed'])).' - '.round(($ctsarray[1] * $currency_factor['data-aed']));
+									$currency_list['data-omr'] = round(($ctsarray[0] * $currency_factor['data-omr'])).' - '.round(($ctsarray[1] * $currency_factor['data-omr']));
 								} 
 								else if (strpos($cust_tax->name, '+')) 
 								{
 									$ctname .= ' +';
-								}
-								if (is_tax($custom_tax, $cust_tax->slug) || @in_array($cust_tax->slug, $_GET['filter-'.$custom_tax])) $checked = ' CHECKED'; 
-								else $checked = '';
 
-								$block.= '<input data-block="shop-by-'.$custom_tax.'" type="checkbox" name="filter-'.$custom_tax.'[]" value="'.$cust_tax->slug.'" id="'.$custom_tax.'-'.$cust_tax->term_id.'"'.$checked.' />';
-								$block.= '<label title="'.$cust_tax->name.'" id="label-'.$cust_tax->slug.'" data-input="'.$custom_tax.'-'.$cust_tax->term_id.'" data-a="a-'.$custom_tax.'-'.$cust_tax->term_id.'">'.$ctname.' '.$_SESSION["currency-code"].'</label>';	
+									$currency_list['data-usd'] = round(($ctsarray[0] * $currency_factor['data-usd'])).' +';
+									$currency_list['data-jod'] = round(($ctsarray[0] * $currency_factor['data-jod'])).' +';
+									$currency_list['data-lbp'] = round(($ctsarray[0] * $currency_factor['data-lbp'])).' +';
+									$currency_list['data-qar'] = round(($ctsarray[0] * $currency_factor['data-qar'])).' +';
+									$currency_list['data-sar'] = round(($ctsarray[0] * $currency_factor['data-sar'])).' +';
+									$currency_list['data-aed'] = round(($ctsarray[0] * $currency_factor['data-aed'])).' +';
+									$currency_list['data-omr'] = round(($ctsarray[0] * $currency_factor['data-omr'])).' +';
+								}
+	
+								$checked  = $this->isNodeCheck($cust_tax->term_id) ? 'checked' : '';
+
+
+								if(isset($_GET['sbrand']) AND strlen($_GET['sbrand']))
+								{
+									if($cust_tax->slug == $_GET['sbrand']) $checked = ' CHECKED';
+								}
+
+								$currency_str = '';
+								foreach ($currency_list as $key => $value) 
+								{
+									$currency_str.= $key.'="'.$value.'" ';
+								}
+
+								$block.= '<input data-block="shop-by-'.$custom_tax.'" onchange="filter.filter(event, this)" autocomplete="off" type="checkbox" name="filter-'.$custom_tax.'[]" value="'.$cust_tax->slug.'" id="'.$custom_tax.'-'.$cust_tax->term_id.'"'.$checked.' />';
+								$block.= '<label '.$currency_str.' title="'.$cust_tax->name.'" id="label-'.$cust_tax->slug.'" data-input="'.$custom_tax.'-'.$cust_tax->term_id.'" data-a="a-'.$custom_tax.'-'.$cust_tax->term_id.'">'.$ctname.' '.$_SESSION["currency-code"].'</label>';	
 							}
 							else
 							{
-								if (is_tax($custom_tax, $cust_tax->slug) || @in_array($cust_tax->slug, $_GET['filter-'.$custom_tax])) $checked = ' CHECKED'; 
-								else $checked = '';
+								$checked  = $this->isNodeCheck($cust_tax->term_id) ? 'checked' : '';
 
-								$block.= '<input data-block="shop-by-'.$custom_tax.'" type="checkbox" name="filter-'.$custom_tax.'[]" value="'.$cust_tax->slug.'" id="'.$custom_tax.'-'.$cust_tax->term_id.'"'.$checked.'/>';
+								if(isset($_GET['sbrand']) AND strlen($_GET['sbrand']))
+								{
+									if($cust_tax->slug == $_GET['sbrand']) $checked = ' CHECKED';
+								}
+
+								$block.= '<input data-block="shop-by-'.$custom_tax.'" onchange="filter.filter(event, this)" autocomplete="off" type="checkbox" name="filter-'.$custom_tax.'[]" value="'.$cust_tax->slug.'" id="'.$custom_tax.'-'.$cust_tax->term_id.'"'.$checked.'/>';
 								$block.= '<label title="'.$cust_tax->name.'" id="label-'.$cust_tax->slug.'" data-input="'.$custom_tax.'-'.$cust_tax->term_id.'" data-a="a-'.$custom_tax.'-'.$cust_tax->term_id.'">'.$cust_tax->name.'</label>';	
 							}
 							$block.='</div><!-- f-row -->';
@@ -4846,6 +4933,21 @@ class ShopSearchFilterWidget extends WP_Widget {
 			}
 		} 		
 		return $blocks_arr;
+	}
+
+	function getSearchInBrands()
+	{
+		ob_start();
+		?>
+		<div class="checkbox-list-search" style="display:none;">
+            <input type="text" placeholder="Search" data-block="shop-by-brand" name="checkbox-list-search-input" autocomplete="off" oninput="search_list.search(this)">
+            <button name="checkbox-list-search-button" type="button" onclick="search_list.searchButton(event)">Search</button>
+        </div>
+		<?php
+		
+		$var = ob_get_contents();
+		ob_end_clean();
+		return $var;
 	}
 
 	/**

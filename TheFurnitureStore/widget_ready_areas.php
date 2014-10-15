@@ -37,59 +37,7 @@ if (is_home()) {
 	<?php  } ?>
 	<?php if ( is_sidebar_active('frontpage_middle_widget_area') ) : dynamic_sidebar('frontpage_middle_widget_area'); endif; ?>
 	
-	<?php	/*
-	if ( is_sidebar_active('frontpage_3left_widget_area') || is_sidebar_active('frontpage_2left_widget_area') || is_sidebar_active('frontpage_single_widget_area')) : ?>
-		
-		<ul class="secondary_content clearfix noprint home-widgets">
-			
-			<?php // 3 columns
-			if ( is_sidebar_active('frontpage_3left_widget_area')): 
-				if ( is_sidebar_active('frontpage_3left_widget_area') ) : ?>
-					<li class="c_box_first">
-						<?php dynamic_sidebar('frontpage_3left_widget_area'); ?>
-					</li><!-- c_box  -->
-				<?php endif;
-				
-				if ( is_sidebar_active('frontpage_3middle_widget_area') ) : ?>
-					<li class="c_box_middle">
-						<?php dynamic_sidebar('frontpage_3middle_widget_area'); ?>
-					</li><!-- c_box  -->
-				<?php endif;
-				
-				if ( is_sidebar_active('frontpage_3right_widget_area') ) : ?>
-					<li class="c_box_last">
-						<?php dynamic_sidebar('frontpage_3right_widget_area'); ?>
-					</li><!-- c_box  -->
-				<?php endif;
-			endif;
-			
-			// 1 column
-			if (is_sidebar_active('frontpage_single_widget_area')) :  ?>	
-				<li class="c_box_single">
-					<?php dynamic_sidebar('frontpage_single_widget_area'); ?>
-				</li><!-- c_box  -->
-			<?php endif;
-		
-			
-			// 2 columns
-			
-			if ( is_sidebar_active('frontpage_2left_widget_area')): 
-				if ( is_sidebar_active('frontpage_2left_widget_area') ) : ?>
-					<li class="c_box c_box2 c_box_first">
-						<?php dynamic_sidebar('frontpage_2left_widget_area'); ?>
-					</li><!-- c_box  -->
-				<?php endif;
-				
-				if ( is_sidebar_active('frontpage_2right_widget_area') ) : ?>
-					<li class="c_box c_box2 c_box_last">
-						<?php dynamic_sidebar('frontpage_2right_widget_area'); ?>
-					</li><!-- c_box  -->
-				<?php endif;
-			endif;?>
-			
-		</ul><!-- secondary_content -->
-			
-	<?php endif; */
+	<?php	
 
 	if ( is_sidebar_active('frontpage_bottom_widget_area') ) : dynamic_sidebar('frontpage_bottom_widget_area'); endif;
 
@@ -238,8 +186,8 @@ if (is_home()) {
 	$the_div_class 	= 'sidebar tag_sidebar category_sidebar noprint '. $the_float_class; ?>
 	<div class="<?php echo $the_div_class;?>">
 		<?php
-		// widgets are added here
-		if (is_sidebar_active('category_widget_area') ) : dynamic_sidebar('category_widget_area'); endif;
+		if (is_sidebar_active('category_widget_area') ) : dynamic_sidebar('category_widget_area'); endif;	
+		
 		?>
 	</div><!-- category_sidebar -->
 	

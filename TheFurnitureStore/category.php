@@ -1,55 +1,79 @@
 <?php 
-if(is_category('member-bags') || is_category('reserved-bags') || is_category('sale'))
-{
-	auth_redirect_theme_login();
-}
 get_header();
+$qo = get_queried_object();
 
-//collect options
-$WPS_prodCol       = $OPTION['wps_prodCol_option'];
-$WPS_catCol        = $OPTION['wps_catCol_option'];
-$WPS_sidebar       = $OPTION['wps_sidebar_option'];
-$WPS_showposts     = $OPTION['wps_showpostsOverwrite_Option'];
-
-$this_category     = get_category($cat);
-
-$topParent         = NWS_get_root_category($cat,'allData');
-$topParentSlug     = $topParent->slug;
-$this_categorySlug = $this_category->slug;
-
-//collect options
-$orderBy           = $OPTION['wps_secondaryCat_orderbyOption'];
-$order             = $OPTION['wps_secondaryCat_orderOption'];
-
-get_cat_parent($this_category->term_id);
-
-// sidebar location?
-switch($WPS_sidebar)
+if($qo->taxonomy == 'category')
 {
-	case 'alignRight':
-		$the_float_class 	= 'alignleft';
-	break;
-	case 'alignLeft':
-		$the_float_class 	= 'alignright';
-	break;
+	$cat_parents = KostulQuery::countParents($qo)+1; 
+	$tax = 'tax_cat_'.$cat_parents;
 }
-// teaser?
-if($OPTION['wps_teaser_enable_option']) {$the_eqcol_class = 'eqcol'; }
-
-//set the div class	
-$the_div_class 	= 'theProds clearfix '.$prodCol_class. ' '.$the_float_class.' '.$the_eqcol_class;
-	
-if($OPTION['wps_catDescr_enable']) 
+else
 {
-	echo term_description();
+	$taxonomies = array(
+		'colour'          => 'tax_colours',
+		'size'            => 'tax_sizes',
+		'ring-size'       => 'tax_ring_sizes',
+		'clothes-size'    => 'tax_clothes_sizes',
+		'selection'       => 'tax_selections',
+		'brand'           => 'tax_brands',
+		'style'           => 'tax_styles',
+		'price'           => 'tax_prices',
+		'seller-category' => 'tax_seller_category',
+	);
+	$tax = $taxonomies[$qo->taxonomy];
+}
+
+
+$DEFAULT = show_default_view();
+
+ if($DEFAULT){
+	$WPS_sidebar		= $OPTION['wps_sidebar_option'];
+	switch($WPS_sidebar){
+		case 'alignRight':
+			$the_float_class 	= 'alignleft';
+		break;
+		case 'alignLeft':
+			$the_float_class 	= 'alignright';
+		break;
+	}
+
+	$the_div_class 	= 'sidebar tag_sidebar category_sidebar noprint alignleft ';
+	if (is_sidebar_active('category_widget_area')) 
+	{
+		printf('<div class="%s" data-ttttt="">', $the_div_class );
+		dynamic_sidebar('category_widget_area');	
+		printf('</div><!-- category_sidebar -->');
+	} 
+	?>
+	<div class="alignright" id="main_col">
+		<?php
+		product_sort_select();
+		
+		global $OPTION;
+		$_GET['cats'][$tax]    = $qo->term_id;
+		$kostul_query  = new KostulQuery();
+		$request       = $kostul_query->makeRequestFromArgs($_GET);
+		$columns       = intval(str_replace('tagCol', '', $OPTION['wps_tagCol_option']));
+		$html          = '';
+		$pagination    = new Pagination($request['count'], $request['last_args']['count'], $request['last_args']['offset']);
+		
+		if(is_array($request['posts']) AND count($request['posts']))
+		{
+			foreach ($request['posts'] as $p) 
+			{
+				$post = new KostulHTML($p, $columns, $OPTION);
+				$html.= $post->getHTML();
+			}
+		}
+		?>
+		<div id="products-container" class="theProds clearfix  alignright eqcol">
+			<script>
+				var last_args = <?php echo json_encode($request['last_args']); ?>;
+				var visible_terms = <?php echo json_encode($request['visible_terms']); ?>;
+			</script>
+			<?php echo $html.$pagination->getHTML(); ?>
+		</div>
+	</div>
+	<?php
 } 
-$_SESSION["ajax"]       = false;
-product_sort_select();
-?>
-	<div class="<?php echo $the_div_class;?>" id="products-container">		
-		<?php get_template_part('loop', 'products'); ?>
-	</div><!-- theProds -->
-</div><!-- main_col -->
-<?php
-include (TEMPLATEPATH . '/widget_ready_areas.php');
 get_footer(); ?>

@@ -257,21 +257,24 @@
 						
 			global $OPTION;
 			
-							$to 		= $OPTION['wps_shop_email'];
-							$subject 	= __('You received - ','wpShop') . $PDT_DATA[itemname];					
-							
-							$filename	= 'email-owner-order-notification.txt';
-							$path		= (strlen(WPLANG)< 1 ? WP_CONTENT_DIR.'/themes/'. WPSHOP_THEME_NAME .'/email/' : WP_CONTENT_DIR.'/themes/'. WPSHOP_THEME_NAME .'/email/' . WPLANG.'-'); 
-							$message	= file_get_contents($path.$filename);			
+			$to 		= $OPTION['wps_shop_email'];
+			$subject 	= __('You received - ','wpShop') . $PDT_DATA[itemname];					
+			
+			$filename	= 'email-owner-order-notification.txt';
+			$path		= (strlen(WPLANG)< 1 ? WP_CONTENT_DIR.'/themes/'. WPSHOP_THEME_NAME .'/email/' : WP_CONTENT_DIR.'/themes/'. WPSHOP_THEME_NAME .'/email/' . WPLANG.'-'); 
+			$message	= file_get_contents($path.$filename);			
 
-							$message_shop_owner 	= str_replace($search,$replace,$message);			
-							$admin_email_address	= $OPTION['wps_shop_email'];
-							$domain					= get_option('home');
-							$domain 				= substr($domain, 7); 
+			$message_shop_owner 	= str_replace($search,$replace,$message);			
+			$admin_email_address	= $OPTION['wps_shop_email'];
+			$domain					= 'www.theluxurycloset.com';
+
+			if (WPSHOP_EMAIL_FORMAT_OPTION == 'mime') {
+				$this->mime_mail($to, $subject, $message_shop_owner, $message_shop_owner, $admin_email_address, $domain, 'zend');
+			} else {
+				$this->send_mail($to, $subject, $message_shop_owner, $admin_email_address, $domain);
+			}
 							
-							$this->send_mail($to,$subject,$message_shop_owner,$admin_email_address,$domain);	
-							
-		return 'DONE';
+			return 'DONE';
 		}
 
 		

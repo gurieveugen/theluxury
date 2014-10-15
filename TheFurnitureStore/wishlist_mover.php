@@ -53,7 +53,7 @@ if(($_GET['transfer_cart_item'] == '1') && (isset($_GET['cid']))){
 	$qStr 	= "DELETE FROM $table WHERE cid = $cid";
 	mysql_query($qStr);	
 	
-	$url 	= get_option('home') . '/?showCart=1&wltransfer=OK'; 
+	$url 	= get_cart_url().'/?wltransfer=OK'; 
 	header("Location: $url");
 	exit(NULL);
 }

@@ -87,7 +87,7 @@ wps_shop_process_steps(3); ?>
 <div class="payment-section">
 	<h1 class="title">Delivery & Billing Address</h1>
 	<div class="holder">
-		<form class="step2 checkoutSteps clearfix" action="?orderNow=2" name="step2form" id="step2form" method="POST">
+		<form class="step2 checkoutSteps clearfix" action="<?php echo get_checkout_url(); ?>?orderNow=2" name="step2form" id="step2form" method="POST">
 			<div id="editAddress" class="editCont clearfix">
 				<div class="clearfix">
 					<?php if (strlen($feedback['e_message'])) { ?>
@@ -146,7 +146,15 @@ wps_shop_process_steps(3); ?>
 							</p>
 							<div class="check-row">
 								<input type="checkbox" name="terms_accepted" /> 
-								<label>I accept the <a rel='div.overlay:eq(2)' href='?showTerms=1' target='_blank'><?php echo $LANG['terms']; ?></a> of The Luxury Closet<br />(Tradelux LLC).</label>
+								<label>I accept the <a href="#terms" class="show-terms-link"><?php echo $LANG['terms']; ?></a> of The Luxury Closet<br />(Tradelux LLC).</label>
+								<div style="display:none;">
+									<div id="terms-and-conditions" class="cart-shipping-costs-desc" style="width:750px; padding:30px 5px 20px 20px;">
+										<h2>Terms & Conditions</h2>
+										<div style="height:550px;overflow:auto;">
+											<?php echo wpautop($OPTION['wps_terms_conditions']); ?>
+										</div>
+									</div>
+								</div>
 							</div>
 						</div>
 						<?php if($OPTION['wps_customNote_enable']) { ?>

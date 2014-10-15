@@ -5,6 +5,12 @@ jQuery(document).ready(function(){
 		jQuery.colorbox({inline:true, href:'#cart-shipping-costs'});
 		return false;
 	});
+	// checkout terms & conditions popup
+	jQuery('.show-terms-link').click(function(){
+		jQuery.colorbox({inline:true, href:'#terms-and-conditions'});
+		return false;
+	});
+	
 	// cart remove button
 	jQuery('.order_form .remove').click(function(){
 		var rm = confirm('Are you sure?');
@@ -111,6 +117,7 @@ jQuery(document).ready(function(){
 		if (!isloggedin) {
 			var ahref = jQuery(this).attr('href');
 			show_login_popup('wn', ahref);
+			jQuery('.popup-login .login-tab-link').trigger('click');
 			return false;
 		}
 	});
@@ -118,6 +125,7 @@ jQuery(document).ready(function(){
 		if (!isloggedin) {
 			var ahref = jQuery(this).attr('href');
 			show_login_popup('sale', ahref);
+			jQuery('.popup-login .login-tab-link').trigger('click');
 			return false;
 		}
 	});
@@ -125,6 +133,13 @@ jQuery(document).ready(function(){
 		if (!isloggedin) {
 			var ahref = jQuery(this).attr('href');
 			show_login_popup('wishlist', ahref);
+			return false;
+		}
+	});
+	jQuery('#nav .primary-my-items a').click(function(){
+		if (!isloggedin) {
+			var ahref = jQuery(this).attr('href');
+			show_login_popup('def', ahref);
 			return false;
 		}
 	});
@@ -155,7 +170,7 @@ jQuery(document).ready(function(){
 					hide_login_popup();
 					mcEvilPopupCookie();
 					if (callpg.indexOf('%26alertslogin') > 0) {
-						location.reload();
+						setTimeout(function(){ window.location.href = callpg; location.reload(); }, 500);
 					} else {
 						setTimeout(function(){ window.location.href = callpg; }, 500);
 					}
@@ -190,7 +205,7 @@ jQuery(document).ready(function(){
 					hide_login_popup();
 					mcEvilPopupCookie();
 					if (callpg.indexOf('%26alertslogin') > 0) {
-						location.reload();
+						setTimeout(function(){ window.location.href = callpg; location.reload(); }, 500);
 					} else {
 						setTimeout(function(){ window.location.href = callpg; }, 500);
 					}
@@ -231,9 +246,12 @@ jQuery(document).ready(function(){
 	jQuery('.popup-login .btn-twitter').click(function(){
 		return false;
 	});
-	jQuery('.product-socials .pinit a').attr('class', '');
-	jQuery('.product-socials .pinit a').addClass('pinterest');
-	jQuery('.product-socials .pinit').show();
+	setTimeout(function(){
+		jQuery('.product-socials .pinit span a').attr('class', 'pinterest');
+		jQuery('.product-socials .pinit span a').css('cursor', 'pointer');
+		jQuery('.product-socials .pinit a.pinmask').hide();
+		jQuery('.product-socials .pinit span').css('left', '0px');
+	}, 1000);
 
 	// first login popup
 	//jQuery('*').click(function(){

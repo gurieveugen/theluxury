@@ -60,7 +60,7 @@ function childtheme_queue_js() {
 						
 						// do we want flowplayer?
 						if($OPTION['wps_flowplayer_enable']) {
-							wp_enqueue_script( 'flowplayer',get_stylesheet_directory_uri().'/js/flowplayer-3.1.4.min.js', '3.1.4', true );
+							$a = 1;//wp_enqueue_script( 'flowplayer',get_stylesheet_directory_uri().'/js/flowplayer-3.1.4.min.js', '3.1.4', true );
 						}
 						
 						switch($WPS_prodImg_effect){
@@ -127,7 +127,7 @@ function childtheme_queue_js() {
 				}
 			}
 			
-			wp_enqueue_script( 'myjquery', get_stylesheet_directory_uri().'/js/myjquery.js', array('jquery'), '1', true );
+			//wp_enqueue_script( 'myjquery', get_stylesheet_directory_uri().'/js/myjquery.js', array('jquery'), '1', true );
 			 
 		}
 	}

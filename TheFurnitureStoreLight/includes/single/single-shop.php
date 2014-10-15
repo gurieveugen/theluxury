@@ -42,8 +42,7 @@ $wps_shop_mode 	= $OPTION['wps_shop_mode'];
 			
 			// "added to wishlist or cart" - feedback 
 			if($_GET['added'] == 'OK'){
-				$basket_url = get_option('home') .'?showCart=1&cPage='. current_page(3);
-				//$basket_url = get_option('home') . '/index.php?showCart=1';	//or this as alternative		
+				$basket_url = get_cart_url().'?cPage='. current_page(3);
 				if($_GET['l'] == 'cart'){
 					if($wps_shop_mode =='Inquiry email mode'){ ?>
 						<div class='success'><?php printf(__ ('Your item has been successfully added to your %s!','wpShop'), $OPTION['wps_pgNavi_inquireOption'])?><a href="<?php echo $basket_url;?>"><?php printf(__ (' View %s','wpShop'), $OPTION['wps_pgNavi_inquireOption'])?></a> | <a href="<?php the_permalink(); ?>"><?php _e('Continue Shopping','wpShop');?></a></div>
@@ -60,7 +59,7 @@ $wps_shop_mode 	= $OPTION['wps_shop_mode'];
 			} 
 			//change.9.9
 			elseif($_GET['added'] == 'NOK') {
-				$basket_url = get_option('home') .'?showCart=1&cPage='. current_page(3);
+				$basket_url = get_cart_url() .'?cPage='. current_page(3);
 				if($_GET['l'] == 'cart'){
 					if($wps_shop_mode =='Inquiry email mode'){ ?>
 						<p class="success"><?php printf(__ ('Since this item is out of stock it has not been added to your %s - ','wpShop'), $OPTION['wps_pgNavi_inquireOption'])?><a href="<?php echo $basket_url;?>"><?php printf(__ (' View %s','wpShop'), $OPTION['wps_pgNavi_inquireOption'])?></a></p>

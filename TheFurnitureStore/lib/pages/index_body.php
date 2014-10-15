@@ -1,11 +1,7 @@
 <?php
 global $OPTION;
 
-if(isset($_GET['showCart']) && $_GET['showCart'] == '1') // show the shopping cart
-{											
-	include WP_CONTENT_DIR.'/themes/'.WPSHOP_THEME_NAME.'/lib/pages/shop_cart.php';
-}
-elseif(isset($_GET['orderNow']) && $_GET['orderNow'] == '1') // checkout payments and delivery
+if(isset($_GET['orderNow']) && $_GET['orderNow'] == '1') // checkout payments and delivery
 {
 	include WP_CONTENT_DIR.'/themes/'.WPSHOP_THEME_NAME.'/lib/pages/shop_checkout_payment.php';
 }

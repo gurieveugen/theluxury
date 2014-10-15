@@ -1,9 +1,4 @@
 <?php
-//hack to prevent caching by wp-engine once user has added anythig to cart
-//wp-engine has added showCart parameter to cache excluding list.
-//echo "here";
-//exit;
-
 /*if(isset($_GET['showCart']) || (isset($_GET['non_cache']) && $_GET['non_cache'] == 'lang')){
 	setcookie("wordpress_logged_in_eec_no_cache", "guest_no_cache", time()+10800, "/");
 	if($_GET['non_cache'] == 'lang'){  
@@ -15,10 +10,10 @@
 @Header('Cache-Control: no-cache');
 @Header('Pragma: no-cache');
 
+global $OPTION;
+
 //if ( is_404() ) { wp_redirect( get_option('siteurl') . '/404error/'); exit(); }
 include (STYLESHEETPATH . '/lib/pages/header_head.php');
-
-$OPTION = NWS_get_global_options();
 
 // if a blog is used
 $blog_Name 	= $OPTION['wps_blogCat'];
@@ -140,7 +135,7 @@ $lostPass	= get_page_by_title($OPTION['wps_passLostPg']);
 			<meta name="robots" content="noindex, nofollow" /> 
 	    <?php }?>
 		<?php if(is_archive() && !is_category()){ ?><meta name="robots" content="noindex" /><?php } ?>
-		<link rel="stylesheet" type="text/css" media="all" href="<?php NWS_bloginfo('stylesheet_url','yes'); ?>" />
+		<link rel="stylesheet" type="text/css" media="all" href="<?php NWS_bloginfo('stylesheet_url', 'yes'); ?>?ver=<?php echo time(); ?>" />
 		
 		<?php 
 		remove_action( 'wp_head', 'feed_links_extra'); // Display the links to the extra feeds such as category feeds
@@ -180,7 +175,6 @@ $lostPass	= get_page_by_title($OPTION['wps_passLostPg']);
 		var fapp_id = '<?php echo get_option('fbc_app_key_option'); ?>';
 		var is_prof_add_item_page = '<?php if (is_page($OPTION['wps_profreseller_add_item_page'])) { echo 'true'; } ?>';
 		var mcevilpopupclick = <?php echo (int)$_COOKIE['MCEvilPopupClick']; ?>;
-		var alertslogin = '<?php echo $_SESSION['alertslogin']; unset($_SESSION['alertslogin']); ?>';
 		</script>
 		<script type="text/javascript" src="<?php bloginfo('template_url') ?>/js/jquery-ui.min.js"></script>
 		<script src="<?php bloginfo('stylesheet_directory'); ?>/js/jquery.colorbox-min.js"></script>
@@ -191,8 +185,7 @@ $lostPass	= get_page_by_title($OPTION['wps_passLostPg']);
 		<script src="<?php bloginfo('template_url') ?>/js/jquery.jqtransform.js"></script>
 		<script src="<?php bloginfo('template_url'); ?>/js/main.theme.js"></script>
 		<script src="<?php bloginfo('template_url'); ?>/js/sellers-process.js"></script>
-		<script src="<?php bloginfo('template_url'); ?>/js/alerts.js"></script>
-		<script id='search-ajax' src="<?php bloginfo('template_url'); ?>/js/search-ajax.js" data-url="<?php bloginfo('template_url'); ?>"></script>
+		<script src="<?php bloginfo('template_url'); ?>/js/alerts.js"></script>		
 		<?php if (wp_is_mobile()) { ?>
 		<script type="text/javascript">
 		(function() {
@@ -214,13 +207,24 @@ $lostPass	= get_page_by_title($OPTION['wps_passLostPg']);
 				});
 			</script>
 		<![endif]-->
+		<script type="text/javascript">
+		var ScarabQueue = ScarabQueue || [];
+		(function(subdomain, id) {
+		  if (document.getElementById(id)) return;
+		  var js = document.createElement('script'); js.id = id;
+		  js.src = subdomain + '.scarabresearch.com/js/1AA1DDA02D2AADC3/scarab-v2.js';
+		  var fs = document.getElementsByTagName('script')[0];
+		  fs.parentNode.insertBefore(js, fs);
+		})('https:' == document.location.protocol ? 'https://recommender' : 'http://cdn', 'scarab-js-api');
+		</script>
+		<?php emarsys_script(); ?>
 		<?php if (is_front_page()) { ?><!--<a href="https://plus.google.com/114474869893468804277" rel="publisher">Google+</a>--><?php } ?>
 	</head>	
 	<?php  
 	// am I viewing the shopping cart? || going through checkout? || on confirmation page? || reading the terms and conditions? etc...
-	if($_GET['showCart'] == '1') { ?>
+	if(is_cart_page()) { ?>
 		<body class="shopping_cart">
-	<?php } elseif (($_GET['orderNow'] == '1') || ($_GET['orderNow'] == '2') || ($_GET['orderNow'] == '3') || ($_GET['orderNow'] == '4') || ($_GET['orderNow'] == '5') || ($_GET['orderNow'] == '6') || ($_GET['orderNow'] == '7') || ($_GET[orderNow] == '8') || ($_GET[orderNow] == '81')){ ?>
+	<?php } elseif (is_checkout_page()){ ?>
 		<body class="shopping_cart order_checkout">
 	<?php } elseif(($_GET['confirm'] == '1') || ($_GET['confirm'] == '2') || ($_GET['confirm'] == '3')) { ?>
 		<body class="shopping_cart order_confirmation">

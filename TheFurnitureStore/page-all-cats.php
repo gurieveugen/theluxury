@@ -2,16 +2,7 @@
 /*
 Template Name: All Cats
 */
-$cats = array(
-	'all-handbags'    => 'mens-handbags,womens-handbags',
-	'all-clothes'     => 'mens-clothes,womens-clothes',
-	'all-jewelry'     => 'mens-jewelry,womens-jewelry',
-	'all-shoes'       => 'mens-shoes,womens-shoes',
-	'all-watches'     => 'mens-watches,womens-watches',
-	'all-accessories' => 'mens-accessories,womens-accessories');
 
-
-$_SESSION['custom_cats'] = $cats[$post->post_name];
 $show_widget = true;
 get_header();
 	$WPS_sidebar		= $OPTION['wps_sidebar_option'];
@@ -75,7 +66,7 @@ get_header();
 			$order 	 = $OPTION['wps_prods_orderOption'];
 			$paged   = (get_query_var('paged')) ? get_query_var('paged') : 1;
 			
-			$cats = (isset($_SESSION['custom_cats'])) ? $_SESSION['custom_cats'] : 'womens-handbags';
+			$cats = ($custom_cats != '') ? $_SESSION['custom_cats'] : 'womens-handbags';
 
 			$args = array(
 				'post_type'     => 'post',
@@ -85,8 +76,8 @@ get_header();
 				'category_name' => $cats
 			);
 			$_SESSION['show_latest_products'] = TRUE;
-			$args                             = product_sort_process($args);			
-			$_SESSION['custom_args']          = $args;			
+			$args                             = product_sort_process($args);	
+			
 			get_template_part('loop', 'products');
 			?>
 			

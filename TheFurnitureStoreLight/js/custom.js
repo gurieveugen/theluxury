@@ -16,6 +16,7 @@ jQuery(document).ready(function(){
 		return false;
 	});
 	change_currency();
+	update_header_cart_info();
 
 	// installments
 	jQuery("#installments-button").click(function(){
@@ -149,13 +150,13 @@ jQuery(document).ready(function(){
 	// 		enable:true
 	// 	}
 	// });
-		
 	jQuery('.widget-filter .f-block h4').click(function(){
-		jQuery(this).next('.f-container').slideToggle(300,function(){
+		jQuery(this).parent().children('.f-container').slideToggle(300,function(){
 			jQuery(this).parent().toggleClass('open');
 			jQuery(this).parents('.f-block').find('.f-container').mCustomScrollbar('update');
 		});
-	});
+	});	
+
 	
 	// jQuery('.widget-filter .shop-by-category h4').click(function(){
 	// 	jQuery(this).next('.f-container').slideToggle(300,function(){
@@ -163,7 +164,12 @@ jQuery(document).ready(function(){
 	// 		jQuery(this).parents('.shop-by-category').mCustomScrollbar('update');
 	// 	});		
 	// });
-	
+	jQuery('#row-156 > label, #row-418 > label').click(function(){
+		jQuery(this).next().next('.sub-category').slideToggle(300,function(){
+				jQuery(this).parent().toggleClass('open');
+				jQuery(this).parents('.shop-by-category').mCustomScrollbar('update');
+			});	
+	});
 	jQuery('.widget-filter .has-drop').click(function(){
 		if(jQuery(this).data('depth') == 0)
 		{
@@ -252,6 +258,7 @@ function set_currency_cookie(currname) {
 
 var ccurrency = 'USD';
 var lcurrency = 'USD';
+var urcurrflag = false;
 function change_currency() {
 	var sitecookies = document.cookie.split(';');
 	var iscookies = false;
@@ -259,14 +266,18 @@ function change_currency() {
 		parts = sitecookies[i].split('=');
 		if(parts[0].indexOf('theluxcurrency') != -1) { ccurrency = parts[1]; iscookies = true; }
 	}
-	if (!iscookies) {
+	/*if (!iscookies && !urcurrflag) {
 		jQuery.get(siteurl + "/index.php?non_cache=true&FormAction=user-region-currency", "", function(data){
+			urcurrflag = true;
 			set_currency_cookie(data);
 			change_currency();
 		});
 		return false;
-	}
+	}*/
 	if (ccurrency == '') { ccurrency = 'USD'; }
+	jQuery('.currency-price').hide();
+	jQuery('.price-'+ccurrency).show();
+	//jQuery('.price-'+lcurrency).hide();
 	if (ccurrency != lcurrency) {
 		jQuery('#currencySelect strong').attr('class', 'current currency-'+ccurrency);
 		jQuery('#currencySelect strong .opacity-fader').html(ccurrency);
@@ -275,9 +286,6 @@ function change_currency() {
 		jQuery('.currency-block .curr-loc-'+lcurrency.toLowerCase()).hide();
 		jQuery('.currency-block .curr-loc-'+ccurrency.toLowerCase()).fadeIn();
 
-		jQuery('.price-'+ccurrency).show();
-		jQuery('.price-'+lcurrency).hide();
-		update_header_cart_info();
 		lcurrency = ccurrency;
 		jQuery('#invite a.invite').attr('id', ccurrency);
 	}
@@ -287,10 +295,18 @@ function change_currency() {
 		jQuery('.price-box h3 strong span').each(function(){ jQuery(this).hide(); })
 		jQuery('.price-'+ccurrency).show();
 	}
+	changeCurrency();
 }
 
 function update_header_cart_info() {
-	jQuery("#header-bag-info").load(siteurl + "/index.php?non_cache=true&FormAction=header-shop-cart-items");
+	var cart_items = 0;
+	var sitecookies = document.cookie.split(';');
+	for(i=0;i<sitecookies.length;i++) {
+		parts = sitecookies[i].split('=');
+		if(parts[0].indexOf('thelux_cart_items') != -1) { cart_items = parts[1]; }
+	}
+	jQuery("#header-bag-info a").html(cart_items);
+	//jQuery("#header-bag-info").load(siteurl + "/index.php?non_cache=true&FormAction=header-shop-cart-items");
 }
 
 function odetails_show_hide(orel) {

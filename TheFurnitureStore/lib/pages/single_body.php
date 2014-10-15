@@ -331,7 +331,7 @@ if(strlen(get_custom_field('disable_cart', FALSE))==0){
 					
 				<?php if($OPTION['wps_shoppingCartEngine_yes']) {
 				
-					$basket_url = get_option('home') .'?showCart=1&cPage='. current_page(3); ?>	
+					$basket_url = get_cart_url().'?cPage='. current_page(3); ?>	
 				
 					<form method="post" name="view"  id="vCart" class="clearfix" action="<?php echo $basket_url; ?>" target="_top">
 						<div class="shopform_btn">								

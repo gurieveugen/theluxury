@@ -1,6 +1,6 @@
 <?php
 // for the shopping cart
-if ($_GET['showCart'] == '1') {
+if (is_cart_page()) {
 	$pageTitleClass 		= 'cart-title';
 	
 	if($OPTION['wps_shop_mode']=='Inquiry email mode'){

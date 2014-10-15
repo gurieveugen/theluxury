@@ -56,7 +56,7 @@ wps_shop_process_steps(2); ?>
 			_e('This Website will send your Order first as an <strong>Email Enquiry</strong> to us. However, for an exact calculation of all necessary costs, please select your preferred Delivery and Payment Option below.','wpShop');
 			echo "</p>";
 		} ?>
-		<form class="step1 checkoutSteps" action="?orderNow=<?php echo $go; ?>" method="POST">
+		<form class="step1 checkoutSteps" action="<?php echo get_checkout_url(); ?>?orderNow=<?php echo $go; ?>" method="POST">
 			<input type="hidden" name="utm_source" id="utm_source">
 			<input type="hidden" name="utm_medium" id="utm_medium">
 			<input type="hidden" name="utm_campaign" id="utm_campaign">
@@ -76,7 +76,11 @@ wps_shop_process_steps(2); ?>
 					<label class="delivery-row">
 						<span class="icon"><img src="<?php bloginfo('template_url'); ?>/images/icon-delivery.png" alt=""></span>
 						<input id="dOptpost" type="radio" name="d_option" onchange="changePaymentAvailability('post')" value="post" checked="checked" />
-						<span><?php echo $OPTION['wps_delivery_label']; ?></span>
+						<?php if (is_flat_limit_shipping_free($CART['total_price'])) { ?>
+							<span class="fl-free"><?php echo $OPTION['wps_delivery_free_label']; ?></span>
+						<?php } else { ?>
+							<span><?php echo $OPTION['wps_delivery_label']; ?></span>
+						<?php } ?>
 					</label>
 				</div>
 				<!-- Payments Options -->

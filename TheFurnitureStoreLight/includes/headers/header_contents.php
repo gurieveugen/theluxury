@@ -1,22 +1,17 @@
 <?php
-global $currency_options;
-$location = 'International';
-$geoplugin = new geoPlugin();
-$geoplugin->locate($_SERVER['REMOTE_ADDR']);
-$user_ccode = strtolower($geoplugin->currencyCode);
-if (strlen($user_ccode)) {
-	if ($user_ccode == 'usd') {
-		$location = 'United States';
-	} else if (in_array($user_ccode, $currency_options)) {
-		$location = $geoplugin->countryName;
-	}
-}
+global $currency_options, $currency_locations;
 $pageurl = $_SERVER['REQUEST_URI'];
 if ($pageurl == '/') { $pageurl = site_url(); }
 ?>
 	<div class="header-right">
-		<div class="row">
-			<strong class="label">Location: </strong> <span class="country"><?php echo $location; ?> |</span>
+		<div class="row currency-block">
+			<strong class="label">Location: </strong> 
+			<span class="country">
+				<font class="curr-location curr-loc-usd">International</font>
+				<?php foreach($currency_options as $cc) { ?>
+					<font class="curr-location curr-loc-<?php echo $cc; ?>" style="display:none;"><?php echo $currency_locations[$cc]; ?></font>
+				<?php } ?>
+			 |</span>
 			<div class="switch switcher-currency">
 				<div id="currencySelect" class="switch-wrapper">
 					<span onclick="popUpMenu(this);">
@@ -52,11 +47,11 @@ if ($pageurl == '/') { $pageurl = site_url(); }
 				if(!isset($_GET['confirm'])) {
 					$CART = show_cart();
 					if(is_array($CART) && $CART['status'] == 'filled') {
-						$basket = '<a href="'.get_option('home').'?showCart=1">'.$CART['total_item_num'].'</a>';
+						$basket = $CART['total_item_num'];
 					}
 				}
 				?>
-				<span class="bag"><?php echo $basket; ?></span>
+				<span class="bag" id="header-bag-info"><a href="<?php echo get_cart_url(); ?>"><?php echo $basket; ?></a></span>
 				<?php if (is_user_logged_in()) { global $current_user;
 					$my_items_page = get_permalink($OPTION['wps_indvseller_my_items_page']);
 					if (in_array('profseller', $current_user->roles)) {
@@ -70,7 +65,7 @@ if ($pageurl == '/') { $pageurl = site_url(); }
 								<li><a href="<?php echo get_permalink($OPTION['wps_account_my_purchases_page']); ?>"><?php _e('My Purchases','wpShop'); ?></a></li>
 								<li><a href="<?php echo get_permalink($OPTION['wps_account_my_wishlist_page']); ?>"><?php _e('My Wishlist','wpShop'); ?></a></li>
 								<?php if ($OPTION['wps_alerts_enable']) { ?><li><a href="<?php echo get_permalink($OPTION['wps_account_my_alerts_page']); ?>"><?php _e('My Notifications','wpShop'); ?></a></li><?php } ?>
-								<li><a href="<?php echo get_permalink($OPTION['wps_account_login_page']); ?>?action=logout" title="<?php _e('Exit your account','wpShop'); ?>"><?php _e('Logout','wpShop'); ?></a></li>
+								<li><a href="<?php echo site_url(); ?>/?logout=true" title="<?php _e('Exit your account','wpShop'); ?>"><?php _e('Logout','wpShop'); ?></a></li>
 							</ul>
 						</li>
 					</ul>

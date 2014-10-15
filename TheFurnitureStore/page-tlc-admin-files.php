@@ -17,6 +17,7 @@ $split_categories = sellers_get_split_categories();
 
 $search_username = trim($_GET['search-username']);
 $search_quotation = trim($_GET['search-quotation']);
+$search_title = trim($_GET['search-title']);
 $search_option = trim($_GET['search-option']);
 $search_date_start = trim($_GET['search-date-start']);
 $search_date_end = trim($_GET['search-date-end']);
@@ -27,6 +28,7 @@ $mtab = trim($_GET['mtab']);
 if ($search_username == 'Username / Email') { $search_username = ''; }
 $search_username = str_replace("'", "''", $search_username);
 if ($search_quotation == 'Quotation Number') { $search_quotation = ''; }
+if ($search_title == 'Post Title') { $search_title = ''; }
 
 $sWhere = "";
 if (strlen($search_username)) {
@@ -58,7 +60,7 @@ if (strlen($search_date_end)) {
 	$sWhere .= " AND p.post_date <= '".$edate."'";
 }
 if (strlen($iscat)) {
-	$scat_tt_id = $wpdb->get_var(sprintf("SELECT term_taxonomy_id FROM %sterm_taxonomy WHERE term_id = %s", $wpdb->prefix, $iscat));
+	$scat_tt_id = $wpdb->get_var(sprintf("SELECT term_taxonomy_id FROM %sterm_taxonomy WHERE taxonomy = 'seller-category' AND term_id = %s", $wpdb->prefix, $iscat));
 	if ($scat_tt_id) {
 		$iseller_where = " AND tr.term_taxonomy_id = ".$scat_tt_id;
 	}
@@ -76,6 +78,17 @@ if (strlen($pscat)) {
 if (strlen($search_quotation)) {
 	$iseller_where .= " AND pm.meta_value LIKE '%".$search_quotation."%'";
 	$pseller_where .= " AND pm.meta_value LIKE '%".$search_quotation."%'";
+}
+$title_where = '';
+if (strlen($search_title)) {
+	if (strpos($search_title, " ")) {
+		$starray = explode(" ", $search_title);
+		foreach($starray as $stword) {
+			$title_where .= " AND p.post_title LIKE '%".$stword."%'";
+		}
+	} else {
+		$title_where = " AND p.post_title LIKE '%".$search_title."%'";
+	}
 }
 
 $sellers_includes = sellers_get_includes();
@@ -131,7 +144,7 @@ if ($all_draft_posts) {
 				<li><a href="#tab-approved-items-is">Approved</a></li>
 				<li><a href="#tab-pickup-items-is">Pickup</a></li>
 				<li><a href="#tab-received-items-is">Received</a></li>
-				<li><a href="#tab-authenticated-items-is">Authenticated</a></li>
+				<li><a href="#tab-authenticated-items-is">To be photographed</a></li>
 				<li><a href="#tab-on-sale-items-is">On Sale</a></li>
 				<li><a href="#tab-sold-items-is">Sold</a></li>
 			</ul>
@@ -142,7 +155,7 @@ if ($all_draft_posts) {
 					$pg = $_GET['issipg']; if (!$pg) { $pg = 1; }
 					$limit = ' LIMIT '.(($pg - 1) * $admin_items_per_page).', '.$admin_items_per_page;
 
-					$draft_user_posts = $wpdb->get_results(sprintf("SELECT SQL_CALC_FOUND_ROWS p.*, u.user_login FROM %sposts p LEFT JOIN %susers u ON u.ID = p.post_author LEFT JOIN %sterm_relationships tr ON tr.object_id = p.ID LEFT JOIN %spostmeta pm ON pm.post_id = p.ID AND pm.meta_key = 'ID_item' WHERE p.post_type = 'post' AND p.post_status = 'iseller_draft' %s %s GROUP BY p.ID ORDER BY p.ID DESC %s", $wpdb->prefix, $wpdb->prefix, $wpdb->prefix, $wpdb->prefix, $sWhere, $iseller_where, $limit));
+					$draft_user_posts = $wpdb->get_results(sprintf("SELECT SQL_CALC_FOUND_ROWS p.*, u.user_login FROM %sposts p LEFT JOIN %susers u ON u.ID = p.post_author LEFT JOIN %sterm_relationships tr ON tr.object_id = p.ID LEFT JOIN %spostmeta pm ON pm.post_id = p.ID AND pm.meta_key = 'ID_item' WHERE p.post_type = 'post' AND p.post_status = 'iseller_draft' %s %s GROUP BY p.ID ORDER BY p.ID DESC %s", $wpdb->prefix, $wpdb->prefix, $wpdb->prefix, $wpdb->prefix, $sWhere, $iseller_where.$title_where, $limit));
 					$total_posts = $wpdb->get_var("SELECT FOUND_ROWS()");
 					if ($draft_user_posts) {
 						foreach($draft_user_posts as $spost) {
@@ -152,7 +165,10 @@ if ($all_draft_posts) {
 						$spost_includes = get_post_meta($spost->ID, 'item_includes', true);
 						$item_tlc_viwed = (int)get_post_meta($spost->ID, 'item_tlc_viwed', true);
 						$spost_username = $spost->user_login;
+						$post_created = $spost->post_created;
+
 						$item_includes = explode('|', $spost_includes);
+						if (!strlen($post_created)) { $post_created = $spost->post_date; }
 
 						$spost_price = sellers_currency_price($spost_price);
 						$spost_your_price = sellers_currency_price($spost_your_price);
@@ -166,6 +182,7 @@ if ($all_draft_posts) {
 								<div class="price-row">
 									<span class="price"><strong>Seller Price:</strong> <?php echo format_price($spost_your_price, true); ?></span>
 								</div>
+								<p>Created on: <?php echo $post_created; ?></p>
 							</div>
 							<div class="btn-column v-middle">
 								<a href="#view" class="link-pink view" name="<?php echo $spost->ID; ?>">View</a>
@@ -220,7 +237,7 @@ if ($all_draft_posts) {
 					$pg = $_GET['ispaipg']; if (!$pg) { $pg = 1; }
 					$limit = ' LIMIT '.(($pg - 1) * $admin_items_per_page).', '.$admin_items_per_page;
 
-					$pending_user_posts = $wpdb->get_results(sprintf("SELECT SQL_CALC_FOUND_ROWS p.*, u.user_login, u.user_email FROM %sposts p LEFT JOIN %spostmeta pmi ON pmi.post_id = p.ID LEFT JOIN %susers u ON u.ID = p.post_author LEFT JOIN %sterm_relationships tr ON tr.object_id = p.ID LEFT JOIN %spostmeta pm ON pm.post_id = p.ID AND pm.meta_key = 'ID_item' WHERE p.post_type = 'post' AND p.post_status IN ('pending', 'iseller_pending') AND pmi.meta_key = 'item_seller' AND pmi.meta_value = 'i' %s %s GROUP BY p.ID ORDER BY p.ID DESC %s", $wpdb->prefix, $wpdb->prefix, $wpdb->prefix, $wpdb->prefix, $wpdb->prefix, $sWhere, $iseller_where, $limit));
+					$pending_user_posts = $wpdb->get_results(sprintf("SELECT SQL_CALC_FOUND_ROWS p.*, u.user_login, u.user_email FROM %sposts p LEFT JOIN %spostmeta pmi ON pmi.post_id = p.ID LEFT JOIN %susers u ON u.ID = p.post_author LEFT JOIN %sterm_relationships tr ON tr.object_id = p.ID LEFT JOIN %spostmeta pm ON pm.post_id = p.ID AND pm.meta_key = 'ID_item' WHERE p.post_type = 'post' AND p.post_status IN ('pending', 'iseller_pending') AND pmi.meta_key = 'item_seller' AND pmi.meta_value = 'i' %s %s GROUP BY p.ID ORDER BY p.ID DESC %s", $wpdb->prefix, $wpdb->prefix, $wpdb->prefix, $wpdb->prefix, $wpdb->prefix, $sWhere, $iseller_where.$title_where, $limit));
 					$total_posts = $wpdb->get_var("SELECT FOUND_ROWS()");
 					if ($pending_user_posts) {
 						foreach($pending_user_posts as $spost) {
@@ -231,8 +248,10 @@ if ($all_draft_posts) {
 							$spost_includes = get_post_meta($spost->ID, 'item_includes', true);
 							$spost_tlc_quotation_price_low = get_post_meta($spost->ID, 'item_tlc_quotation_price_low', true);
 							$spost_tlc_quotation_price_high = get_post_meta($spost->ID, 'item_tlc_quotation_price_high', true);
-							$qpdata = explode("-", $spost_tlc_quotation_price);
 							$follow_sent = get_post_meta($spost->ID, 'item_follow_sent', true);
+							$post_quoted = get_post_meta($spost->ID, '_post_quoted', true);
+
+							$qpdata = explode("-", $spost_tlc_quotation_price);
 							$item_includes = explode('|', $spost_includes);
 
 							$spost_price = sellers_currency_price($spost_price);
@@ -255,6 +274,9 @@ if ($all_draft_posts) {
 									<span class="price"><strong>Seller Price:</strong> <?php echo format_price($spost_your_price, true); ?></span>
 									<span class="price"><strong>Quotation:</strong> <span class="quotation-value-<?php echo $spost->ID; ?>"><?php echo $quotation_value; ?></span></span>
 								</div>
+								<?php if ($post_quoted) { ?>
+									<p>Quoted on: <?php echo $post_quoted; ?></p>
+								<?php } ?>
 							</div>
 							<div class="btn-column v-middle">
 								<a href="#change-quotation" class="link-pink change-quotation" name="<?php echo $spost->ID; ?>">Change Quotation</a>
@@ -310,7 +332,7 @@ if ($all_draft_posts) {
 							$pg = $_GET['isprpg']; if (!$pg) { $pg = 1; }
 							$limit = ' LIMIT '.(($pg - 1) * $admin_items_per_page).', '.$admin_items_per_page;
 
-							$pending_user_posts = $wpdb->get_results(sprintf("SELECT SQL_CALC_FOUND_ROWS p.*, u.user_login FROM %sposts p LEFT JOIN %spostmeta pmi ON pmi.post_id = p.ID LEFT JOIN %spostmeta pm2 ON pm2.post_id = p.ID LEFT JOIN %susers u ON u.ID = p.post_author LEFT JOIN %sterm_relationships tr ON tr.object_id = p.ID LEFT JOIN %spostmeta pm ON pm.post_id = p.ID AND pm.meta_key = 'ID_item' WHERE p.post_type = 'post' AND p.post_status = 'publish' AND pmi.meta_key = 'item_seller' AND pmi.meta_value = 'i' AND pm2.meta_key = 'item_request_price' AND pm2.meta_value = 'true' %s %s GROUP BY p.ID ORDER BY p.ID DESC %s", $wpdb->prefix, $wpdb->prefix, $wpdb->prefix, $wpdb->prefix, $wpdb->prefix, $wpdb->prefix, $sWhere, $iseller_where, $limit));
+							$pending_user_posts = $wpdb->get_results(sprintf("SELECT SQL_CALC_FOUND_ROWS p.*, u.user_login FROM %sposts p LEFT JOIN %spostmeta pmi ON pmi.post_id = p.ID LEFT JOIN %spostmeta pm2 ON pm2.post_id = p.ID LEFT JOIN %susers u ON u.ID = p.post_author LEFT JOIN %sterm_relationships tr ON tr.object_id = p.ID LEFT JOIN %spostmeta pm ON pm.post_id = p.ID AND pm.meta_key = 'ID_item' WHERE p.post_type = 'post' AND p.post_status = 'publish' AND pmi.meta_key = 'item_seller' AND pmi.meta_value = 'i' AND pm2.meta_key = 'item_request_price' AND pm2.meta_value = 'true' %s %s GROUP BY p.ID ORDER BY p.ID DESC %s", $wpdb->prefix, $wpdb->prefix, $wpdb->prefix, $wpdb->prefix, $wpdb->prefix, $wpdb->prefix, $sWhere, $iseller_where.$title_where, $limit));
 							$total_posts = $wpdb->get_var("SELECT FOUND_ROWS()");
 							if ($pending_user_posts) {
 								foreach($pending_user_posts as $spost) { $spost_picture = nws_get_item_thumb($spost->ID);
@@ -363,7 +385,7 @@ if ($all_draft_posts) {
 							$pg = $_GET['ishpg']; if (!$pg) { $pg = 1; }
 							$limit = ' LIMIT '.(($pg - 1) * $admin_items_per_page).', '.$admin_items_per_page;
 
-							$history_user_posts = $wpdb->get_results(sprintf("SELECT SQL_CALC_FOUND_ROWS p.*, u.user_login FROM %sposts p LEFT JOIN %spostmeta pmi ON pmi.post_id = p.ID LEFT JOIN %spostmeta pm2 ON pm2.post_id = p.ID LEFT JOIN %susers u ON u.ID = p.post_author LEFT JOIN %sterm_relationships tr ON tr.object_id = p.ID LEFT JOIN %spostmeta pm ON pm.post_id = p.ID WHERE p.post_type = 'post' AND p.post_status = 'publish' AND pmi.meta_key = 'item_seller' AND pmi.meta_value = 'i' AND pm2.meta_key = 'item_request_price' AND pm2.meta_value = 'completed' %s %s GROUP BY p.ID ORDER BY p.ID DESC %s", $wpdb->prefix, $wpdb->prefix, $wpdb->prefix, $wpdb->prefix, $wpdb->prefix, $wpdb->prefix, $sWhere, $iseller_where, $limit));
+							$history_user_posts = $wpdb->get_results(sprintf("SELECT SQL_CALC_FOUND_ROWS p.*, u.user_login FROM %sposts p LEFT JOIN %spostmeta pmi ON pmi.post_id = p.ID LEFT JOIN %spostmeta pm2 ON pm2.post_id = p.ID LEFT JOIN %susers u ON u.ID = p.post_author LEFT JOIN %sterm_relationships tr ON tr.object_id = p.ID LEFT JOIN %spostmeta pm ON pm.post_id = p.ID WHERE p.post_type = 'post' AND p.post_status = 'publish' AND pmi.meta_key = 'item_seller' AND pmi.meta_value = 'i' AND pm2.meta_key = 'item_request_price' AND pm2.meta_value = 'completed' %s %s GROUP BY p.ID ORDER BY p.ID DESC %s", $wpdb->prefix, $wpdb->prefix, $wpdb->prefix, $wpdb->prefix, $wpdb->prefix, $wpdb->prefix, $sWhere, $iseller_where.$title_where, $limit));
 							$total_posts = $wpdb->get_var("SELECT FOUND_ROWS()");
 							if ($history_user_posts) {
 								foreach($history_user_posts as $spost) { $spost_picture = nws_get_item_thumb($spost->ID);
@@ -418,7 +440,7 @@ if ($all_draft_posts) {
 					$pg = $_GET['isaipg']; if (!$pg) { $pg = 1; }
 					$limit = ' LIMIT '.(($pg - 1) * $admin_items_per_page).', '.$admin_items_per_page;
 
-					$approved_user_posts = $wpdb->get_results(sprintf("SELECT SQL_CALC_FOUND_ROWS p.*, u.user_login FROM %sposts p LEFT JOIN %susers u ON u.ID = p.post_author LEFT JOIN %sterm_relationships tr ON tr.object_id = p.ID LEFT JOIN %spostmeta pm ON pm.post_id = p.ID AND pm.meta_key = 'ID_item' WHERE p.post_type = 'post' AND p.post_status = 'iseller_approved' %s %s GROUP BY p.ID ORDER BY p.ID DESC %s", $wpdb->prefix, $wpdb->prefix, $wpdb->prefix, $wpdb->prefix, $sWhere, $iseller_where, $limit));
+					$approved_user_posts = $wpdb->get_results(sprintf("SELECT SQL_CALC_FOUND_ROWS p.*, u.user_login FROM %sposts p LEFT JOIN %susers u ON u.ID = p.post_author LEFT JOIN %sterm_relationships tr ON tr.object_id = p.ID LEFT JOIN %spostmeta pm ON pm.post_id = p.ID AND pm.meta_key = 'ID_item' WHERE p.post_type = 'post' AND p.post_status = 'iseller_approved' %s %s GROUP BY p.ID ORDER BY p.ID DESC %s", $wpdb->prefix, $wpdb->prefix, $wpdb->prefix, $wpdb->prefix, $sWhere, $iseller_where.$title_where, $limit));
 					$total_posts = $wpdb->get_var("SELECT FOUND_ROWS()");
 					if ($approved_user_posts) {
 						foreach($approved_user_posts as $spost) {
@@ -428,6 +450,8 @@ if ($all_draft_posts) {
 							$spost_price = get_post_meta($spost->ID, 'price', true);
 							$spost_new_price = get_post_meta($spost->ID, 'new_price', true);
 							$item_seller = $spost->meta_value;
+							$post_modified = $spost->post_modified;
+
 							if (!$spost_new_price) { $spost_new_price = $spost_price; }
 
 							$spost_new_price = sellers_currency_price($spost_new_price);
@@ -444,6 +468,9 @@ if ($all_draft_posts) {
 									<span class="price"><strong>Seller Payout:</strong> <?php echo format_price($spost_item_your_quotation_price, true); ?></span>
 									<span class="price"><strong>The Luxury Closet Selling Price:</strong> <?php echo format_price($spost_new_price, true); ?></span>
 								</div>
+								<?php if ($post_modified) { ?>
+									<p>Modified on: <?php echo $post_modified; ?></p>
+								<?php } ?>
 							</div>
 						</div>
 					<?php } ?>
@@ -469,7 +496,7 @@ if ($all_draft_posts) {
 					$pg = $_GET['ispipg']; if (!$pg) { $pg = 1; }
 					$limit = ' LIMIT '.(($pg - 1) * $admin_items_per_page).', '.$admin_items_per_page;
 
-					$approved_user_posts = $wpdb->get_results(sprintf("SELECT SQL_CALC_FOUND_ROWS p.*, u.user_login FROM %sposts p LEFT JOIN %susers u ON u.ID = p.post_author LEFT JOIN %sterm_relationships tr ON tr.object_id = p.ID LEFT JOIN %spostmeta pm ON pm.post_id = p.ID AND pm.meta_key = 'ID_item' WHERE p.post_type = 'post' AND p.post_status = 'iseller_pickup' %s %s GROUP BY p.ID ORDER BY p.ID DESC %s", $wpdb->prefix, $wpdb->prefix, $wpdb->prefix, $wpdb->prefix, $sWhere, $iseller_where, $limit));
+					$approved_user_posts = $wpdb->get_results(sprintf("SELECT SQL_CALC_FOUND_ROWS p.*, u.user_login FROM %sposts p LEFT JOIN %susers u ON u.ID = p.post_author LEFT JOIN %sterm_relationships tr ON tr.object_id = p.ID LEFT JOIN %spostmeta pm ON pm.post_id = p.ID AND pm.meta_key = 'ID_item' WHERE p.post_type = 'post' AND p.post_status = 'iseller_pickup' %s %s GROUP BY p.ID ORDER BY p.ID DESC %s", $wpdb->prefix, $wpdb->prefix, $wpdb->prefix, $wpdb->prefix, $sWhere, $iseller_where.$title_where, $limit));
 					$total_posts = $wpdb->get_var("SELECT FOUND_ROWS()");
 					if ($approved_user_posts) {
 						foreach($approved_user_posts as $spost) {
@@ -479,6 +506,8 @@ if ($all_draft_posts) {
 							$spost_price = get_post_meta($spost->ID, 'price', true);
 							$spost_new_price = get_post_meta($spost->ID, 'new_price', true);
 							$item_seller = $spost->meta_value;
+							$post_modified = $spost->post_modified;
+
 							if (!$spost_new_price) { $spost_new_price = $spost_price; }
 
 							$spost_new_price = sellers_currency_price($spost_new_price);
@@ -495,6 +524,9 @@ if ($all_draft_posts) {
 									<span class="price"><strong>Seller Payout:</strong> <?php echo format_price($spost_item_your_quotation_price, true); ?></span>
 									<span class="price"><strong>The Luxury Closet Selling Price:</strong> <?php echo format_price($spost_new_price, true); ?></span>
 								</div>
+								<?php if ($post_modified) { ?>
+									<p>Modified on: <?php echo $post_modified; ?></p>
+								<?php } ?>
 							</div>
 						</div>
 					<?php } ?>
@@ -520,7 +552,7 @@ if ($all_draft_posts) {
 					$pg = $_GET['isripg']; if (!$pg) { $pg = 1; }
 					$limit = ' LIMIT '.(($pg - 1) * $admin_items_per_page).', '.$admin_items_per_page;
 
-					$approved_user_posts = $wpdb->get_results(sprintf("SELECT SQL_CALC_FOUND_ROWS p.*, u.user_login FROM %sposts p LEFT JOIN %susers u ON u.ID = p.post_author LEFT JOIN %sterm_relationships tr ON tr.object_id = p.ID LEFT JOIN %spostmeta pm ON pm.post_id = p.ID AND pm.meta_key = 'ID_item' WHERE p.post_type = 'post' AND p.post_status = 'iseller_received' %s %s GROUP BY p.ID ORDER BY p.ID DESC %s", $wpdb->prefix, $wpdb->prefix, $wpdb->prefix, $wpdb->prefix, $sWhere, $iseller_where, $limit));
+					$approved_user_posts = $wpdb->get_results(sprintf("SELECT SQL_CALC_FOUND_ROWS p.*, u.user_login, pmrd.meta_value as post_received, STR_TO_DATE(pmrd.meta_value, '%s') as rdate FROM %sposts p LEFT JOIN %susers u ON u.ID = p.post_author LEFT JOIN %sterm_relationships tr ON tr.object_id = p.ID LEFT JOIN %spostmeta pm ON pm.post_id = p.ID AND pm.meta_key = 'ID_item' LEFT JOIN %spostmeta pmrd ON pmrd.post_id = p.ID AND pmrd.meta_key = '_post_received' WHERE p.post_type = 'post' AND p.post_status = 'iseller_received' %s %s GROUP BY p.ID ORDER BY rdate %s", '%Y-%m-%d', $wpdb->prefix, $wpdb->prefix, $wpdb->prefix, $wpdb->prefix, $wpdb->prefix, $sWhere, $iseller_where.$title_where, $limit));
 					$total_posts = $wpdb->get_var("SELECT FOUND_ROWS()");
 					if ($approved_user_posts) {
 						foreach($approved_user_posts as $spost) {
@@ -530,6 +562,9 @@ if ($all_draft_posts) {
 							$spost_price = get_post_meta($spost->ID, 'price', true);
 							$spost_new_price = get_post_meta($spost->ID, 'new_price', true);
 							$item_seller = $spost->meta_value;
+							//$post_received = get_post_meta($spost->ID, '_post_received', true);
+							$post_received = $spost->post_received;
+
 							if (!$spost_new_price) { $spost_new_price = $spost_price; }
 
 							$spost_new_price = sellers_currency_price($spost_new_price);
@@ -546,6 +581,9 @@ if ($all_draft_posts) {
 									<span class="price"><strong>Seller Payout:</strong> <?php echo format_price($spost_item_your_quotation_price, true); ?></span>
 									<span class="price"><strong>The Luxury Closet Selling Price:</strong> <?php echo format_price($spost_new_price, true); ?></span>
 								</div>
+								<?php if (strlen($post_received)) { ?>
+									<p>Received on: <?php echo $post_received; ?></p>
+								<?php } ?>
 							</div>
 						</div>
 					<?php } ?>
@@ -565,7 +603,7 @@ if ($all_draft_posts) {
 				</div>
 			</div>
 			<div class="clear"></div>
-			<!-- Authenticated -->
+			<!-- To be photographed -->
 			<div id="tab-authenticated-items-is" class="tab-content">
 				<div class="sellers-other-tabs">
 					<form method="POST">
@@ -574,7 +612,7 @@ if ($all_draft_posts) {
 					$pg = $_GET['isaipg']; if (!$pg) { $pg = 1; }
 					$limit = ' LIMIT '.(($pg - 1) * $admin_items_per_page).', '.$admin_items_per_page;
 
-					$authenticated_user_posts = $wpdb->get_results(sprintf("SELECT SQL_CALC_FOUND_ROWS p.*, u.user_login FROM %sposts p LEFT JOIN %susers u ON u.ID = p.post_author LEFT JOIN %sterm_relationships tr ON tr.object_id = p.ID LEFT JOIN %spostmeta pm ON pm.post_id = p.ID AND pm.meta_key = 'ID_item' WHERE p.post_type = 'post' AND p.post_status = 'iseller_authed' %s %s GROUP BY p.ID ORDER BY p.ID DESC %s", $wpdb->prefix, $wpdb->prefix, $wpdb->prefix, $wpdb->prefix, $sWhere, $iseller_where, $limit));
+					$authenticated_user_posts = $wpdb->get_results(sprintf("SELECT SQL_CALC_FOUND_ROWS p.*, u.user_login, pmrd.meta_value as post_received, STR_TO_DATE(pmrd.meta_value, '%s') as rdate FROM %sposts p LEFT JOIN %susers u ON u.ID = p.post_author LEFT JOIN %sterm_relationships tr ON tr.object_id = p.ID LEFT JOIN %spostmeta pm ON pm.post_id = p.ID AND pm.meta_key = 'ID_item' LEFT JOIN %spostmeta pmrd ON pmrd.post_id = p.ID AND pmrd.meta_key = '_post_received' WHERE p.post_type = 'post' AND p.post_status = 'iseller_authed' %s %s GROUP BY p.ID ORDER BY rdate %s", '%Y-%m-%d', $wpdb->prefix, $wpdb->prefix, $wpdb->prefix, $wpdb->prefix, $wpdb->prefix, $sWhere, $iseller_where.$title_where, $limit));
 					$total_posts = $wpdb->get_var("SELECT FOUND_ROWS()");
 					if ($authenticated_user_posts) {
 						foreach($authenticated_user_posts as $spost) {
@@ -584,6 +622,8 @@ if ($all_draft_posts) {
 							$spost_price = get_post_meta($spost->ID, 'price', true);
 							$spost_new_price = get_post_meta($spost->ID, 'new_price', true);
 							$item_seller = $spost->meta_value;
+							$post_received = $spost->post_received;
+
 							if (!$spost_new_price) { $spost_new_price = $spost_price; }
 
 							$spost_new_price = sellers_currency_price($spost_new_price);
@@ -600,6 +640,9 @@ if ($all_draft_posts) {
 									<span class="price"><strong>Seller Payout:</strong> <?php echo format_price($spost_item_your_quotation_price, true); ?></span>
 									<span class="price"><strong>The Luxury Closet Selling Price:</strong> <?php echo format_price($spost_new_price, true); ?></span>
 								</div>
+								<?php if ($post_received) { ?>
+									<p>Received on: <?php echo $post_received; ?></p>
+								<?php } ?>
 							</div>
 						</div>
 					<?php } ?>
@@ -629,6 +672,8 @@ if ($all_draft_posts) {
 						$spost_price = get_post_meta($spost->ID, 'price', true);
 						$spost_new_price = get_post_meta($spost->ID, 'new_price', true);
 						$item_seller = $spost->meta_value;
+						$post_published = $spost->post_date;
+
 						if (!$spost_new_price) { $spost_new_price = $spost_price; }
 
 						$spost_new_price = sellers_currency_price($spost_new_price);
@@ -644,6 +689,7 @@ if ($all_draft_posts) {
 									<span class="price"><strong>Seller Payout:</strong> <?php echo format_price($spost_item_your_quotation_price, true); ?></span>
 									<span class="price"><strong>The Luxury Closet Selling Price:</strong> <?php echo format_price($spost_new_price, true); ?></span>
 								</div>
+								<p>Published on: <?php echo $post_published; ?></p>
 							</div>
 						</div>
 					<?php }
@@ -672,7 +718,7 @@ if ($all_draft_posts) {
 					$pg = $_GET['issoipg']; if (!$pg) { $pg = 1; }
 					$limit = ' LIMIT '.(($pg - 1) * $admin_items_per_page).', '.$admin_items_per_page;
 
-					$sold_user_posts = $wpdb->get_results(sprintf("SELECT SQL_CALC_FOUND_ROWS p.*, u.user_login, o.level, o.layaway_order FROM %sposts p LEFT JOIN %spostmeta pmi ON pmi.post_id = p.ID LEFT JOIN %susers u ON u.ID = p.post_author LEFT JOIN %sterm_relationships tr ON tr.object_id = p.ID LEFT JOIN %spostmeta pm ON pm.post_id = p.ID AND pm.meta_key = 'ID_item' LEFT JOIN %swps_shopping_cart sc ON sc.postID = p.ID AND sc.order_id > 0 LEFT JOIN %swps_orders o ON o.oid = sc.order_id WHERE p.post_type = 'post' AND p.post_status = 'publish' AND p.inventory = 0 AND pmi.meta_key = 'item_seller' AND pmi.meta_value = 'i' %s %s GROUP BY p.ID ORDER BY p.ID DESC %s", $wpdb->prefix, $wpdb->prefix, $wpdb->prefix, $wpdb->prefix, $wpdb->prefix, $wpdb->prefix, $wpdb->prefix, $sWhere, $iseller_where, $limit));
+					$sold_user_posts = $wpdb->get_results(sprintf("SELECT SQL_CALC_FOUND_ROWS p.*, u.user_login, o.level, o.layaway_order FROM %sposts p LEFT JOIN %spostmeta pmi ON pmi.post_id = p.ID LEFT JOIN %susers u ON u.ID = p.post_author LEFT JOIN %sterm_relationships tr ON tr.object_id = p.ID LEFT JOIN %spostmeta pm ON pm.post_id = p.ID AND pm.meta_key = 'ID_item' LEFT JOIN %swps_shopping_cart sc ON sc.postID = p.ID AND sc.order_id > 0 LEFT JOIN %swps_orders o ON o.oid = sc.order_id WHERE p.post_type = 'post' AND p.post_status = 'publish' AND p.inventory = 0 AND pmi.meta_key = 'item_seller' AND pmi.meta_value = 'i' %s %s GROUP BY p.ID ORDER BY p.ID DESC %s", $wpdb->prefix, $wpdb->prefix, $wpdb->prefix, $wpdb->prefix, $wpdb->prefix, $wpdb->prefix, $wpdb->prefix, $sWhere, $iseller_where.$title_where, $limit));
 					$total_posts = $wpdb->get_var("SELECT FOUND_ROWS()");
 					if ($sold_user_posts) {
 						foreach($sold_user_posts as $spost) { $spost_picture = nws_get_item_thumb($spost->ID);
@@ -755,7 +801,7 @@ if ($all_draft_posts) {
 				<form method="POST">
 				<input type="hidden" name="SellersAction" value="tlc_approved_items">
 				<?php
-				$approved_user_posts = $wpdb->get_results(sprintf("SELECT SQL_CALC_FOUND_ROWS p.*, u.user_login, u.user_email FROM %sposts p LEFT JOIN %spostmeta pm ON pm.post_id = p.ID AND pm.meta_key = 'ID_item' LEFT JOIN %susers u ON u.ID = p.post_author LEFT JOIN %sterm_relationships tr ON tr.object_id = p.ID WHERE p.post_type = 'post' AND p.post_status = 'pseller_pending' %s %s GROUP BY p.ID ORDER BY p.ID DESC", $wpdb->prefix, $wpdb->prefix, $wpdb->prefix, $wpdb->prefix, $sWhere, $pseller_where));
+				$approved_user_posts = $wpdb->get_results(sprintf("SELECT SQL_CALC_FOUND_ROWS p.*, u.user_login, u.user_email FROM %sposts p LEFT JOIN %spostmeta pm ON pm.post_id = p.ID AND pm.meta_key = 'ID_item' LEFT JOIN %susers u ON u.ID = p.post_author LEFT JOIN %sterm_relationships tr ON tr.object_id = p.ID WHERE p.post_type = 'post' AND p.post_status = 'pseller_pending' %s %s GROUP BY p.ID ORDER BY p.ID DESC", $wpdb->prefix, $wpdb->prefix, $wpdb->prefix, $wpdb->prefix, $sWhere, $pseller_where.$title_where));
 				if ($approved_user_posts) {
 					foreach($approved_user_posts as $spost) {
 						$spost_picture = nws_get_item_thumb($spost->ID);
@@ -803,7 +849,7 @@ if ($all_draft_posts) {
 				$pg = $_GET['pssipg']; if (!$pg) { $pg = 1; }
 				$limit = ' LIMIT '.(($pg - 1) * $admin_items_per_page).', '.$admin_items_per_page;
 
-				$approved_user_posts = $wpdb->get_results(sprintf("SELECT SQL_CALC_FOUND_ROWS p.*, u.user_login FROM %sposts p LEFT JOIN %spostmeta pm ON pm.post_id = p.ID AND pm.meta_key = 'ID_item' LEFT JOIN %susers u ON u.ID = p.post_author LEFT JOIN %sterm_relationships tr ON tr.object_id = p.ID WHERE p.post_type = 'post' AND p.post_status = 'pseller_approved' %s %s GROUP BY p.ID ORDER BY p.ID DESC %s", $wpdb->prefix, $wpdb->prefix, $wpdb->prefix, $wpdb->prefix, $sWhere, $pseller_where, $limit));
+				$approved_user_posts = $wpdb->get_results(sprintf("SELECT SQL_CALC_FOUND_ROWS p.*, u.user_login FROM %sposts p LEFT JOIN %spostmeta pm ON pm.post_id = p.ID AND pm.meta_key = 'ID_item' LEFT JOIN %susers u ON u.ID = p.post_author LEFT JOIN %sterm_relationships tr ON tr.object_id = p.ID WHERE p.post_type = 'post' AND p.post_status = 'pseller_approved' %s %s GROUP BY p.ID ORDER BY p.ID DESC %s", $wpdb->prefix, $wpdb->prefix, $wpdb->prefix, $wpdb->prefix, $sWhere, $pseller_where.$title_where, $limit));
 				$total_posts = $wpdb->get_var("SELECT FOUND_ROWS()");
 				if ($approved_user_posts) {
 					foreach($approved_user_posts as $spost) {
@@ -894,7 +940,7 @@ if ($all_draft_posts) {
 					$pg = $_GET['pssoipg']; if (!$pg) { $pg = 1; }
 					$limit = ' LIMIT '.(($pg - 1) * $admin_items_per_page).', '.$admin_items_per_page;
 
-					$sold_user_posts = $wpdb->get_results(sprintf("SELECT SQL_CALC_FOUND_ROWS p.*, pm.meta_value, u.user_login FROM %sposts p LEFT JOIN %spostmeta pm ON pm.post_id = p.ID AND pm.meta_key = 'ID_item' LEFT JOIN %spostmeta pm2 ON pm2.post_id = p.ID LEFT JOIN %susers u ON u.ID = p.post_author LEFT JOIN %sterm_relationships tr ON tr.object_id = p.ID WHERE p.post_type = 'post' AND p.post_status = 'publish' AND p.inventory = 0 AND pm2.meta_key = 'item_seller' AND pm2.meta_value = 'p' AND p.ID NOT IN (SELECT post_id FROM %spostmeta WHERE meta_key = '_prof_item_deleted') %s %s GROUP BY p.ID ORDER BY p.ID DESC %s", $wpdb->prefix, $wpdb->prefix, $wpdb->prefix, $wpdb->prefix, $wpdb->prefix, $wpdb->prefix, $sWhere, $pseller_where, $limit));
+					$sold_user_posts = $wpdb->get_results(sprintf("SELECT SQL_CALC_FOUND_ROWS p.*, pm.meta_value, u.user_login FROM %sposts p LEFT JOIN %spostmeta pm ON pm.post_id = p.ID AND pm.meta_key = 'ID_item' LEFT JOIN %spostmeta pm2 ON pm2.post_id = p.ID LEFT JOIN %susers u ON u.ID = p.post_author LEFT JOIN %sterm_relationships tr ON tr.object_id = p.ID WHERE p.post_type = 'post' AND p.post_status = 'publish' AND p.inventory = 0 AND pm2.meta_key = 'item_seller' AND pm2.meta_value = 'p' AND p.ID NOT IN (SELECT post_id FROM %spostmeta WHERE meta_key = '_prof_item_deleted') %s %s GROUP BY p.ID ORDER BY p.ID DESC %s", $wpdb->prefix, $wpdb->prefix, $wpdb->prefix, $wpdb->prefix, $wpdb->prefix, $wpdb->prefix, $sWhere, $pseller_where.$title_where, $limit));
 					$total_posts = $wpdb->get_var("SELECT FOUND_ROWS()");
 					if ($sold_user_posts) {
 						foreach($sold_user_posts as $spost) { $spost_picture = nws_get_item_thumb($spost->ID);
@@ -941,7 +987,7 @@ if ($all_draft_posts) {
 					<label>Search Username</label>
 					<div class="form-row">
 						<?php if (!strlen($search_username)) { $search_username = 'Username / Email'; } ?>
-						<input type="text" name="search-username" class="text" value="<?php echo $search_username; ?>" onfocus="if(this.value=='Username / Email'){this.value='';}" onblur="if(this.value==''){this.value='Username / Email';}">
+						<input type="text" name="search-username" class="text" value="<?php echo $search_username; ?>" onfocus="if(this.value=='Username / Email'){this.value='';}" onblur="if(this.value==''){this.value='Username / Email';}" style="height:26px;">
 						<input type="submit" value="Search">
 					</div>
 				</div>
@@ -949,7 +995,15 @@ if ($all_draft_posts) {
 					<label>Search Quotation</label>
 					<div class="form-row">
 						<?php if (!strlen($search_quotation)) { $search_quotation = 'Quotation Number'; } ?>
-						<input type="text" name="search-quotation" class="text" value="<?php echo $search_quotation; ?>" onfocus="if(this.value=='Quotation Number'){this.value='';}" onblur="if(this.value==''){this.value='Quotation Number';}">
+						<input type="text" name="search-quotation" class="text" value="<?php echo $search_quotation; ?>" onfocus="if(this.value=='Quotation Number'){this.value='';}" onblur="if(this.value==''){this.value='Quotation Number';}" style="height:26px;">
+						<input type="submit" value="Search">
+					</div>
+				</div>
+				<div class="section">
+					<label>Search By Title</label>
+					<div class="form-row">
+						<?php if (!strlen($search_title)) { $search_title = 'Post Title'; } ?>
+						<input type="text" name="search-title" class="text" value="<?php echo $search_title; ?>" onfocus="if(this.value=='Post Title'){this.value='';}" onblur="if(this.value==''){this.value='Post Title';}" style="height:26px;">
 						<input type="submit" value="Search">
 					</div>
 				</div>

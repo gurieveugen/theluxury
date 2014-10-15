@@ -4,7 +4,7 @@
 		<!--</div>--><!-- floatswrap-->
 		</div><!-- .center-content -->
 	</div><!-- #pg_wrap -->
-	<?php if(!isset($_GET['showCart']) && !isset($_GET['orderNow'])): ?>
+	<?php if(!is_cart_page() && !is_checkout_page()): ?>
 		<?php dynamic_sidebar('footer-area'); ?>
 	<?php endif; ?>
 	<div class="footer-wrap">
@@ -40,11 +40,12 @@ remove_action( 'wp_footer', 'grofiles_attach_cards');
 remove_action( 'wp_footer', 'grofiles_extra_data'); 
 wp_footer(); 
 include('footer-popups.php');
-if ($_GET['slp'] == 'true') { ?><script type="text/javascript">jQuery(document).ready(function(){ jQuery('.log-buttons .login-lnk').trigger('click'); });</script><?php } ?>
+if ($_GET['slp'] == 'true') { ?><script type="text/javascript">jQuery(document).ready(function(){ show_login_popup('def', '<?php echo $_GET['r']; ?>'); });</script><?php } ?>
 </div> <!-- #wrapper -->
 <div class="bg-popup-login" style="display:none;"></div>
 <div class="window-mask" style="display:none;"></div>
 <?php if (is_category($OPTION['wps_sale_category'])) { ?><div class="sale-category-pg" style="display:none;"><?php echo $OPTION['wps_sale_category'].';'.get_cat_name($OPTION['wps_sale_category']); ?></div><?php } ?>
+<script type="text/javascript">jQuery.post('<?php echo get_cart_url(); ?>', { FormAction: 'get-total-cart-items' }, function(data){ jQuery('span.bag a').html(data); });</script>
 <script type="text/javascript">
 document.write(unescape("%3Cscript id=%27pap_x2s6df8d%27 src=%27" + (("https:" == document.location.protocol) ? "https://" : "http://") + "perf.clickmena.com/scripts/trackjs.js%27 type=%27text/javascript%27%3E%3C/script%3E"));
 </script>
@@ -124,5 +125,25 @@ function _kms(u){
 _kms('//i.kissmetrics.com/i.js');
 _kms('//doug1izaerwt3.cloudfront.net/' + _kmk + '.1.js');
 </script>
+<?php if ((is_front_page() || is_page('authenticity')) && !isset($_GET['showCart']) && !isset($_GET['orderNow']) && !isset($_GET['confirm'])) { ?>
+<!-- Start of GetKudos Script -->
+<script>
+(function(w,t,gk,d,s,fs){if(w[gk])return;d=w.document;w[gk]=function(){
+(w[gk]._=w[gk]._||[]).push(arguments)};s=d.createElement(t);s.async=!0;
+s.src='//static.getkudos.me/widget.js';fs=d.getElementsByTagName(t)[0];
+fs.parentNode.insertBefore(s,fs)})(window,'script','getkudos');
+getkudos('create', 'theluxurycloset');
+</script>
+<!-- End of GetKudos Script -->
+<?php } ?>
+<!--Start of Zopim Live Chat Script-->
+<script type="text/javascript">
+window.$zopim||(function(d,s){var z=$zopim=function(c){z._.push(c)},$=z.s=
+d.createElement(s),e=d.getElementsByTagName(s)[0];z.set=function(o){z.set.
+_.push(o)};z._=[];z.set._=[];$.async=!0;$.setAttribute('charset','utf-8');
+$.src='//v2.zopim.com/?U8dQigYM4gzeUChrgZU4PoO3vopV0jG0';z.t=+new Date;$.
+type='text/javascript';e.parentNode.insertBefore($,e)})(document,'script');
+</script>
+<!--End of Zopim Live Chat Script-->
 </body>
 </html>

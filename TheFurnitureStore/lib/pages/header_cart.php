@@ -7,7 +7,7 @@ $wps_shop_mode = $OPTION['wps_shop_mode'];
 		if(!isset($_GET['confirm'])){
 			$CART = show_cart();
 			if(is_array($CART) && $CART['status'] == 'filled'){
-				$basket_url = get_option('home').'?showCart=1';
+				$basket_url = get_cart_url();
 				echo "<a href='$basket_url'><img src='".NWS_bloginfo('stylesheet_directory').'/images/'.$OPTION['wps_shopping_icon']."' alt='".$OPTION['wps_pgNavi_cartOption']."'/>";
 				
 				if($CART['total_item_num'] == '1'){ $item = ' '.__('item','wpShop'); } else { $item = ' '.__('items','wpShop'); }

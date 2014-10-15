@@ -3,6 +3,9 @@ $term      = get_term_by( 'slug', get_query_var( 'term' ), get_query_var( 'taxon
 $customTax = $term->taxonomy;
 
 $store_title = $OPTION['wps_store_pgs_title'];
+if (is_category($OPTION['wps_sale_category'])) {
+	$store_title = 'Sale';
+}
 $page_obj = $wp_query->get_queried_object();
 // Page Titles. Brace yourself! (modify at your own risk)
 if (is_page() && !$page_obj->post_parent) {

@@ -21,7 +21,7 @@ jQuery(function() {
 		event.preventDefault();
 	});
 
-	jQuery( '#nav li:has(ul)' ).not('.noclick').doubleTapToGo();
+	//jQuery( '#nav li:has(ul)' ).not('.noclick').doubleTapToGo();
 });
 
 function initNav(o)
