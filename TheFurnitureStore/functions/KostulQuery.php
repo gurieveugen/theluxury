@@ -53,7 +53,8 @@ class KostulQuery{
 			'tax_brands'          => '',
 			'tax_styles'          => '',
 			'tax_prices'          => '',
-			'tax_seller_category' => ''
+			'tax_seller_category' => '',
+			'tag'                 => ''
 		);
 	}
 
@@ -78,7 +79,7 @@ class KostulQuery{
 			'tax_brands',         
 			'tax_styles',         
 			'tax_prices',         
-			'tax_seller_category'		
+			'tax_seller_category'
 		);
 	}
 
@@ -100,7 +101,7 @@ class KostulQuery{
 		$args      = array_merge($defaults, $args);
 		$posts     = $this->getProducts($args['cats'], $args['offset'], $args['count'], $args['order_by_col'], $args['order_by_type']);
 		$posts_all = $this->getProducts($args['cats'], $args['offset'], $args['count'], $args['order_by_col'], $args['order_by_type'], true);
-
+		
 		return array(
 			'posts'         => $posts,
 			'visible_terms' => $this->getVisibleTerms($posts_all),
@@ -332,6 +333,28 @@ class KostulQuery{
 	}
 
 	/**
+	 * Init tag Where
+	 * @param  array $value --- items
+	 * @return string --- where tag
+	 */
+	private function initTagWhere($value)
+	{
+		$items = '';
+		$tags  = explode(',', $value);
+
+		foreach ($tags as $t) 
+		{
+			if($t != '')
+			{
+				$items[] = '`tag` LIKE \'%"'.$t.'"%\'';	
+			}
+		}
+		$items_str = implode(' OR ', $items);
+		if($items_str == '') return '';
+		return sprintf('(%s)', $items_str);
+	}
+
+	/**
 	 * Init where 
 	 * @param  array $args --- query arguments
 	 * @return array --- initialized where
@@ -339,6 +362,15 @@ class KostulQuery{
 	public function initWhere($args)
 	{
 		$where = array();
+		if(isset($args['tag']))
+		{
+			$tag_where = $this->initTagWhere($args['tag']);
+			if(strlen($tag_where))
+			{
+				$where[] = 	$tag_where;
+			}
+			unset($args['tag']);
+		}
 		foreach ($args as $key => $values) 
 		{
 			if(!empty($values))

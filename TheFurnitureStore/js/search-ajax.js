@@ -238,6 +238,7 @@ filter.getCheckedData = function(){
 		tax_brands:          [],
 		tax_prices:          [],
 		tax_seller_category: [],
+		tag:                 [],
 	};
 
 	var blocks = {
@@ -254,7 +255,14 @@ filter.getCheckedData = function(){
 	var block_class   = '';
 	var block_tax     = '';
 	var block_replace = '';
-
+	
+	if(typeof(last_args.cats.tag) != 'undefined')
+	{
+		if(!isNaN(parseInt(last_args.cats.tag)))
+		{
+			tax_cat['tag'].push(parseInt(last_args.cats.tag));
+		}
+	}
 	// ==============================================================
 	// Categories
 	// ==============================================================

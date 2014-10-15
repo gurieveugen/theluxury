@@ -153,7 +153,36 @@ class Updater{
 		$row['thumbnail']       = isset($images[0]) ? $this->getImage($images[0]) : '';
 		$row['thumbnail_hover'] = isset($images[1]) ? $this->getImage($images[1]) : '';
 
+		// ==============================================================
+		// Post tag
+		// ==============================================================
+		$tags = wp_get_post_terms( $post_id, array('post_tag'), array('fields' => 'ids') );
+		if(is_array($tags))
+		{
+			$tags = serialize($this->converToString($tags));
+		}
+		else
+		{
+			$tags = '';
+		}
+		$row['tag'] = $tags;
+
 		return $row;
+	}
+
+	/**
+	 * Convert all array values to string
+	 * @param  array $arr --- array to convert
+	 * @return array --- converted array
+	 */
+	private function converToString($arr)
+	{
+		if(!count((array)$arr)) return $arr;
+		foreach ($arr as $key => &$value) 
+		{
+			$value = strval($value);
+		}
+		return $arr;
 	}
 
 	/**

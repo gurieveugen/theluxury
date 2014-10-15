@@ -35,7 +35,7 @@ class KostulHTML{
 	 */
 	public function isHaveHover()
 	{
-		if($this->post->thumbnail != '' AND $this->post->thumbnail != '') return true;
+		if($this->post->thumbnail != '' AND $this->post->thumbnail_hover != '') return true;
 		return false;
 	}
 
