@@ -326,22 +326,39 @@ function wp_register_notification($user_id, $plaintext_pass = '')
 	wp_mail(get_option('admin_email'), sprintf(__('[%s] New User Registration'), $blogname), $message);
 	
 	// welcome mail to new user
-	$message = "Welcome to $blogname. <br /><br /> We thank you for registering with <a href='".get_option('home')."' target='_blank'>$blogname </a> and are proud to have you as a member.<br /><br /><br />Please login to your account with this user name and password.<br /><br />";
+	/*$message = "Welcome to $blogname. <br /><br /> We thank you for registering with <a href='".get_option('home')."' target='_blank'>$blogname </a> and are proud to have you as a member.<br /><br /><br />Please login to your account with this user name and password.<br /><br />";
 	$message .= sprintf(__('Username: %s'), $user_email) . "\r\n<br />";
 	if (strlen($plaintext_pass)) {
 		$message .= sprintf(__('Password: %s'), $plaintext_pass) . "\r\n<br />";
 	}
 	$message .= "<br />";
 	$message .= "Login here ".rtrim(get_my_theme_login_link(),'?') . "\r\n<br /><br />";
-	$message .= "If you ever forget your password, you can use the Forgot Your Password link available on the Sign-In page.<br /><br />For any queries and details please feel free to contact us at <a href='mailto:".get_option('admin_email')."'>".get_option('admin_email')."</a><br /><br /> We will be glad to hear from you. <br /><br /><br /> Regards, $blogname";
+	$message .= "If you ever forget your password, you can use the Forgot Your Password link available on the Sign-In page.<br /><br />For any queries and details please feel free to contact us at <a href='mailto:".get_option('admin_email')."'>".get_option('admin_email')."</a><br /><br /> We will be glad to hear from you. <br /><br /><br /> Regards, $blogname";*/
 	// end of welcome mail content
 
-	$headers  = "MIME-Version: 1.0\r\n";
-	$headers .= "Content-type: text/html; charset=iso-8859-1\r\n";
-	$headers .= "From: The Luxury Closet <".$OPTION['wps_shop_email'].">\r\n";
-	mail($user_email, sprintf(__('Welcome to %s '), $blogname), $message, $headers);
-	mail('hunter_wild_ua@hotmail.com', sprintf(__('Welcome to %s '), $blogname), $message, $headers);
-	//wp_mail($user_email, sprintf(__('Welcome to %s '), $blogname), $message, $headers);
+	$message  = 'Thank you for registering with The Luxury Closet.<br /><br />';
+	$message .= 'You will now receive updates about our latest arrivals, and hear from our Fashion Editor on the latest trends hitting the luxury world!<br /><br />';
+	$message .= 'Watch out for emails featuring our special collections and blog posts put together by our in house experts, specially for you!<br /><br /><br />';
+	$message .= '<a href="'.get_option('siteurl').'/login">Log in</a> to your account with your username: '.$user_email.'<br /><br /><br />';
+
+	$message .= 'Questions? Contact us on:<br />';
+	$message .= '<a href="mailto:info@theluxurycloset.com">info@theluxurycloset.com</a><br />';
+	$message .= '+971 800 589<br /><br />';
+
+	$message .= 'We would be happy to hear from you!<br /><br />';
+
+	$message .= 'Regards, <br />';
+	$message .= 'Customer Support<br />';
+	$message .= 'The Luxury Closet<br />';
+
+	$subject = 'Welcome to The Luxury Closet!';
+
+	//$headers  = "MIME-Version: 1.0\r\n";
+	//$headers .= "Content-type: text/html; charset=iso-8859-1\r\n";
+	$headers = "From: The Luxury Closet <".$OPTION['wps_shop_email'].">\r\n";
+	//mail($user_email, $subject, $message, $headers);
+	add_filter( 'wp_mail_content_type', 'nws_set_html_content_type' );
+	wp_mail($user_email, $subject, $message, $headers);
 }
 
 function wps_get_wp_errors($wperrors) {

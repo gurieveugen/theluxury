@@ -61,7 +61,7 @@ $soldnmb = $wpdb->get_var(sprintf("SELECT COUNT(sc.item_id) FROM %swps_shopping_
 		<h4>Questions?</h4>
 		<div class="contact-row v1">
 			<p>
-				See our <a href="http://luxcloset.staging.wpengine.com/faqs">FAQs</a> or
+				See our <a href="/faqs#selling">FAQs</a> or
 				<span class="i-phone"><?php echo $OPTION['wps_shop_questions_phone']; ?></span>
 				<a class="i-email" href="mailto:<?php echo $OPTION['wps_shop_questions_email']; ?>"><?php echo $OPTION['wps_shop_questions_email']; ?></a>
 			</p>

@@ -117,9 +117,13 @@ function pdt_response(){
 				$table = is_dbtable_there('orders');
 				$order_data = $wpdb->get_row(sprintf("SELECT * FROM %s WHERE who = '%s'", $table, $PDT_DATA['who']));
 
-				$PDT_DATA['d_option'] = $order->d_option;
 				$parts = explode("-",$PDT_DATA['who']);
-				$PDT_DATA['tracking_id'] = $parts[0];
+
+				$PDT_DATA['d_option']      = $order_data->d_option;
+				$PDT_DATA['p_option']      = $order_data->p_option;
+				$PDT_DATA['tracking_id']   = $parts[0];
+				$PDT_DATA['oid']		   = $order_data->oid;
+				$PDT_DATA['layaway_order'] = $order_data->layaway_order;
 
 				if(pdf_usable_language()){ 	
 					$PDT_DATA['pdf_bill'] = NWS_encode($OPTION['wps_invoice_prefix'].'_' . $PDT_DATA['tracking_id'] . '.pdf');	
@@ -312,11 +316,11 @@ function ipn_response(){
 						// in case of other languages than english,german,french,italian we produce a html instead
 						if(pdf_usable_language()){
 							$INVOICE->make_pdf($order);		//change.9.10
-							$IPN_DATA[pdf_bill] = $OPTION['wps_invoice_prefix'].'_' . $order['tracking_id'] . '.pdf';
+							$IPN_DATA['pdf_bill'] = $OPTION['wps_invoice_prefix'].'_' . $order['tracking_id'] . '.pdf';
 						}
 						else{
 							$INVOICE->make_html($order);	//change.9.10
-							$IPN_DATA[pdf_bill] = $OPTION['wps_invoice_prefix'].'_' . $order['tracking_id'] . '.html';
+							$IPN_DATA['pdf_bill'] = $OPTION['wps_invoice_prefix'].'_' . $order['tracking_id'] . '.html';
 						}
 					}
 

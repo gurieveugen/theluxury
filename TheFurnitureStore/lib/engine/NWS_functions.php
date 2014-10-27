@@ -61,6 +61,10 @@ function NWS_send_email($to, $subject, $message, $from_email = '', $from_name = 
 	}
 }
 
+function nws_set_html_content_type() {
+	return 'text/html';
+}
+
 ##################################################################################################################################
 // 	                                          SEO Optimization 
 ##################################################################################################################################
@@ -1892,41 +1896,32 @@ function ga_ecommerce_tracking_code($who) {
 			if (in_array($order_data->level, $olevels)) {
 ?>
 		<script type="text/javascript">
-		  var _gaq = _gaq || [];
-		  _gaq.push(['_setAccount', '<?php echo $OPTION['wps_google_analytics_id']; ?>']);
-		  _gaq.push(['_trackPageview']);
-		  _gaq.push(['_addTrans',
-			'<?php echo $order_data->txn_id; ?>',
-			'The Luxury Closet',
-			'<?php echo $order_data->amount; ?>',
-			'<?php echo $order_data->tax; ?>',
-			'<?php echo $order_data->shipping_fee; ?>',
-			'<?php echo $order_data->town; ?>',
-			'<?php echo $order_data->state; ?>',
-			'<?php echo $order_data->country; ?>'
-		  ]);
-		  <?php if ($order_items) {
-		  foreach ($order_items as $order_item) {
-			$post_categories = wp_get_post_categories($order_item->postID, array('fields' => 'all'));
-			$cats = array();
-			if ($post_categories) { foreach($post_categories as $post_category) { $cats[] = $post_category->name; } }
-		  ?>
-		  _gaq.push(['_addItem',
-			'<?php echo $order_data->txn_id; ?>',
-			'<?php echo $order_item->item_id; ?>',
-			'<?php echo $order_item->item_name; ?>',
-			'<?php echo implode(", ", $cats); ?>',
-			'<?php echo $order_item->item_price; ?>',
-			'<?php echo $order_item->item_amount; ?>'
-		  ]);
-		  <?php }} ?>
-		  _gaq.push(['_trackTrans']);
-
-		  (function() {
-			var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
-			ga.src = ('https:' == document.location.protocol ? 'https://' : 'http://') + 'stats.g.doubleclick.net/dc.js';
-			var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
-		  })();
+			(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+			(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+			m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+			})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+			ga('ecommerce:addTransaction', {
+			  'id': '<?php echo $order_data->txn_id; ?>',
+			  'affiliation': 'The Luxury Closet',
+			  'revenue': '<?php echo $order_data->amount; ?>',
+			  'shipping': '<?php echo $order_data->shipping_fee; ?>',
+			  'tax': '<?php echo $order_data->tax; ?>'
+			});
+			<?php if ($order_items) {
+			foreach ($order_items as $order_item) {
+				$post_categories = wp_get_post_categories($order_item->postID, array('fields' => 'all'));
+				$cats = array();
+				if ($post_categories) { foreach($post_categories as $post_category) { $cats[] = $post_category->name; } } ?>
+				ga('ecommerce:addItem', {
+				  'id': '<?php echo $order_data->txn_id; ?>',
+				  'name': '<?php echo $order_item->item_name; ?>',
+				  'sku': '<?php echo $order_item->item_id; ?>',
+				  'category': '<?php echo implode(", ", $cats); ?>',
+				  'price': '<?php echo $order_item->item_price; ?>',
+				  'quantity': '<?php echo $order_item->item_amount; ?>'
+				});
+			<?php }} ?>
+			ga('ecommerce:send');
 		</script>
 
 		<!-- Google Code for Sale Conversion Page -->
@@ -4382,6 +4377,7 @@ function alerts_send_notifications() { // Alerts Notifications
 				$post_sizes = wp_get_post_terms($added_post->ID, 'size');
 				$post_ring_sizes = wp_get_post_terms($added_post->ID, 'ring-size');
 				$post_clothes_sizes = wp_get_post_terms($added_post->ID, 'clothes-size');
+				$post_tags = wp_get_post_terms($added_post->ID, 'post_tag');
 
 				// it bags (type = 2)
 				if ($post_brands) {
@@ -4427,6 +4423,7 @@ function alerts_send_notifications() { // Alerts Notifications
 						'sz' => $post_sizes[0]->term_id,
 						'rs' => $post_ring_sizes[0]->term_id,
 						'cs' => $post_clothes_sizes[0]->term_id,
+						'tg' => $post_tags[0]->term_id,
 						'post_id' => $added_post->ID,
 						'post' => serialize($added_post)
 					);
@@ -5440,7 +5437,7 @@ function copy_follow_brands_to_alerts() {
 // hivista init
 add_action('init', 'nws_additional_init');
 function nws_additional_init() {
-	global $wpdb, $current_user;
+	global $wpdb, $current_user, $OPTION;
 	if ($_GET['notify'] == 'send') {
 		echo 'Notify notifications:<br><br>';
 		alerts_send_notifications();
@@ -5466,6 +5463,32 @@ function nws_additional_init() {
 				}
 			}
 		}
+		exit;
+	}
+	if ($_GET['hivista'] == 'email') {
+		$user_email = 'gavrilenko.ruslan@gmail.com';
+		$message  = 'Thank you for registering with The Luxury Closet.<br /><br />';
+		$message .= 'You will now receive updates about our latest arrivals, and hear from our Fashion Editor on the latest trends hitting the luxury world!<br /><br />';
+		$message .= 'Watch out for emails featuring our special collections and blog posts put together by our in house experts, specially for you!<br /><br /><br />';
+		$message .= '<a href="'.get_option('siteurl').'/login">Log in</a> to your account with your username: '.$user_email.'<br /><br /><br />';
+
+		$message .= 'Questions? Contact us on:<br />';
+		$message .= '<a href="mailto:info@theluxurycloset.com">info@theluxurycloset.com</a><br />';
+		$message .= '+971 800 589<br /><br />';
+
+		$message .= 'We would be happy to hear from you!<br /><br />';
+
+		$message .= 'Regards, <br />';
+		$message .= 'Customer Support<br />';
+		$message .= 'The Luxury Closet<br />';
+
+		$subject = 'Welcome to The Luxury Closet!';
+
+		//$headers  = "MIME-Version: 1.0\r\n";
+		//$headers .= "Content-type: text/html; charset=iso-8859-1\r\n";
+		$headers .= "From: The Luxury Closet <".$OPTION['wps_shop_email'].">\r\n";
+		wp_mail($user_email, $subject, $message, $headers);
+		//var_dump(mail($user_email, $subject, $message, $headers));
 		exit;
 	}
 }

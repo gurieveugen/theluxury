@@ -1,3 +1,4 @@
+var prod_tab;
 jQuery(document).ready(function(){
 	// currency
 	jQuery('.currency-val').click(function(){
@@ -98,6 +99,24 @@ jQuery(document).ready(function(){
 		jQuery(this).next('.content').slideToggle(function(){
 			jQuery(this).parent().toggleClass('open');
 		});
+	});
+	prod_tab = 'prod-info-tab';
+	jQuery('.accordion-item-info .heading').click(function(){
+		var rel = jQuery(this).attr('rel');
+		var opnf = false;
+		if (jQuery(this).parent().hasClass('open')) {
+			jQuery('.accordion-item-info .'+rel+' .content').animate({height: 'hide'}, 300);
+			jQuery('.accordion-item-info .'+rel).removeClass('open');
+			prod_tab = '';
+		} else {
+			if (prod_tab != '') {
+				jQuery('.accordion-item-info .'+prod_tab+' .content').animate({height: 'hide'}, 300);
+				jQuery('.accordion-item-info .'+prod_tab).removeClass('open');
+			}
+			jQuery('.accordion-item-info .'+rel+' .content').animate({height: 'show'}, 300);
+			jQuery('.accordion-item-info .'+rel).addClass('open');
+			prod_tab = rel;
+		}
 	});
 	jQuery('.shop_by_widget, .select, #mc-embedded-subscribe-form .checkbox-list, .prof-seller-form .label, .popup-login .remember-me').jqTransform();
 	// jQuery('.solt-by-values li a').click(function(){

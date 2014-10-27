@@ -17,10 +17,12 @@ function cas_response(){
 	if($order == FALSE) { expulsion(); } // if customer refreshes last confirmation page -> redirect
 	
 	// We add some additional values for confirmation screen needed for e.g. info about pick-up etc.
-	$feedback['d_option'] 	 = $order['d_option'];
-	$feedback['p_option'] 	 = $order['p_option'];
-	$feedback['tracking_id'] = $order['tracking_id'];
-	$feedback['amount']		 = $order['net'];
+	$feedback['d_option'] 	   = $order['d_option'];
+	$feedback['p_option'] 	   = $order['p_option'];
+	$feedback['tracking_id']   = $order['tracking_id'];
+	$feedback['amount']		   = $order['net'];
+	$feedback['oid']		   = $order['oid'];
+	$feedback['layaway_order'] = $order['layaway_order'];
 
 	// Provide Invoice in PDF/Html format  	
 	if(pdf_usable_language()) {

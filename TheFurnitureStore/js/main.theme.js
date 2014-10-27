@@ -275,6 +275,9 @@ jQuery(document).ready(function(){
 		}
 		return false;
 	});
+	jQuery('.addtowishlist a').click(function(){
+		jQuery('.addtowishlist .atwloading').show();
+	});
 });
 
 function check_first_popup() {

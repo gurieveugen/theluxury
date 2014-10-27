@@ -182,7 +182,7 @@ if ($all_draft_posts) {
 								<div class="price-row">
 									<span class="price"><strong>Seller Price:</strong> <?php echo format_price($spost_your_price, true); ?></span>
 								</div>
-								<p>Created on: <?php echo $post_created; ?></p>
+								<p>Created on: <?php echo date("d-m-Y H:i:s", strtotime($post_created)); ?></p>
 							</div>
 							<div class="btn-column v-middle">
 								<a href="#view" class="link-pink view" name="<?php echo $spost->ID; ?>">View</a>
@@ -275,7 +275,7 @@ if ($all_draft_posts) {
 									<span class="price"><strong>Quotation:</strong> <span class="quotation-value-<?php echo $spost->ID; ?>"><?php echo $quotation_value; ?></span></span>
 								</div>
 								<?php if ($post_quoted) { ?>
-									<p>Quoted on: <?php echo $post_quoted; ?></p>
+									<p>Quoted on: <?php echo date("d-m-Y H:i:s", strtotime($post_quoted)); ?></p>
 								<?php } ?>
 							</div>
 							<div class="btn-column v-middle">
@@ -469,7 +469,7 @@ if ($all_draft_posts) {
 									<span class="price"><strong>The Luxury Closet Selling Price:</strong> <?php echo format_price($spost_new_price, true); ?></span>
 								</div>
 								<?php if ($post_modified) { ?>
-									<p>Modified on: <?php echo $post_modified; ?></p>
+									<p>Modified on: <?php echo date("d-m-Y H:i:s", strtotime($post_modified)); ?></p>
 								<?php } ?>
 							</div>
 						</div>
@@ -525,7 +525,7 @@ if ($all_draft_posts) {
 									<span class="price"><strong>The Luxury Closet Selling Price:</strong> <?php echo format_price($spost_new_price, true); ?></span>
 								</div>
 								<?php if ($post_modified) { ?>
-									<p>Modified on: <?php echo $post_modified; ?></p>
+									<p>Modified on: <?php echo date("d-m-Y H:i:s", strtotime($post_modified)); ?></p>
 								<?php } ?>
 							</div>
 						</div>
@@ -552,7 +552,7 @@ if ($all_draft_posts) {
 					$pg = $_GET['isripg']; if (!$pg) { $pg = 1; }
 					$limit = ' LIMIT '.(($pg - 1) * $admin_items_per_page).', '.$admin_items_per_page;
 
-					$approved_user_posts = $wpdb->get_results(sprintf("SELECT SQL_CALC_FOUND_ROWS p.*, u.user_login, pmrd.meta_value as post_received, STR_TO_DATE(pmrd.meta_value, '%s') as rdate FROM %sposts p LEFT JOIN %susers u ON u.ID = p.post_author LEFT JOIN %sterm_relationships tr ON tr.object_id = p.ID LEFT JOIN %spostmeta pm ON pm.post_id = p.ID AND pm.meta_key = 'ID_item' LEFT JOIN %spostmeta pmrd ON pmrd.post_id = p.ID AND pmrd.meta_key = '_post_received' WHERE p.post_type = 'post' AND p.post_status = 'iseller_received' %s %s GROUP BY p.ID ORDER BY rdate %s", '%Y-%m-%d', $wpdb->prefix, $wpdb->prefix, $wpdb->prefix, $wpdb->prefix, $wpdb->prefix, $sWhere, $iseller_where.$title_where, $limit));
+					$approved_user_posts = $wpdb->get_results(sprintf("SELECT SQL_CALC_FOUND_ROWS p.*, u.user_login, pmrd.meta_value as post_received, STR_TO_DATE(pmrd.meta_value, '%s') as rdate FROM %sposts p LEFT JOIN %susers u ON u.ID = p.post_author LEFT JOIN %sterm_relationships tr ON tr.object_id = p.ID LEFT JOIN %spostmeta pm ON pm.post_id = p.ID AND pm.meta_key = 'ID_item' LEFT JOIN %spostmeta pmrd ON pmrd.post_id = p.ID AND pmrd.meta_key = '_post_received' WHERE p.post_type = 'post' AND p.post_status = 'iseller_received' %s %s GROUP BY p.ID ORDER BY rdate DESC %s", '%Y-%m-%d', $wpdb->prefix, $wpdb->prefix, $wpdb->prefix, $wpdb->prefix, $wpdb->prefix, $sWhere, $iseller_where.$title_where, $limit));
 					$total_posts = $wpdb->get_var("SELECT FOUND_ROWS()");
 					if ($approved_user_posts) {
 						foreach($approved_user_posts as $spost) {
@@ -582,7 +582,7 @@ if ($all_draft_posts) {
 									<span class="price"><strong>The Luxury Closet Selling Price:</strong> <?php echo format_price($spost_new_price, true); ?></span>
 								</div>
 								<?php if (strlen($post_received)) { ?>
-									<p>Received on: <?php echo $post_received; ?></p>
+									<p>Received on: <?php echo date("d-m-Y H:i:s", strtotime($post_received)); ?></p>
 								<?php } ?>
 							</div>
 						</div>
@@ -612,7 +612,7 @@ if ($all_draft_posts) {
 					$pg = $_GET['isaipg']; if (!$pg) { $pg = 1; }
 					$limit = ' LIMIT '.(($pg - 1) * $admin_items_per_page).', '.$admin_items_per_page;
 
-					$authenticated_user_posts = $wpdb->get_results(sprintf("SELECT SQL_CALC_FOUND_ROWS p.*, u.user_login, pmrd.meta_value as post_received, STR_TO_DATE(pmrd.meta_value, '%s') as rdate FROM %sposts p LEFT JOIN %susers u ON u.ID = p.post_author LEFT JOIN %sterm_relationships tr ON tr.object_id = p.ID LEFT JOIN %spostmeta pm ON pm.post_id = p.ID AND pm.meta_key = 'ID_item' LEFT JOIN %spostmeta pmrd ON pmrd.post_id = p.ID AND pmrd.meta_key = '_post_received' WHERE p.post_type = 'post' AND p.post_status = 'iseller_authed' %s %s GROUP BY p.ID ORDER BY rdate %s", '%Y-%m-%d', $wpdb->prefix, $wpdb->prefix, $wpdb->prefix, $wpdb->prefix, $wpdb->prefix, $sWhere, $iseller_where.$title_where, $limit));
+					$authenticated_user_posts = $wpdb->get_results(sprintf("SELECT SQL_CALC_FOUND_ROWS p.*, u.user_login, pmrd.meta_value as post_received, STR_TO_DATE(pmrd.meta_value, '%s') as rdate FROM %sposts p LEFT JOIN %susers u ON u.ID = p.post_author LEFT JOIN %sterm_relationships tr ON tr.object_id = p.ID LEFT JOIN %spostmeta pm ON pm.post_id = p.ID AND pm.meta_key = 'ID_item' LEFT JOIN %spostmeta pmrd ON pmrd.post_id = p.ID AND pmrd.meta_key = '_post_received' WHERE p.post_type = 'post' AND p.post_status = 'iseller_authed' %s %s GROUP BY p.ID ORDER BY p.post_modified %s", '%Y-%m-%d', $wpdb->prefix, $wpdb->prefix, $wpdb->prefix, $wpdb->prefix, $wpdb->prefix, $sWhere, $iseller_where.$title_where, $limit));
 					$total_posts = $wpdb->get_var("SELECT FOUND_ROWS()");
 					if ($authenticated_user_posts) {
 						foreach($authenticated_user_posts as $spost) {
@@ -622,7 +622,7 @@ if ($all_draft_posts) {
 							$spost_price = get_post_meta($spost->ID, 'price', true);
 							$spost_new_price = get_post_meta($spost->ID, 'new_price', true);
 							$item_seller = $spost->meta_value;
-							$post_received = $spost->post_received;
+							$post_modified = $spost->post_modified;
 
 							if (!$spost_new_price) { $spost_new_price = $spost_price; }
 
@@ -640,8 +640,8 @@ if ($all_draft_posts) {
 									<span class="price"><strong>Seller Payout:</strong> <?php echo format_price($spost_item_your_quotation_price, true); ?></span>
 									<span class="price"><strong>The Luxury Closet Selling Price:</strong> <?php echo format_price($spost_new_price, true); ?></span>
 								</div>
-								<?php if ($post_received) { ?>
-									<p>Received on: <?php echo $post_received; ?></p>
+								<?php if ($post_modified) { ?>
+									<p>Date modified: <?php echo date("d-m-Y H:i:s", strtotime($post_modified)); ?></p>
 								<?php } ?>
 							</div>
 						</div>
@@ -689,7 +689,7 @@ if ($all_draft_posts) {
 									<span class="price"><strong>Seller Payout:</strong> <?php echo format_price($spost_item_your_quotation_price, true); ?></span>
 									<span class="price"><strong>The Luxury Closet Selling Price:</strong> <?php echo format_price($spost_new_price, true); ?></span>
 								</div>
-								<p>Published on: <?php echo $post_published; ?></p>
+								<p>Published on: <?php echo date("d-m-Y H:i:s", strtotime($post_published)); ?></p>
 							</div>
 						</div>
 					<?php }

@@ -21,7 +21,9 @@ $table = is_dbtable_there('wishlist');
 ?>
 
 <div class="my-wishlist-wrap">
+	<div class="page-top-text">
 	<?php the_content(); ?>
+	</div>
 	<table class="my-wishlist-table" border="0">
 		<?php
 		$wishlist_items = $wpdb->get_results(sprintf("SELECT * FROM %s WHERE uid = %s ORDER BY wid DESC", $table, $current_user->ID));

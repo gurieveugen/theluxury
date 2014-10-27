@@ -75,11 +75,12 @@ if ($_SESSION['layaway_order'] > 0) { $dstyle = ' style="visibility:hidden;"'; }
 wps_shop_process_steps(4);
 ?>
 <div class="payment-section">
+	<?php if(isset($_REQUEST['payerror']) && $_REQUEST['payerror'] != '') { ?>
+		<p class="error">There has been an error processing this transaction.<br />
+		<font style="font-weight:bold;">ERROR: <?php echo $_REQUEST['payerror']; ?></font></p>
+	<?php } ?>
 	<h1 class="title">Delivery & Billing Address</h1>
 	<div class="holder">
-		<?php if(isset($_REQUEST['error']) && $_REQUEST['error'] == 'g2p_error') { ?>
-			<p class="error">Your transaction is failed. There has been an error processing this transaction.</p>
-		<?php } ?>
 		<div class="review-order">
 			<div class="box"<?php echo $dstyle; ?>>
 				<h3 class="heading"><?php echo $LANG['delivery']; ?> <a href="<?php echo get_checkout_url(); ?>?orderNow=1"><?php echo $LANG['change']; ?></a></h3>
@@ -111,9 +112,10 @@ wps_shop_process_steps(4);
 					<?php if($order['d_addr'] == '1') { ?>
 						<h5><?php echo __('Delivery Address:','wpShop'); ?></h5>
 						<p>
-							<?php echo address_format(retrieve_delivery_addr(), 'd-addr'); ?>
-							<?php echo '<br/>'.$order['email']; ?>
-							<?php echo '<br/>'.$order['telephone']; ?>
+							<?php $delivery_addr = retrieve_delivery_addr(); ?>
+							<?php echo address_format($delivery_addr, 'd-addr'); ?>
+							<?php echo '<br/>'.$delivery_addr['email']; ?>
+							<?php echo '<br/>'.$delivery_addr['telephone']; ?>
 						</p>
 					<?php } ?>
 					<?php if (strlen($order['custom_note'])) { ?>
@@ -208,7 +210,7 @@ wps_shop_process_steps(4);
 			include WP_CONTENT_DIR.'/themes/'.WPSHOP_THEME_NAME.'/lib/modules/payment/'.$order['p_option'].'/start.php';
 		} else {
 		?>
-			<form class="order_now" method="POST" action="<?php echo get_checkout_url(); ?>?orderNow=complete&oid=<?php echo $order['oid']; ?>" target="_top">
+			<form class="order_now" method="POST" action="<?php echo get_checkout_url(); ?>?orderNow=complete" target="_top">
 				<input type="hidden" name="order_id" value="<?php echo $order['oid']; ?>" />
 				<input type="hidden" name="item_name" value="<?php echo $Your_Order.' - '.$date_order; ?>" />
 				<input type="hidden" name="amount" value="<?php echo $TOTAL_AM; ?>" />

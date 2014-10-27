@@ -1,5 +1,11 @@
 <?php global $OPTION;
+$oid = $_GET['oid'];
 $order_payment_data = $_SESSION['order_payment_data'];
+if (!$order_payment_data && $oid) {
+	$table = is_dbtable_there('orders');
+	$res = mysql_query("SELECT * FROM $table WHERE oid = '$oid' LIMIT 1");
+	$order_payment_data = mysql_fetch_assoc($res);
+}
 if (!$order_payment_data) {
 	wp_redirect(home_url('/'));
 	wp_exit();

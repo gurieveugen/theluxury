@@ -1,4 +1,4 @@
-<?php global $OPTION, $current_user; ?>
+<?php global $OPTION, $current_user, $wp_query; ?>
 
 			<!--</div>--><!-- container -->
 		<!--</div>--><!-- floatswrap-->
@@ -45,6 +45,8 @@ if ($_GET['slp'] == 'true') { ?><script type="text/javascript">jQuery(document).
 <div class="bg-popup-login" style="display:none;"></div>
 <div class="window-mask" style="display:none;"></div>
 <?php if (is_category($OPTION['wps_sale_category'])) { ?><div class="sale-category-pg" style="display:none;"><?php echo $OPTION['wps_sale_category'].';'.get_cat_name($OPTION['wps_sale_category']); ?></div><?php } ?>
+<?php if (is_tag()) { $ctag_id = $wp_query->get_queried_object_id(); $tag_data = get_tag($ctag_id); ?><div class="tag-pg" style="display:none;"><?php echo $ctag_id.';'.$tag_data->name; ?></div><?php } ?>
+
 <script type="text/javascript">jQuery.post('<?php echo get_cart_url(); ?>', { FormAction: 'get-total-cart-items' }, function(data){ jQuery('span.bag a').html(data); });</script>
 <script type="text/javascript">
 document.write(unescape("%3Cscript id=%27pap_x2s6df8d%27 src=%27" + (("https:" == document.location.protocol) ? "https://" : "http://") + "perf.clickmena.com/scripts/trackjs.js%27 type=%27text/javascript%27%3E%3C/script%3E"));
@@ -62,15 +64,13 @@ var google_remarketing_only = true;
 /* ]]> */
 </script>
 <script type="text/javascript" src="//www.googleadservices.com/pagead/conversion.js"></script>
-<noscript>
-<div style="display:inline;"><img height="1" width="1" style="border-style:none;" alt="" src="//googleads.g.doubleclick.net/pagead/viewthroughconversion/956545849/?value=0&label=KTA3CI_ZgQUQufaOyAM&guid=ON&script=0"/></div>
-</noscript>
+<noscript><div style="display:inline;"><img height="1" width="1" style="border-style:none;" alt="" src="//googleads.g.doubleclick.net/pagead/viewthroughconversion/956545849/?value=0&label=KTA3CI_ZgQUQufaOyAM&guid=ON&script=0"/></div></noscript>
 
 <?php // Sign up using facebook (popup) ?>
 <?php if (!is_page('login') && !is_page('register')) { $fapikey = get_option('fbc_app_key_option'); ?>
-<link type="text/css" rel="stylesheet" href="<?php bloginfo('url'); ?>/wp-content/plugins/xl-facebookconnect//fbconnect.css"></link>
+<link type="text/css" rel="stylesheet" href="<?php bloginfo('url'); ?>/wp-content/plugins/xl-facebookconnect/fbconnect.css"></link>
 <script src="http://static.ak.connect.facebook.com/js/api_lib/v0.4/FeatureLoader.js.php" type="text/javascript"></script>
-<script src="<?php bloginfo('url'); ?>/wp-content/plugins/xl-facebookconnect//fbconnect.js" type="text/javascript"></script>
+<script src="<?php bloginfo('url'); ?>/wp-content/plugins/xl-facebookconnect/fbconnect.js" type="text/javascript"></script>
 <script type="text/javascript">
 FBConnect.init('<?php echo $fapikey; ?>', '<?php bloginfo('url'); ?>/wp-content/plugins/xl-facebookconnect/', '<?php bloginfo('url'); ?>', 0, FBConnect.appconfig_none);
 var base = '<?=get_option('siteurl')?>';

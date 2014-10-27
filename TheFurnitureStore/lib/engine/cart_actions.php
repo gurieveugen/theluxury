@@ -1017,7 +1017,7 @@ function process_order($step = 1) // function manages also inquiries
 
 				// add record in delivery address table
 				$column_array	= array();  $value_array	= array();
-				$column_array[] = 'who';	$value_array[1]	= $_SESSION['cust_id'];
+				$column_array[] = 'who';	$value_array[]	= $_SESSION['cust_id'];
 				db_insert($table2, $column_array, $value_array);
 				$_POST = array(); // in case user uses back button of browser
 			}
@@ -1045,6 +1045,7 @@ function process_order($step = 1) // function manages also inquiries
 			break;
 		// show the name + address form 
 		case 2:
+			$user_order_info = array();
 			// update orders table
 			$column_value_array 	= array();
 			$where_conditions 		= array();
@@ -1072,6 +1073,38 @@ function process_order($step = 1) // function manages also inquiries
 				$column_value_array['telephone'] = $_POST['telephone'];
 				if($_POST['saveWhat'] != 'editAddress') { $column_value_array['custom_note'] = $_POST['custom_note']; }
 				if($_POST['delivery_address_yes'] == 'on') {	$column_value_array['d_addr'] = '1'; }
+
+				$user_order_info = array(
+					'fname' => $_POST['f_name'],
+					'lname' => $_POST['l_name'],
+					'email' => $_POST['email'],
+					'telephone' => $_POST['telephone'],
+					'country' => $_POST['country'],
+					'street' => $_POST['street'],
+					'state' => $_POST['state'],
+					'town' => $_POST['town'],
+					'zip' => $_POST['zip'],
+					'shipp_fname' => $_POST['f_name'],
+					'shipp_lname' => $_POST['l_name'],
+					'shipp_email' => $_POST['email'],
+					'shipp_telephone' => $_POST['telephone'],
+					'shipp_country' => $_POST['country'],
+					'shipp_street' => $_POST['street'],
+					'shipp_state' => $_POST['state'],
+					'shipp_town' => $_POST['town'],
+					'shipp_zip' => $_POST['zip']
+				);
+				if($_POST['delivery_address_yes'] == 'on') {
+					$user_order_info['shipp_fname'] = $_POST['f_name|2'];
+					$user_order_info['shipp_lname'] = $_POST['l_name|2'];
+					$user_order_info['shipp_email'] = $_POST['email|2'];
+					$user_order_info['shipp_telephone'] = $_POST['telephone|2'];
+					$user_order_info['shipp_country'] = $_POST['country|2'];
+					$user_order_info['shipp_street'] = $_POST['street|2'];
+					$user_order_info['shipp_state'] = $_POST['state|2'];
+					$user_order_info['shipp_town'] = $_POST['town|2'];
+					$user_order_info['shipp_zip'] = $_POST['zip|2'];
+				}
 			}
 			$where_conditions[0] = "who = '$_SESSION[cust_id]'";
 			db_update($table, $column_value_array, $where_conditions);
@@ -1102,6 +1135,8 @@ function process_order($step = 1) // function manages also inquiries
 				$where_conditions[0]			 = "who = '$_SESSION[cust_id]'";			
 				db_update($table2, $column_value_array, $where_conditions);
 			}
+			// save user order data
+			nws_set_user_order_info($user_order_info);
 			break;
 		case 3:
 			if(isset($_GET['dpchange']) && $_GET['dpchange'] == 1)
@@ -1137,6 +1172,30 @@ function process_order($step = 1) // function manages also inquiries
 		case 5:		break; 
 	}
 	return $feedback;	
+}
+
+function nws_set_user_order_info($user_order_info) {
+	global $current_user;
+	if (is_user_logged_in()) {
+		update_user_meta($current_user->ID, 'user_order_info', $user_order_info);
+	}
+	setcookie('thelux_user_order_info', serialize($user_order_info), time() + ((60 * 60 * 24) * 300), '/');
+}
+
+function nws_get_user_order_info() {
+	global $current_user;
+	$user_order_info = '';
+	if (is_user_logged_in()) {
+		$user_order_info = get_user_meta($current_user->ID, 'user_order_info', true);
+	}
+	if (!$user_order_info) {
+		$user_order_info = $_COOKIE['thelux_user_order_info'];
+		if (strlen($user_order_info)) {
+			$user_order_info = str_replace('\"', '"', $user_order_info);
+			$user_order_info = unserialize($user_order_info);
+		}
+	}
+	return $user_order_info;
 }
 
 function order_exists($table){
@@ -1403,26 +1462,6 @@ function check_address_form()
 		unset($_POST['place|2']);
 		unset($_POST['town|2']);
 	}	
-
-	// save adrress data to session
-	$_SESSION['order_data']['fname'] = $_POST['f_name'];
-	$_SESSION['order_data']['lname'] = $_POST['l_name'];
-	$_SESSION['order_data']['country'] = $_POST['country'];
-	$_SESSION['order_data']['street'] = $_POST['street'];
-	$_SESSION['order_data']['state'] = $_POST['state'];
-	$_SESSION['order_data']['town'] = $_POST['town'];
-	$_SESSION['order_data']['zip'] = $_POST['zip'];
-	$_SESSION['order_data']['email'] = $_POST['email'];
-	$_SESSION['order_data']['telephone'] = $_POST['telephone'];
-	$_SESSION['order_data']['shipp_fname'] = $_POST['f_name|2'];
-	$_SESSION['order_data']['shipp_lname'] = $_POST['l_name|2'];
-	$_SESSION['order_data']['shipp_country'] = $_POST['country|2'];
-	$_SESSION['order_data']['shipp_street'] = $_POST['street|2'];
-	$_SESSION['order_data']['shipp_state'] = $_POST['state|2'];
-	$_SESSION['order_data']['shipp_town'] = $_POST['town|2'];
-	$_SESSION['order_data']['shipp_zip'] = $_POST['zip|2'];
-	$_SESSION['order_data']['shipp_email'] = $_POST['email|2'];
-	$_SESSION['order_data']['shipp_telephone'] = $_POST['telephone|2'];
 
 	// were countries chosen?
 	if(isset($_POST['country']) && $_POST['country'] == 'bc'){
@@ -4220,22 +4259,20 @@ return $ID_item;
 // 												GOOGLE  
 ##################################################################################################################################
 function google_analytics($profile_id='1111'){
+	?>
+	<!-- Google Analytics -->
+	<script>
+	(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+	(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+	m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+	})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
 
-$code = "
-	<script type=\"text/javascript\">
-	var _gaq = _gaq || [];
-	_gaq.push(['_setAccount', '".$profile_id."']);
-	_gaq.push(['_trackPageview']);
+	ga('create', '<?php echo $profile_id; ?>', 'auto');
+	ga('send', 'pageview');
 
-	(function() {
-	var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
-	ga.src = ('https:' == document.location.protocol ? 'https://' : 'http://') + 'stats.g.doubleclick.net/dc.js';
-	var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
-	})();
 	</script>
-";
-
-return $code ;
+	<!-- End Google Analytics -->
+	<?php
 }
 
 function google_adsense($ad_no){

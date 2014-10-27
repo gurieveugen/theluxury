@@ -21,6 +21,8 @@ function cod_response(){
 	$feedback['p_option'] 	 = $order['p_option'];
 	$feedback['tracking_id'] = $order['tracking_id'];
 	$feedback['amount']		 = $order['net'];
+	$feedback['oid']		   = $order['oid'];
+	$feedback['layaway_order'] = $order['layaway_order'];
 
 	// Provide Invoice in PDF/Html format  	
 	if(pdf_usable_language()) { 

@@ -2583,6 +2583,7 @@ function post_created_modified_date_metabox() {
 add_action('init', 'backend_actions_init');
 function backend_actions_init() {
 	global $wpdb, $current_user, $voucher_errors;
+	$vuploaded = 0;
 	// VOUCHER ACTIONS
 	if (isset($_GET['voucher_action'])) {
 		if ($_GET['voucher_action'] == 'create') {
@@ -2603,6 +2604,7 @@ function backend_actions_init() {
 					}
 					$insert = array();
 					$insert['code'] = trim($_POST['voucher_code']);
+					$insert['type'] = $_POST['voucher_type'];
 					$insert['option'] = $_POST['voucher_option'];
 					$insert['amount'] = trim($_POST['voucher_amount']);
 					$insert['expired'] = $voucher_expired;
@@ -2616,6 +2618,52 @@ function backend_actions_init() {
 			} else {
 				$voucher_errors = 'Please enter Voucher Code.';
 			}
+		} else if ($_GET['voucher_action'] == 'upload') {
+			require_once('includes/file.php');
+			$file = wp_handle_upload($_FILES['vouchers_csv'], array('test_form' => false), current_time('mysql'));
+			if ($file) {
+				$sep = ',';
+				$csv_file = $file["file"];
+				if (($handle = fopen($csv_file, "r")) !== false) {
+					while (($data = fgetcsv($handle, 1000, $sep)) !== false) {
+						$voucher_code = trim($data[0]);
+						$voucher_type = trim($data[1]);
+						$voucher_option = trim($data[2]);
+						$amount = trim($data[3]);
+						$expiry_date = trim($data[4]);
+						$shipping_zone = trim($data[5]);
+
+						$type = 1;
+						if ($voucher_type == 'M') { $type = 2; }
+						$expired = '';
+						if ($edlen = strlen($expiry_date)) {
+							$expired = $expiry_date;
+							if ($edlen == 10) {
+								$expired .= ' 00:00:00';
+							}
+						}
+						$shipping_zone = trim(str_replace('Zone', '', $shipping_zone));
+
+						if (strlen($voucher_code) && $voucher_code != 'voucher code' && $amount && strlen($voucher_option)) {
+							$check_voucher_code = $wpdb->get_var(sprintf("SELECT COUNT(vid) FROM %swps_vouchers WHERE code = '%s'", $wpdb->prefix, $voucher_code));
+							if (!$check_voucher_code) {
+								$insert = array();
+								$insert['code'] = $voucher_code;
+								$insert['type'] = $type;
+								$insert['option'] = $voucher_option;
+								$insert['amount'] = $amount;
+								$insert['expired'] = $expired;
+								$insert['zone'] = $shipping_zone;
+								$insert['created'] = current_time('mysql');
+								$insert['user_id'] = $current_user->ID;
+								$wpdb->insert($wpdb->prefix."wps_vouchers", $insert);
+								$vuploaded++;
+							}
+						}
+					}
+					fclose($handle);
+				}
+			}
 		} else if ($_GET['voucher_action'] == 'remove') {
 			$vid = $_GET['vid'];
 			if ($vid) {
@@ -2623,7 +2671,9 @@ function backend_actions_init() {
 			}
 		}
 		if (!strlen($voucher_errors)) {
-			wp_redirect('admin.php?page=functions.php&section=vouchers');
+			$redir = 'admin.php?page=functions.php&section=vouchers';
+			if ($vuploaded > 0) { $redir .= '&vuploaded='.$vuploaded; }
+			wp_redirect($redir);
 			wp_exit();
 		}
 	}

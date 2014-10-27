@@ -27,11 +27,11 @@
 
 	$arrPaymentDetails = array(
 		"secure_secret" => trim($OPTION['wps_audi_secret']),
-		"accessCode" => trim($OPTION['wps_audi_code']),	
+		"accessCode" => trim($OPTION['wps_audi_code']),
 		"amount" => $formatted_TOTAL_AM,
 		"merchTxnRef" => time(),
 		"merchant" => trim($OPTION['wps_audi_mid']),
-		"orderInfo" => $OPTION['wps_order_no_prefix'].$order['oid'],		
+		"orderInfo" => $OPTION['wps_order_no_prefix'].$order['oid'],
 		"returnURL" => trim($OPTION['wps_audi_return_url'])
 	);
 	$thousand_separators = array("a", "e", "i", "o", "u", "A", "E", "I", "O", "U");

@@ -56,25 +56,28 @@ if ($_POST['order_step'] == 2) {
 	$l_name		= trim($_POST['l_name']);
 	$b_country	= trim($_POST['country']);
 
-	$f_name2	= trim($_POST['f_name']);
-	$l_name2	= trim($_POST['l_name']);
+	$f_name2	= trim($_POST['f_name|2']);
+	$l_name2	= trim($_POST['l_name|2']);
 	$d_country	= trim($_POST['country|2']);
-} else if (isset($_SESSION['order_data'])) {
-	$f_name		= $_SESSION['order_data']['fname'];
-	$l_name		= $_SESSION['order_data']['lname'];
-	$b_country	= $_SESSION['order_data']['country'];
+} else {
+	if (isset($_SESSION['layaway_order_data'])) {
+		$f_name		= $_SESSION['layaway_order_data']['fname'];
+		$l_name		= $_SESSION['layaway_order_data']['lname'];
+		$b_country	= $_SESSION['layaway_order_data']['country'];
 
-	$f_name2	= $_SESSION['order_data']['shipp_fname'];
-	$l_name2	= $_SESSION['order_data']['shipp_lname'];
-	$d_country	= $_SESSION['order_data']['shipp_country'];
-} else if (isset($_SESSION['layaway_order_data'])) {
-	$f_name		= $_SESSION['layaway_order_data']['fname'];
-	$l_name		= $_SESSION['layaway_order_data']['lname'];
-	$b_country	= $_SESSION['layaway_order_data']['country'];
+		$f_name2	= $_SESSION['layaway_order_data']['shipp_fname'];
+		$l_name2	= $_SESSION['layaway_order_data']['shipp_lname'];
+		$d_country	= $_SESSION['layaway_order_data']['shipp_country'];
+	} else if ($user_order_info = nws_get_user_order_info()) {
+		$_SESSION['order_data'] = $user_order_info;
+		$f_name		= $_SESSION['order_data']['fname'];
+		$l_name		= $_SESSION['order_data']['lname'];
+		$b_country	= $_SESSION['order_data']['country'];
 
-	$f_name2	= $_SESSION['layaway_order_data']['shipp_fname'];
-	$l_name2	= $_SESSION['layaway_order_data']['shipp_lname'];
-	$d_country	= $_SESSION['layaway_order_data']['shipp_country'];
+		$f_name2	= $_SESSION['order_data']['shipp_fname'];
+		$l_name2	= $_SESSION['order_data']['shipp_lname'];
+		$d_country	= $_SESSION['order_data']['shipp_country'];
+	}
 }
 
 //get cart composition
@@ -179,9 +182,9 @@ wps_shop_process_steps(3); ?>
 						<p><?php echo $LANG['shipping_address_message']; ?><br/><?php echo $feedback['e_message2']; ?></p>
 
 						<label for="dfirstname"><?php echo $LANG['firstname']; ?>:</label>
-						<input id="dfirstname" type="text" name="f_name|2" value="<?php echo $f_name_2; ?>" maxlength="255" />
+						<input id="dfirstname" type="text" name="f_name|2" value="<?php echo $f_name2; ?>" maxlength="255" />
 						<label for="dlastname"><?php echo $LANG['lastname']; ?>:</label>
-						<input id="dlastname" type="text" name="l_name|2" value="<?php echo $l_name_2; ?>" maxlength="255" />
+						<input id="dlastname" type="text" name="l_name|2" value="<?php echo $l_name2; ?>" maxlength="255" />
 						<?php
 						if ($dc['num'] > 0) { ?>
 							<label><?php echo $LANG['country']; ?>:</label>

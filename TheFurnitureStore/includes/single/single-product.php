@@ -43,9 +43,8 @@ jQuery(document).ready(function() {
 </script>
 
 <div class="main-product">
-	<?php if($_GET['added'] == 'OK' && $_GET['l'] == 'wl') {
-		$customerArea = get_page_by_title($OPTION['wps_customerAreaPg']); ?>
-		<div class="success-message"><?php printf(__ ('Your item has been successfully added to your %s!','wpShop'), $OPTION['wps_wishListLink_option'])?> <a href="<?php echo get_permalink($OPTION['wps_account_my_wishlist_page']); ?>"><?php printf(__ (' View %s','wpShop'), $OPTION['wps_wishListLink_option'])?></a> | <a href="<?php the_permalink(); ?>"><?php _e('Continue Shopping','wpShop');?></a></div>
+	<?php if($_GET['added'] == 'OK' && $_GET['l'] == 'wl') { ?>
+		<div class="success-message">This item has been added to <a href="<?php echo get_permalink($OPTION['wps_account_my_wishlist_page']); ?>">Your Wishlist</a>, where you can save all of your favourite items. <a href="<?php echo get_permalink($OPTION['wps_account_my_wishlist_page']); ?>">View Your Wishlist</a></div>
 	<?php } ?>
 	<h1><?php the_title(); ?></h1>
 	<div class="product-holder">
@@ -192,7 +191,7 @@ jQuery(document).ready(function() {
 								<?php } ?>
 							<?php } ?>
 							<?php if($OPTION['wps_lrw_yes']) { ?>
-								<a class="link-wishlist" href="<?php echo site_url('index.php?wishlist=add&fpg=single&pid='.$post->ID); ?>">Add to Wishlist</a>
+								<div class="addtowishlist"><a class="link-wishlist" href="<?php echo site_url('index.php?wishlist=add&fpg=single&pid='.$post->ID); ?>">Add to Wishlist</a><img src="<?php echo TEMPLURL; ?>/images/wishlist-loading.gif" class="atwloading" style="margin:0 0 0 5px; position:relative; top:2px; display:none;"></div>
 							<?php } ?>
 						<?php } ?>
 					</div>
@@ -243,13 +242,13 @@ jQuery(document).ready(function() {
 				</div>
 			</div>
 			<div class="data-section">
-				<div class="accordion">
-					<div class="accordion-item open">
-						<div class="heading">
+				<div class="accordion-item-info">
+					<div class="accordion-item prod-info-tab open">
+						<div class="heading" rel="prod-info-tab">
 							<span class="icon"></span>
 							<h3>Product Info</h3>
 						</div>
-						<div class="content">
+						<div class="content" style="display:block;">
 							<?php
 							$old_price = get_post_meta($post->ID, 'old_price', true);
 							$item_request_price = get_post_meta($post->ID, 'item_request_price', true);
@@ -335,8 +334,8 @@ jQuery(document).ready(function() {
 						</div>
 					</div>
 					<?php if ('open' == $post->comment_status) { ?>
-					<div class="accordion-item open">
-						<div class="heading">
+					<div class="accordion-item prod-comments-tab">
+						<div class="heading" rel="prod-comments-tab">
 							<span class="icon"></span>
 							<h3>Comments</h3>
 						</div>
@@ -346,8 +345,8 @@ jQuery(document).ready(function() {
 					</div>
 					<?php } ?>
 					<?php if($OPTION['wps_shipping_details_enable']) { ?>
-					<div class="accordion-item">
-						<div class="heading">
+					<div class="accordion-item prod-delivery-tab">
+						<div class="heading" rel="prod-delivery-tab">
 							<span class="icon"></span>
 							<h3>Delivery & Returns</h3>
 						</div>
@@ -367,9 +366,9 @@ jQuery(document).ready(function() {
 						</div>
 					</div>
 					<?php } ?>
-					<div class="accordion-item">
+					<div class="accordion-item prod-sizing-tab">
 						<?php if (in_category($OPTION['wps_men_shoes_category'], $post->ID) || in_category($OPTION['wps_women_shoes_category'], $post->ID)) { ?>
-						<div class="heading">
+						<div class="heading" rel="prod-sizing-tab">
 							<span class="icon"></span>
 							<h3>Sizing</h3>
 						</div>
@@ -424,7 +423,7 @@ jQuery(document).ready(function() {
 							<?php } ?>
 						</div>
 						<?php } else if (in_category($OPTION['wps_men_bags_category'], $post->ID) || in_category($OPTION['wps_women_bags_category'], $post->ID)) { ?>
-						<div class="heading">
+						<div class="heading" rel="prod-sizing-tab">
 							<span class="icon"></span>
 							<h3>Bag Measurements</h3>
 						</div>
@@ -436,7 +435,7 @@ jQuery(document).ready(function() {
 						</div>
 						<?php } else if (in_category($OPTION['wps_men_jewelry_category'], $post->ID) || in_category($OPTION['wps_women_jewelry_category'], $post->ID)) { ?>
 							<?php if (in_category('rings', $post->ID)) { ?>
-							<div class="heading">
+							<div class="heading" rel="prod-sizing-tab">
 								<span class="icon"></span>
 								<h3>Ring Sizing</h3>
 							</div>
@@ -475,7 +474,7 @@ jQuery(document).ready(function() {
 							</div>
 							<?php } ?>
 						<?php } else if (in_category($OPTION['wps_men_clothes_category'], $post->ID) || in_category($OPTION['wps_women_clothes_category'], $post->ID)) { ?>
-							<div class="heading">
+							<div class="heading" rel="prod-sizing-tab">
 								<span class="icon"></span>
 								<h3>Sizing</h3>
 							</div>

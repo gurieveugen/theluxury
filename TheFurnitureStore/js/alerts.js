@@ -92,6 +92,7 @@ jQuery(document).ready(function(){
 					liclass = liclass.replace('size-', 'sz:');
 					liclass = liclass.replace('ring-size-', 'rs:');
 					liclass = liclass.replace('clothes-size-', 'cs:');
+					liclass = liclass.replace('tag-', 'tg:');
 					if (ca_value != '') { ca_value += ';'; }
 					ca_value += '{'+liclass+'}';
 				}
@@ -320,6 +321,10 @@ jQuery(document).ready(function(){
 		if (jQuery('.sale-category-pg').size()) {
 			var scd = jQuery('.sale-category-pg').html().split(';');
 			create_alert_action('category-'+scd[0], scd[1]);
+		}
+		if (jQuery('.tag-pg').size()) {
+			var tdata = jQuery('.tag-pg').html().split(';');
+			create_alert_action('tag-'+tdata[0], tdata[1]);
 		}
 		init_alerts_action();
 	}

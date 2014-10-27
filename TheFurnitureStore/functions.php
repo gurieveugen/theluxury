@@ -245,7 +245,7 @@ if(is_admin())
 
 // theme init
 function NWS_theme_init(){
-	global $OPTION, $currency_rates, $currency_codes, $currency_options;
+	global $wpdb, $OPTION, $currency_rates, $currency_codes, $currency_options;
 
 	load_theme_textdomain('wpShop', get_template_directory().'/languages/');
 	$currency_code = 'USD';
@@ -273,7 +273,6 @@ function NWS_theme_init(){
 	}
 	// SHOPPING CART ACTIONS
 	// add to cart
-//	var_dump($_SESSION); exit;
 	if(isset($_POST['cmd']) && $_POST['cmd'] == 'add'){
 		add_toCart();
 	}
@@ -318,6 +317,8 @@ function NWS_theme_init(){
 			exit;
 		}
 	} else if ($_POST['order_step'] == 3 || isset($_GET['confirm'])) {
+		$error = '';
+		$iserror = false;
 		if ($_POST['order_step'] == 3) {
 			if (!check_cart_items()) {
 				wp_redirect(get_cart_url());
@@ -346,11 +347,23 @@ function NWS_theme_init(){
 				break;
 				case "100500": // Response from Audi
 					$payment_feedback = audi_response();
+					if ($payment_feedback['status'] == 'error') {
+						$error = $payment_feedback['error'];
+						if (!strlen($error)) { $error = $payment_feedback['message']; }
+						$iserror = true;
+					}
 				break;
 			}
 		}
-		$_SESSION['order_payment_data'] = $payment_feedback;
-		wp_redirect(get_checkout_url().'/?orderNow=confirm&oid='.$_GET['oid']);
+		if ($iserror) {
+			$redirect = '/?orderNow=3&payerror='.urlencode($error);
+		} else {
+			$oid = $payment_feedback['oid'];
+			if ($payment_feedback['layaway_order'] > 0) { $oid = $payment_feedback['layaway_order']; }
+			$_SESSION['order_payment_data'] = $payment_feedback;
+			$redirect = '/?orderNow=confirm&oid='.$oid;
+		}
+		wp_redirect(get_checkout_url().$redirect);
 		exit;
 	}
 	if ($_GET['orderNow'] == '3' && $_POST['order_review'] == 'update') {

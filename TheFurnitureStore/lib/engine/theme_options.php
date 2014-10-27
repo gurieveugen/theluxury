@@ -4651,90 +4651,117 @@ function NWS_theme_admin()
 			$vtypes = array('1' => 'Single-Use', '2' => 'Multi-Use');
 			$voptions = array('P' => 'Percentage, %', 'A' => 'Fixed amount, $');
 			echo make_section_header('vouchers'); ?>
-			<h3>Create Voucher Code</h3>
 			<?php if (strlen($voucher_errors)) { ?><div style="color:#FF0000;padding-bottom:10px;"><?php echo $voucher_errors; ?></div><?php } ?>
-			<form action="admin.php?page=functions.php&section=vouchers&voucher_action=create" method="POST">
-				<table>
-					<tr>
-						<td>Voucher Code:</td>
-						<td><input type="text" name="voucher_code" maxlength="100" style="width:247px;" value="<?php echo $_POST['voucher_code']; ?>" /></td>
-					</tr>
-					<tr>
-						<td>Voucher Type:</td>
-						<td>
-							<select name="voucher_type" style="width:247px;">
-								<?php foreach($vtypes as $vtkey => $vtname) { $s = ''; if ($vtkey == $_POST['voucher_type']) { $s = ' SELECTED'; } ?>
-								<option value="<?php echo $vtkey; ?>"<?php echo $s; ?>><?php echo $vtname; ?></option>
-								<?php } ?>
-							</select>
-						</td>
-					</tr>
-					<tr>
-						<td>Voucher Option:</td>
-						<td>
-							<select name="voucher_option" style="width:247px;">
-								<?php foreach($voptions as $vokey => $voname) { $s = ''; if ($vokey == $_POST['voucher_option']) { $s = ' SELECTED'; } ?>
-								<option value="<?php echo $vokey; ?>"<?php echo $s; ?>><?php echo $voname; ?></option>
-								<?php } ?>
-							</select>
-						</td>
-					</tr>
-					<tr>
-						<td>Amount:</td>
-						<td><input type="text" name="voucher_amount" maxlength="5" style="width:247px;" value="<?php echo $_POST['voucher_amount']; ?>" /></td>
-					</tr>
-					<tr>
-						<td>Expired Date:</td>
-						<td>
-							<select name="voucher_expired_dd" style="padding:1px;width:42px;height:26px;">
-								<option value="">D</option>
-								<?php for($d=1; $d<=31; $d++) { $dv = sprintf("%02d", $d); $s = ''; if ($d == $_POST['voucher_expired_dd']) { $s = ' SELECTED'; } ?>
-								<option value="<?php echo $dv; ?>"<?php echo $s; ?>><?php echo $dv; ?></option>
-								<?php } ?>
-							</select>
-							<select name="voucher_expired_mm" style="padding:1px;width:42px;height:26px;">
-								<option value="">M</option>
-								<?php for($m=1; $m<=12; $m++) { $mv = sprintf("%02d", $m); $s = ''; if ($m == $_POST['voucher_expired_mm']) { $s = ' SELECTED'; } ?>
-								<option value="<?php echo $mv; ?>"<?php echo $s; ?>><?php echo $mv; ?></option>
-								<?php } ?>
-							</select>
-							<select name="voucher_expired_yy" style="padding:1px;width:60px;height:26px;">
-								<option value="">YYYY</option>
-								<?php $cy = (int)date("Y"); for($y=$cy; $y<=$cy+5; $y++) { $s = ''; if ($y == $_POST['voucher_expired_yy']) { $s = ' SELECTED'; } ?>
-								<option value="<?php echo $y; ?>"<?php echo $s; ?>><?php echo $y; ?></option>
-								<?php } ?>
-							</select>
-							<select name="voucher_expired_hh" style="padding:1px;width:42px;height:26px;">
-								<option value="">H</option>
-								<?php for($h=0; $h<=23; $h++) { $hv = sprintf("%02d", $h); $s = ''; if ($h == $_POST['voucher_expired_hh']) { $s = ' SELECTED'; } ?>
-								<option value="<?php echo $hv; ?>"<?php echo $s; ?>><?php echo $hv; ?></option>
-								<?php } ?>
-							</select>
-							<select name="voucher_expired_ii" style="padding:1px;width:42px;height:26px;">
-								<option value="">I</option>
-								<?php for($i=0; $i<60; $i=$i+15) { $iv = sprintf("%02d", $i); $s = ''; if ($i == $_POST['voucher_expired_ii']) { $s = ' SELECTED'; } ?>
-								<option value="<?php echo $iv; ?>"<?php echo $s; ?>><?php echo $iv; ?></option>
-								<?php } ?>
-							</select>
-						</td>
-					</tr>
-					<tr>
-						<td>Shipping Zone:</td>
-						<td>
-							<select name="voucher_zone" style="width:247px;">
-								<option value="">-- None --</option>
-								<?php for($z=1; $z<=6; $z++) { $s = ''; if ($z == $_POST['voucher_zone']) { $s = ' SELECTED'; } ?>
-								<option value="<?php echo $z; ?>"<?php echo $s; ?>>Zone <?php echo $z; ?></option>
-								<?php } ?>
-							</select>
-						</td>
-					</tr>
-					<tr>
-						<td>&nbsp;</td>
-						<td align="right"><input type="submit" name="save_vcode" value="&nbsp;&nbsp;Save&nbsp;&nbsp;" /></td>
-					</tr>
-				</table>
-			</form>
+			<table>
+				<tr>
+					<td><h3 style="margin:0 0 5px 0;">Create Voucher Code</h3></td>
+					<td width="50">&nbsp;</td>
+					<td><h3 style="margin:0 0 5px 0;">Vouchers CSV Upload </h3></td>
+				</tr>
+				<tr>
+					<td valign="top">
+						<form action="admin.php?page=functions.php&section=vouchers&voucher_action=create" method="POST">
+						<table>
+							<tr>
+								<td>Voucher Code:</td>
+								<td><input type="text" name="voucher_code" maxlength="100" style="width:247px;" value="<?php echo $_POST['voucher_code']; ?>" /></td>
+							</tr>
+							<tr>
+								<td>Voucher Type:</td>
+								<td>
+									<select name="voucher_type" style="width:247px;">
+										<?php foreach($vtypes as $vtkey => $vtname) { $s = ''; if ($vtkey == $_POST['voucher_type']) { $s = ' SELECTED'; } ?>
+										<option value="<?php echo $vtkey; ?>"<?php echo $s; ?>><?php echo $vtname; ?></option>
+										<?php } ?>
+									</select>
+								</td>
+							</tr>
+							<tr>
+								<td>Voucher Option:</td>
+								<td>
+									<select name="voucher_option" style="width:247px;">
+										<?php foreach($voptions as $vokey => $voname) { $s = ''; if ($vokey == $_POST['voucher_option']) { $s = ' SELECTED'; } ?>
+										<option value="<?php echo $vokey; ?>"<?php echo $s; ?>><?php echo $voname; ?></option>
+										<?php } ?>
+									</select>
+								</td>
+							</tr>
+							<tr>
+								<td>Amount:</td>
+								<td><input type="text" name="voucher_amount" maxlength="5" style="width:247px;" value="<?php echo $_POST['voucher_amount']; ?>" /></td>
+							</tr>
+							<tr>
+								<td>Expired Date:</td>
+								<td>
+									<select name="voucher_expired_dd" style="padding:1px;width:42px;height:26px;">
+										<option value="">D</option>
+										<?php for($d=1; $d<=31; $d++) { $dv = sprintf("%02d", $d); $s = ''; if ($d == $_POST['voucher_expired_dd']) { $s = ' SELECTED'; } ?>
+										<option value="<?php echo $dv; ?>"<?php echo $s; ?>><?php echo $dv; ?></option>
+										<?php } ?>
+									</select>
+									<select name="voucher_expired_mm" style="padding:1px;width:42px;height:26px;">
+										<option value="">M</option>
+										<?php for($m=1; $m<=12; $m++) { $mv = sprintf("%02d", $m); $s = ''; if ($m == $_POST['voucher_expired_mm']) { $s = ' SELECTED'; } ?>
+										<option value="<?php echo $mv; ?>"<?php echo $s; ?>><?php echo $mv; ?></option>
+										<?php } ?>
+									</select>
+									<select name="voucher_expired_yy" style="padding:1px;width:60px;height:26px;">
+										<option value="">YYYY</option>
+										<?php $cy = (int)date("Y"); for($y=$cy; $y<=$cy+5; $y++) { $s = ''; if ($y == $_POST['voucher_expired_yy']) { $s = ' SELECTED'; } ?>
+										<option value="<?php echo $y; ?>"<?php echo $s; ?>><?php echo $y; ?></option>
+										<?php } ?>
+									</select>
+									<select name="voucher_expired_hh" style="padding:1px;width:42px;height:26px;">
+										<option value="">H</option>
+										<?php for($h=0; $h<=23; $h++) { $hv = sprintf("%02d", $h); $s = ''; if ($h == $_POST['voucher_expired_hh']) { $s = ' SELECTED'; } ?>
+										<option value="<?php echo $hv; ?>"<?php echo $s; ?>><?php echo $hv; ?></option>
+										<?php } ?>
+									</select>
+									<select name="voucher_expired_ii" style="padding:1px;width:42px;height:26px;">
+										<option value="">I</option>
+										<?php for($i=0; $i<60; $i=$i+15) { $iv = sprintf("%02d", $i); $s = ''; if ($i == $_POST['voucher_expired_ii']) { $s = ' SELECTED'; } ?>
+										<option value="<?php echo $iv; ?>"<?php echo $s; ?>><?php echo $iv; ?></option>
+										<?php } ?>
+									</select>
+								</td>
+							</tr>
+							<tr>
+								<td>Shipping Zone:</td>
+								<td>
+									<select name="voucher_zone" style="width:247px;">
+										<option value="">-- None --</option>
+										<?php for($z=1; $z<=6; $z++) { $s = ''; if ($z == $_POST['voucher_zone']) { $s = ' SELECTED'; } ?>
+										<option value="<?php echo $z; ?>"<?php echo $s; ?>>Zone <?php echo $z; ?></option>
+										<?php } ?>
+									</select>
+								</td>
+							</tr>
+							<tr>
+								<td>&nbsp;</td>
+								<td align="right"><input type="submit" name="save_vcode" value="&nbsp;&nbsp;Save&nbsp;&nbsp;" /></td>
+							</tr>
+						</table>
+						</form>
+					</td>
+					<td>&nbsp;</td>
+					<td valign="top">
+						<form action="admin.php?page=functions.php&section=vouchers&voucher_action=upload" method="POST" enctype="multipart/form-data">
+						<table>
+							<tr>
+								<td>CSV File:</td>
+								<td><input type="file" name="vouchers_csv"></td>
+								<td><input type="submit" name="save_vcode" value="&nbsp;&nbsp;Upload&nbsp;&nbsp;" /></td>
+							</tr>
+							<?php if ($_GET['vuploaded']) { ?>
+								<tr>
+									<td colspan="3" style="color:#336600;">Uploaded <?php echo $_GET['vuploaded']; ?> new voucher(s).</td>
+								</tr>
+							<?php } ?>
+						</table>
+						</form>
+					</td>
+				</tr>
+			</table>
 			<?php
 			$opvals = array('A' => 'Amount', 'P' => 'Percent');
 			$vper_page = 20;
@@ -4745,7 +4772,7 @@ function NWS_theme_admin()
 			$where = "";
 			$voucher_search = trim($_GET['voucher_search']);
 			if (strlen($voucher_search)) {
-				$where = " WHERE code = '".$voucher_search."'";
+				$where = " WHERE code LIKE '".$voucher_search."%'";
 			}
 			$vouchers = $wpdb->get_results(sprintf("SELECT SQL_CALC_FOUND_ROWS * FROM %swps_vouchers %s ORDER BY code LIMIT %s, %s", $wpdb->prefix, $where, $vstart, $vper_page));
 			$vouchers_total = $wpdb->get_var("SELECT FOUND_ROWS()");

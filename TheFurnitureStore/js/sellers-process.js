@@ -1,6 +1,5 @@
 var tlctab = "";
 var itemnmb = 1;
-var chelp = '';
 jQuery(document).ready(function(){
 	jQuery('.a-box .a-title h3').click(function(){
 		jQuery(this).parent().next('.a-content').slideToggle(function(){
@@ -17,15 +16,7 @@ jQuery(document).ready(function(){
 	jQuery('a.pic-zoom').colorbox();
 	jQuery('a.help').click(function(){
 		var arel = jQuery(this).attr('rel');
-		if (chelp != '') {
-			jQuery('.'+chelp).hide();
-		}
-		if (arel == 'select-your-payout') {
-			show_custom_popup('help-select-payout-popup');
-		} else {
-			chelp = arel;
-			jQuery('.'+arel).show(100);
-		}
+		show_custom_popup(arel);
 		return false;
 	});
 	jQuery('.help-desc-sec').click(function(){
@@ -704,14 +695,6 @@ jQuery(document).ready(function(){
 	jQuery('.uploaded-pics li .cancel').bind('click', function(){
 		jQuery(this).parent().remove();
 	});
-});
-
-// close help popup
-jQuery(document).click(function(){
-	if (chelp != '') {
-		jQuery('.'+chelp).hide();
-		chelp = '';
-	}
 });
 
 function show_custom_popup(cid) {

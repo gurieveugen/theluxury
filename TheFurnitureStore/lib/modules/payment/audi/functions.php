@@ -15,7 +15,7 @@ function audi_response(){
 	$feedback['amount']		= null2unknown(addslashes($_GET['amount'])/100);
 	$feedback['CURRENCY']	= 'USD';
 	$feedback['trans_id']	= null2unknown(addslashes($_GET['merchTxnRef']));
-	$feedback['pay_m']		= 'audi';
+	$feedback['p_option']	= 'audi';
 	$feedback['itemname']	= "Order No." . $feedback['order_id'] . " - " . date($OPTION['date_format']);
 	if (strlen($_GET['vpc_Message'])) {
 		$feedback['message'] = null2unknown(addslashes($_GET['vpc_Message']));
@@ -74,10 +74,9 @@ function audi_response(){
 		break;
 		
 		default:
-			$order['status'] = '9';
-			$order['error']  = 'There has been an error processing this transaction.</b><br>';
-			$order['error'] .= 'ERROR: '.getResponseDescription($feedback['status']).'<br/>';
-			$order['error'] .= $feedback['message'];
+			$order['status'] = 'error';
+			$order['error'] .= getResponseDescription($feedback['status']);
+			$order['message'] .= $feedback['message'];
 			return $order;
 				
 		break;

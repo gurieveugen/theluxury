@@ -110,26 +110,17 @@ $user_ID = $current_user->ID;
 			$atype = $mysearches_alert->type;
 			$value = $mysearches_alert->value;
 			if ($atype == 1) {
-				$ahref = '';
 				$ahtml = '';
 				$value = str_replace(array('{','}'), '', $value);
 				$svalues = explode(";", $value);
 				foreach($svalues as $sval) {
-					if (strlen($ahref)) { $ahref .= '&'; $ahtml .= ' + '; }
+					if (strlen($ahtml)) { $ahtml .= ' + '; }
 					$svals = explode(":", $sval);
-					if ($svals[0] == 'ct')      { $ahref .= 'filter-category[]='; }
-					else if ($svals[0] == 'br') { $ahref .= 'filter-brand[]='; }
-					else if ($svals[0] == 'cl') { $ahref .= 'filter-colour[]='; }
-					else if ($svals[0] == 'pr') { $ahref .= 'filter-price[]='; }
-					else if ($svals[0] == 'sl') { $ahref .= 'filter-selection[]='; }
-					else if ($svals[0] == 'sz') { $ahref .= 'filter-size[]='; }
-					else if ($svals[0] == 'rs') { $ahref .= 'filter-ring-size[]='; }
-					$ahref .= $sterms[$svals[1]]['slug'];
 					$ahtml .= $sterms[$svals[1]]['name'];
 				}
-				$atag = '<a href="'.$search_results_page.'?'.$ahref.'">'.$ahtml.'</a>';
+				$atag = $ahtml;
 			} else { // search term
-				$atag = '<a href="'.$search_page.'?s='.$value.'">&#171;'.$value.'&#187;</a>';
+				$atag = '&#171;'.$value.'&#187;';
 			}
 		?>        
 		<li><?php echo $atag; ?><img src="<?php bloginfo('template_url'); ?>/images/ico-remove-n.png" rel="<?php echo $alert_id; ?>" title="Remove"></li>

@@ -12,12 +12,6 @@ if (is_user_logged_in() && !in_array('profseller', $current_user->roles)) {
 $seller_posts = array();
 $seller_categories = get_terms('seller-category', 'hide_empty=0&orderby=id&order=asc');
 
-$submitted_items_description = apply_filters('the_content', stripcslashes($OPTION['wps_sellers_submitted_items_description']));
-$select_your_payout_description = apply_filters('the_content', stripcslashes($OPTION['wps_sellers_select_your_payout_description']));
-$awaiting_pickup_items_description = apply_filters('the_content', stripcslashes($OPTION['wps_sellers_awaiting_pickup_items_description']));
-$your_items_on_sale_description = apply_filters('the_content', stripcslashes($OPTION['wps_sellers_your_items_on_sale_description']));
-$sold_items_description = apply_filters('the_content', stripcslashes($OPTION['wps_sellers_sold_items_description']));
-
 $scat = trim($_GET['scat']);
 if (strlen($scat)) {
 	$scat_tt_id = $wpdb->get_var(sprintf("SELECT term_taxonomy_id FROM %sterm_taxonomy WHERE term_id = %s", $wpdb->prefix, $scat));
@@ -62,9 +56,8 @@ if (strlen($scat)) {
 		<div class="a-box open" style="position:relative;">
 			<div class="a-title">
 				<div class="right">
-					<a href="#help" class="ico-question help" rel="hlp-desc-issi">&nbsp;</a>
+					<a href="#help" class="ico-question help" rel="help-submitted-items">&nbsp;</a>
 					<span class="ico"></span>
-					<div class="help-desc-sec hlp-desc-issi"><?php echo $submitted_items_description; ?></div>
 				</div>
 				<h3>Submitted Items</h3>
 			</div>
@@ -93,7 +86,7 @@ if (strlen($scat)) {
 		<div class="a-box open" style="position:relative;">
 			<div class="a-title">
 				<div class="right">
-					<a href="#help" class="ico-question help" rel="select-your-payout">&nbsp;</a>
+					<a href="#help" class="ico-question help" rel="help-select-payout-popup">&nbsp;</a>
 					<span class="ico"></span>
 				</div>
 				<h3>Select your Payout</h3>
@@ -176,9 +169,8 @@ if (strlen($scat)) {
 		<div class="a-box open" style="position:relative;">
 			<div class="a-title">
 				<div class="right">
-					<a href="#help" class="ico-question help" rel="hlp-desc-isap">&nbsp;</a>
+					<a href="#help" class="ico-question help" rel="help-awaiting-pickup">&nbsp;</a>
 					<span class="ico"></span>
-					<div class="help-desc-sec hlp-desc-isap"><?php echo $awaiting_pickup_items_description; ?></div>
 				</div>
 				<h3>Awaiting Pickup</h3>
 			</div>
@@ -218,9 +210,8 @@ if (strlen($scat)) {
 		<div class="a-box open" style="position:relative;">
 			<div class="a-title">
 				<div class="right">
-					<a href="#help" class="ico-question help" rel="hlp-desc-isyion">&nbsp;</a>
+					<a href="#help" class="ico-question help" rel="help-your-items-on-sale">&nbsp;</a>
 					<span class="ico"></span>
-					<div class="help-desc-sec hlp-desc-isyion"><?php echo $your_items_on_sale_description; ?></div>
 				</div>
 				<h3>Your Items on sale</h3>
 			</div>
@@ -284,9 +275,8 @@ if (strlen($scat)) {
 		<div class="a-box open" style="position:relative;">
 			<div class="a-title">
 				<div class="right">
-					<a href="#help" class="ico-question help" rel="hlp-desc-issold">&nbsp;</a>
+					<a href="#help" class="ico-question help" rel="help-sold-items">&nbsp;</a>
 					<span class="ico"></span>
-					<div class="help-desc-sec hlp-desc-issold"><?php echo $sold_items_description; ?></div>
 				</div>
 				<h3>Sold Items</h3>
 			</div>

@@ -326,8 +326,8 @@ function NWS_footer() {
 	echo $content;
 	
 	//google analytics
-	if(($OPTION['wps_google_analytics']) == 'active'){
-		echo google_analytics($OPTION['wps_google_analytics_id']);
+	if(($OPTION['wps_google_analytics']) == 'active') {
+		google_analytics($OPTION['wps_google_analytics_id']);
 	}
 	
 	/**

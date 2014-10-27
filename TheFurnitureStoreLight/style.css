@@ -27,7 +27,7 @@ html,body{
 body{
 	background:#fff url(images/top-bg.png) repeat-x;
 	font:14px Cabin, Arial, Helvetica, sans-serif;
-	color:#666;
+	color:#222;
 	min-width: 1000px;
 }
 ol,ul{
@@ -1229,9 +1229,8 @@ body.shopping_cart #header ul .current_page_item a{
 	margin:0 0 0 10px;
 }
 .whereAmI{
-	padding:0 0 10px;
-	margin-bottom:20px;
-	border-bottom:1px solid #f1eee8;
+	padding:0px;
+	margin-bottom:0px;
 	font: 21px/23px Cabin, Arial, Helvetica, sans-serif;
 }
 .whereAmI a{
@@ -4070,10 +4069,11 @@ a.active,
 	margin:0 0 15px;
 }
 .main-product .success-message{
-	padding:10px;
-	background:#FFFFCC;
-	border:1px solid #CECDCD;
+	padding:10px 0px;
 	margin-bottom:10px;
+}
+.main-product .success-message a{
+	text-decoration:underline;
 }
 .product-holder{
 	padding: 0 0 20px;
@@ -7783,7 +7783,6 @@ table.sellers-summary-info td p{
 #nav li{
 	float:left;
 	position:relative;
-	margin:0 3px;
 	background:none;
 }
 #nav a{
@@ -7792,12 +7791,18 @@ table.sellers-summary-info td p{
 	width:auto !important;
 	height:31px;
 	color:#fff;
-	padding:0 16px;
+	padding:0 19px;
 	text-align:center;
 	position:relative;
 	z-index:101;
 	white-space:nowrap;
 	font:14px/31px Arial, Helvetica, sans-serif;
+}
+#nav .sell-your-item > a{
+	background: #d1ab3e;
+}
+#nav .sell-your-item:hover > a{
+	background: #bb9936;
 }
 #header #nav ul li{
 	color:#555050;
@@ -10396,7 +10401,7 @@ table.sellers-summary-info td p{
 	font-size: 20px;
 	line-height: 24px;
 	font-weight: normal;
-	color: #af7b0f;
+	color: #423f3f;
 }
 .contact-row.v1{
 	font-size: 14px;
@@ -10409,7 +10414,6 @@ table.sellers-summary-info td p{
 .add-item-content .contact-row h4{
 	font-size: 19px;
 	margin: 0 10px 0 0;
-	color: #423f3f;
 	font-weight: bold;
 }
 .add-item-content ul{
@@ -11234,7 +11238,14 @@ input[type="submit"].btn-grey{
 	margin-top: 0;
 	margin-left: 18px;
 }
-
+.page-top-text{
+	border-bottom: 1px solid #f1eee8;
+	padding: 0 0 6px;
+	margin: 0 0 6px;
+}
+.page-top-text p:last-child{
+	margin-bottom: 0;
+}
 .my-wishlist-wrap{
 	padding: 0 0 25px;
 }
@@ -11242,12 +11253,10 @@ input[type="submit"].btn-grey{
 	color: #af7b0f;
 }
 .my-wishlist-table{
-	width: 770px;
+	width: 100%;
 	margin: 0 0 20px;
-	border-top: 1px solid #949494;
 }
 .my-wishlist-table td{
-	border-bottom: 1px solid #949494;
 	padding: 13px 8px;
 }
 .my-wishlist-table td:first-child{
@@ -11269,6 +11278,10 @@ input[type="submit"].btn-grey{
 }
 .my-wishlist-table .image img{
 	display: block;
+}
+.my-wishlist-table .image .show_tooltip{
+	width: 20px;
+	height: 20px;
 }
 .link-facebook,
 .link-twitter,

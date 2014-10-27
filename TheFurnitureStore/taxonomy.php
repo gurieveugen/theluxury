@@ -50,6 +50,21 @@ $DEFAULT = show_default_view();
 	} 
 	?>
 	<div class="alignright" id="main_col">
+		<?php 
+		$term_featured_image = get_field('featured_image', 'brand_'.$qo->term_id);
+		if ($term_featured_image) 
+		{
+			?>
+			<div class="featuredTag">
+				<img src="<?php echo $term_featured_image['url']; ?>" alt="<?php echo $term->name; ?>" />
+			</div>
+			<?php
+		}
+		if($OPTION['wps_termDescr_enable']) 
+		{
+			echo term_description();
+		}
+		?>
 		<?php
 		product_sort_select();
 		
