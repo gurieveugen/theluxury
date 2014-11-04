@@ -525,3 +525,4 @@ function arrayToTaxQuery($taxs)
 	return false;
 }
 
+

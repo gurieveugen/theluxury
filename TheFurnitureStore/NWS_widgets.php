@@ -4088,7 +4088,7 @@ class ShopRecentlyAddedWidget extends WP_Widget {
 			$args['category__in'] = explode(",", str_replace(' ', '', $cats));
 		}
 		$recently_where = true;
-		add_filter('posts_where', 'recently_added_where');
+		//add_filter('posts_where', 'recently_added_where');
 		$recently_added = new wp_query($args); 		
 		if($recently_added->have_posts()) {
 			# Before the widget

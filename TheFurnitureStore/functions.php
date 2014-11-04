@@ -917,4 +917,61 @@ function copy_image($filename, $tofolder)
   }
 }
 
+
+add_filter( 'posts_where_request' , 'posts_where', 100, 2 );
+
+function posts_where( $where, $obj ) {
+	
+	if(is_admin())
+	{
+		global $wpdb;
+		if(isset($_GET['cat']) AND intval($_GET['cat']) > 0)
+		{
+			$a = new WP_Tax_Query( 
+				array(
+					array(
+						'taxonomy' => 'category',
+						'terms' => array($_GET['cat']),
+						'field' => 'term_id',
+						'include_children' => true
+					)
+				) 
+			);
+			$clauses = $a->get_sql( $wpdb->posts, 'ID' );
+			if(strpos($where, $clauses['where']) === FALSE)
+			{
+				$where = $clauses['where'].' '.$where;	
+			}
+		}
+	}
+	return $where;
+}
+
+add_filter( 'posts_join_request', 'posts_join', 10, 2);
+function posts_join($join, $obj)
+{
+	if(is_admin())
+	{
+		global $wpdb;
+		if(isset($_GET['cat']) AND intval($_GET['cat']) > 0)
+		{
+			$a = new WP_Tax_Query( 
+				array(
+					array(
+						'taxonomy' => 'category',
+						'terms' => array($_GET['cat']),
+						'field' => 'term_id',
+						'include_children' => true
+					)
+				) 
+			);
+			$clauses = $a->get_sql( $wpdb->posts, 'ID' );
+			if(strpos($join, $clauses['join']) === FALSE)
+			{
+				$join = $clauses['join'].' '.$join;	
+			}
+		}
+	}
+	return $join;
+}
 ?>
