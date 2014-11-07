@@ -839,13 +839,18 @@ function get_delivery_options($d_labels,$dpch='none'){
 		// hide pickup delivery option for Watches category items
 		$show_do = true;
 		if ($v == 'pickup') {
-			foreach($cart_items as $cart_item) {
+			$geoplugin = new geoPlugin();
+			$geoplugin->locate($_SERVER['REMOTE_ADDR']);
+			if (strlen($geoplugin->countryName) && strtoupper(trim($geoplugin->countryName)) != 'UNITED ARAB EMIRATES') {
+				$show_do = false;
+			}
+			/*foreach($cart_items as $cart_item) {
 				$cidata = explode("|", $cart_item);
 				$pid = $cidata[8];
 				if (in_category($OPTION['wps_women_watches_category'], $pid) || in_category($OPTION['wps_men_watches_category'], $pid)) {
 					$show_do = false;
 				}
-			}
+			}*/
 		}
 
 		if ($show_do) {
@@ -1011,6 +1016,7 @@ function process_order($step = 1) // function manages also inquiries
 				$column_array[]	= 'voucher';	$value_array[]	= $voucher;
 				$column_array[]	= 'level';		$value_array[]	= '1';
 				$column_array[]	= 'created';	$value_array[]	= time();
+				$column_array[]	= 'user_agent';	$value_array[]	= $_SERVER['HTTP_USER_AGENT'];
 
 				$order_id = db_insert($table, $column_array, $value_array);
 				update_utm_params('orders', $order_id);

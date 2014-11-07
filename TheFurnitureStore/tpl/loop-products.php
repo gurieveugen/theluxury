@@ -178,7 +178,7 @@ if($_SESSION['custom_args'])
 
 if(!isset($_SESSION['show_latest_products']))
 {
-	//add_filter( 'posts_where', 'filter_where' );	
+	add_filter( 'posts_where', 'filter_where' );	
 }
 else
 {

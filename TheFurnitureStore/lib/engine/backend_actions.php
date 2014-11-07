@@ -1917,98 +1917,6 @@ function NWS_members_pagination($members=10){
 	}
 }
 
-
-
-function NWS_voucher_pagination($vouchers=10){
-
-	global $wpdb;
-
-	$table 			= is_dbtable_there('vouchers');
-	$vouch_wanted 	= trim($_GET['vouch_wanted']);
-	global $current_user;			
-	get_currentuserinfo(); // grabs the user info and puts into vars AND user_id = $user_ID
-	$user_ID = $current_user->ID;
-	global $user_level;
-	if($user_level == 0)  $wh = "user_id = $user_ID";
-	else $wh = "c_by = 'A'";  
-	// how many vouchers altogether?
-	if(strlen($vouch_wanted) < 1){
-		$qStr 	= "SELECT * FROM $table WHERE duration = '1time' AND $wh";
-	}
-	else{
-		$qStr 	= "SELECT * FROM $table WHERE duration = '1time' AND vcode LIKE '$vouch_wanted%' AND $wh";
-	}
-	$res 		= mysql_query($qStr);
-	$vouch_num	= mysql_num_rows($res);
-	
-	if($vouch_num == 0){
-		echo "<b>".__('No Vouchers found','wpShop')."</b>";
-	}
-	else {
-		$num_pages 	= $vouch_num / $vouchers;
-		$base_url 	= '?page=functions.php&section=vouchers&action=display&vouch_wanted='.$vouch_wanted;
-		
-		echo "<a class='prev page-numbers' href='{$base_url}&start=0&end=".$vouchers."' style='text-decoration:none;'>&laquo;</a>";
-		
-		for($i=0,$j=1,$s=0,$e=$vouchers;$i<$num_pages;$i++,$j++,$s += $vouchers){
-		
-			if($_GET['start'] != $s){
-				echo "<a class='page-numbers' href='{$base_url}&start={$s}&end={$e}'>$j</a>";
-			}
-			else {
-				echo "<span class='page-numbers current'>$j</span>";
-			}
-		}	
-		$l = $s - $vouchers;
-		echo "<a class='next page-numbers' href='{$base_url}&start={$l}&end={$e}' style='text-decoration:none;'>&raquo;</a>";
-	}
-}
-
-
-
-function NWS_resellers_pagination($resellers=10){
-
-	global $wpdb;
-
-	$table 			= is_dbtable_there('vouchers');
-	$resell_wanted 	= trim($_GET['resellers_wanted']);
-
-	// how many vouchers altogether?
-	if(strlen($resell_wanted) < 1){
-		$qStr 	= "SELECT * FROM $table WHERE duration = 'indefinite'";
-	}
-	else{
-		$qStr 	= "SELECT * FROM $table WHERE duration = 'indefinite' AND vcode LIKE '$resell_wanted%'";
-	}
-	$res 		= mysql_query($qStr);
-	$resell_num	= mysql_num_rows($res);
-	
-	if($resell_num == 0){
-		echo "<b>".__('No Resellers found','wpShop')."</b>";
-	}
-	else {
-		$num_pages 	= $resell_num / $resellers;
-		$base_url 	= '?page=functions.php&section=vouchers&action=reseller&resellers_wanted='.$resell_wanted;
-		
-		echo "<a class='prev page-numbers' href='{$base_url}&start=0&end=".$resellers."' style='text-decoration:none;'>&laquo;</a>";
-		
-		for($i=0,$j=1,$s=0,$e=$resellers;$i<$num_pages;$i++,$j++,$s += $resellers){
-		
-			if($_GET['start'] != $s){
-				echo "<a class='page-numbers' href='{$base_url}&start={$s}&end={$e}'>$j</a>";
-			}
-			else {
-				echo "<span class='page-numbers current'>$j</span>";
-			}
-		}	
-		$l = $s - $resellers;
-		echo "<a class='next page-numbers' href='{$base_url}&start={$l}&end={$e}' style='text-decoration:none;'>&raquo;</a>";
-	}
-}
-
-
-
-
 //////////////////////////////////////////////// THEME-OPTIONS ///////////////////////////////////////////////////////
 
 
@@ -2100,38 +2008,14 @@ function NWS_resellers_pagination($resellers=10){
 	}
 	
 	function NWS_total_vouchers_there($option='all'){
-		$totalVouchers 	= array();
-		$table 			= is_dbtable_there('vouchers');
-		
-		//total All
-			$qStr 							= "SELECT * FROM $table";
-			$res 							= mysql_query($qStr);
-			$num 							= mysql_num_rows($res);
-			$totalVouchers['all'] 			= $num;
-			
-		//Single Use		
-			$qStr 							= "SELECT * FROM $table WHERE duration ='1time'";
-			$res 							= mysql_query($qStr);
-			$num 							= mysql_num_rows($res);				
-			$totalVouchers['single_use'] 	= $num;
-			
-		//Single Use Redeemed		
-			$qStr 							= "SELECT * FROM $table WHERE duration ='1time' AND used='1'";
-			$res 							= mysql_query($qStr);
-			$num 							= mysql_num_rows($res);				
-			$totalVouchers['redeemed'] 		= $num;
-			
-		//Single Use Unclaimed		
-			$qStr 							= "SELECT * FROM $table WHERE duration ='1time' AND used='0'";
-			$res 							= mysql_query($qStr);
-			$num 							= mysql_num_rows($res);				
-			$totalVouchers['unclaimed'] 	= $num;
-		
-		//Multi Use (reseller)		
-			$qStr 							= "SELECT * FROM $table WHERE duration ='indefinite'";
-			$res 							= mysql_query($qStr);
-			$num 							= mysql_num_rows($res);				
-			$totalVouchers['multi_use'] 	= $num;
+		global $wpdb;
+		$table = is_dbtable_there('vouchers');
+
+		$totalVouchers 	= array(
+			'all' => $wpdb->get_var(sprintf("SELECT COUNT(vid) FROM %s", $table)),
+			'single_use' => $wpdb->get_var(sprintf("SELECT COUNT(vid) FROM %s WHERE type = 1", $table)),
+			'multi_use' => $wpdb->get_var(sprintf("SELECT COUNT(vid) FROM %s WHERE type = 2", $table))
+		);
 		
 		return $totalVouchers;
 	}
@@ -2596,8 +2480,8 @@ function backend_actions_init() {
 						$mm = $_POST['voucher_expired_mm'];
 						$dd = $_POST['voucher_expired_dd'];
 						$hh = $_POST['voucher_expired_hh'];
-						$ii = $_POST['voucher_expired_hh'];
-						$ss = 00;
+						$ii = $_POST['voucher_expired_ii'];
+						$ss = '00';
 						if (!$hh) { $hh = '00'; }
 						if (!$ii) { $ii = '00'; }
 						$voucher_expired = $yy.'-'.$mm.'-'.$dd.' '.$hh.':'.$ii.':'.$ss;
@@ -2637,7 +2521,7 @@ function backend_actions_init() {
 						if ($voucher_type == 'M') { $type = 2; }
 						$expired = '';
 						if ($edlen = strlen($expiry_date)) {
-							$expired = $expiry_date;
+							$expired = str_replace('/', '-', $expiry_date);
 							if ($edlen == 10) {
 								$expired .= ' 00:00:00';
 							}

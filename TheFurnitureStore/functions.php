@@ -2,6 +2,7 @@
 session_start();
 
 define('TEMPLURL', get_bloginfo('template_url'));
+define('HOMEURL', get_option('home'));
 define('WPSHOP_LIB', 'lib/');
 
 // custom thumbnails size
@@ -20,7 +21,6 @@ add_filter('option_url', 'adjust2ssl');
 add_filter('option_wpurl', 'adjust2ssl');
 add_filter('option_stylesheet_url', 'adjust2ssl');
 add_filter('option_template_url', 'adjust2ssl');
-
 
 if(!isset($_SERVER['HTTPS'])){$_SERVER['HTTPS'] = NULL;}	
 if(!isset($_SERVER['SSL'])){$_SERVER['SSL'] = NULL;}		
@@ -42,10 +42,10 @@ define('WPSHOP_EMAIL_FORMAT_OPTION',$OPTION['wps_email_delivery_type']); // txt,
 // Load required files, modules + define necessary constants
 require_once(WPSHOP_LIB . 'engine/cart_actions.php');
 require_once(WPSHOP_LIB . 'engine/NWS_functions.php');
-require_once(WPSHOP_LIB . 'engine/NWS_login_functions.php');
 require_once(WPSHOP_LIB . 'engine/NWS_taxonomies.php');
 require_once(WPSHOP_LIB . 'engine/NWS_shortcodes.php');
 require_once(WPSHOP_LIB . 'engine/NWS_widgets.php');
+require_once(WPSHOP_LIB . 'engine/NWS_login_functions.php');
 require_once(WPSHOP_LIB . 'engine/nws-email-formats.php');
 require_once(WPSHOP_LIB . 'engine/nws-sell-questions.php');
 require_once(WPSHOP_LIB . 'engine/class.rhinosupport.php');
@@ -458,7 +458,6 @@ function nws_template_redirect() {
 	}
 }
 
-
 if(!function_exists('current_user_role'))
 {
 	function current_user_role()
@@ -840,86 +839,8 @@ function emarsys_get_order_email() {
 	return $order_email;
 }
 
-add_action('init', 'init_hivista');
-function init_hivista() {
-	global $wpdb;
-	if ($_GET['hivista'] == 'vouchers') {
-		$vouchers = $wpdb->get_results("SELECT * FROM wp_wps_vouchers2 ORDER BY vid");
-		if ($vouchers) {
-			foreach($vouchers as $voucher) {
-				$vid = $voucher->vid;
-				$code = $voucher->vcode;
-				$option = $voucher->voption;
-				$amount = $voucher->vamount;
-				$used = $voucher->used;
-				$time_issued = $voucher->time_issued;
-				$user_id = $voucher->user_Id;
-
-				$expired = '';
-				if (strlen($time_issued)) { $expired = date("Y-m-d H:i:s", strtotime($time_issued)); }
-
-				$insert = array();
-				$insert['vid'] = $vid;
-				$insert['code'] = $code;
-				$insert['option'] = $option;
-				$insert['amount'] = $amount;
-				$insert['expired'] = $expired;
-				$insert['zone'] = 0;
-				$insert['used'] = $used;
-				$insert['created'] = current_time('mysql');
-				$insert['user_id'] = $user_id;
-				$wpdb->insert($wpdb->prefix."wps_vouchers", $insert);
-			}
-		}
-		exit;
-	}
-	if ($_GET['hivista'] == 'ptest') {
-		var_dump(get_post_thumb('http://luxclosettest.wpengine.com/wp-content/uploads/miu-miu-flower-patchwork-shoulder-bag-lc-47911-142150-1-6.jpg', 61, 61, true));
-		exit;
-	}
-}
-
-function copy_image($filename, $tofolder)
-{
-  $size = @getimagesize($filename);
-  if ($size) {
-	if ($size['mime'] == 'image/jpeg') {
-      $source = imagecreatefromjpeg($filename);
-	  $itype = 1;
-	}
-	else if ($size['mime'] == 'image/gif') {
-      $source = imagecreatefromgif($filename);
-	  $itype = 2;
-	}
-	else if ($size['mime'] == 'image/png') {
-      $source = imagecreatefrompng($filename);
-	  $itype = 3;
-	}
-
-    if ($source) {
-	    $newimage = $tofolder.basename($filename);
-	    // create new image
-	    $rgb = 0xFFFFFF;
-        $target = imagecreatetruecolor($size[0], $size[1]);
-        imagefill($target, 0, 0, $rgb);
-        imagecopyresized($target,$source,0,0,0,0,$size[0],$size[1],$size[0],$size[1]);
-        if ($itype == 1) {
-          imagejpeg($target, $newimage, 100);
-        } else if ($itype == 2) {
-          imagegif($target, $newimage, 100);
-	    } else {
-          imagepng($target, $newimage, 100);
-        }
-        imagedestroy($target);
-        imagedestroy($source);
-		return $newimage;
-	}
-  }
-}
-
-
+/* Fix wp-admin posts filter */
 add_filter( 'posts_where_request' , 'posts_where', 100, 2 );
-
 function posts_where( $where, $obj ) {
 	
 	if(is_admin())
@@ -973,5 +894,45 @@ function posts_join($join, $obj)
 		}
 	}
 	return $join;
+}
+
+/* Hivista Actions */
+add_action('init', 'init_hivista');
+function init_hivista() {
+	global $wpdb;
+	if ($_GET['hivista'] == 'vouchers') {
+		$vouchers = $wpdb->get_results("SELECT * FROM wp_wps_vouchers2 ORDER BY vid");
+		if ($vouchers) {
+			foreach($vouchers as $voucher) {
+				$vid = $voucher->vid;
+				$code = $voucher->vcode;
+				$option = $voucher->voption;
+				$amount = $voucher->vamount;
+				$used = $voucher->used;
+				$time_issued = $voucher->time_issued;
+				$user_id = $voucher->user_Id;
+
+				$expired = '';
+				if (strlen($time_issued)) { $expired = date("Y-m-d H:i:s", strtotime($time_issued)); }
+
+				$insert = array();
+				$insert['vid'] = $vid;
+				$insert['code'] = $code;
+				$insert['option'] = $option;
+				$insert['amount'] = $amount;
+				$insert['expired'] = $expired;
+				$insert['zone'] = 0;
+				$insert['used'] = $used;
+				$insert['created'] = current_time('mysql');
+				$insert['user_id'] = $user_id;
+				$wpdb->insert($wpdb->prefix."wps_vouchers", $insert);
+			}
+		}
+		exit;
+	}
+	if ($_GET['hivista'] == 'ptest') {
+		var_dump(get_post_thumb('http://luxclosettest.wpengine.com/wp-content/uploads/miu-miu-flower-patchwork-shoulder-bag-lc-47911-142150-1-6.jpg', 61, 61, true));
+		exit;
+	}
 }
 ?>

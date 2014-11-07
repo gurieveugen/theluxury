@@ -405,7 +405,11 @@ function ajax_login_init() {
 					}
 					if ($user) {
 						$check_pass = wp_check_password($pwd, $user->data->user_pass, $user->ID);
-						if (!$check_pass) {
+						if ($check_pass) {
+							if (!in_array('subscriber', $user->roles)) {
+								$error .= 'Login error.'.chr(10);
+							}
+						} else {
 							$error .= 'The password you entered for the "'.$log.'" is incorrect.'.chr(10);
 						}
 					} else {
@@ -514,9 +518,30 @@ function ajax_login_init() {
 	}
 }
 
+add_action('wp_login', 'nws_wp_login', 1, 2);
+function nws_wp_login($user_login, $user) {
+	global $user, $pagenow;
+	if ($pagenow == 'wp-login.php' && in_array('staff', $user->roles)) {
+		if (!check_staff_user_by_ip($user)) {
+			wp_redirect('wp-login.php?stafferror=true');
+			exit;
+		}
+	}
+	return $user;
+}
+
+add_filter('wp_login_errors', 'thelux_wp_login_errors', 10, 2);
+function thelux_wp_login_errors($errors, $redirect_to) {
+	if ($_GET['stafferror'] == 'true') {
+		$errors->add('staff_ip', __("Your IP address isn't in allowed list."));
+	}
+	return $errors;
+}
+
 function check_staff_user_by_ip($user) {
 	$allowed = true;
-	if ($user->roles[0] == 'staff' && $user->ID != 17441) {
+	//if ($user->roles[0] == 'staff' && $user->ID != 17441) {
+	if ($user->roles[0] == 'staff') {
 		$staff_ip = $_SERVER['REMOTE_ADDR'];
 		$allowed_staff_ips = get_option('allowed_staff_ips');
 		if (strlen($allowed_staff_ips)) {
@@ -528,5 +553,14 @@ function check_staff_user_by_ip($user) {
 		}
 	}
 	return $allowed;
+}
+
+add_action('init', 'thelux_login_init');
+function thelux_login_init() {
+	global $pagenow;
+	if ($pagenow == 'wp-login.php' && $_GET['secret'] != 'LuxCloset2014' && !isset($_POST['wp-submit'])) {
+		wp_redirect(home_url());
+		exit;
+	}
 }
 ?>

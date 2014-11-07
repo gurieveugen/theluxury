@@ -214,12 +214,6 @@ jQuery(document).ready(function(){
 		jQuery.colorbox({inline:true, href:'#popup-size-chart'});
 		return false;
 	});
-	// utm params
-	jQuery('#utm_source').val(get_utm_param('utm_source'));
-	jQuery('#utm_medium').val(get_utm_param('utm_medium'));
-	jQuery('#utm_campaign').val(get_utm_param('utm_campaign'));
-	jQuery('#utm_content').val(get_utm_param('utm_content'));
-	jQuery('#utm_term').val(get_utm_param('utm_term'));
 });
 function show_size_filter(loadfl) {
 	var shoes = false;
@@ -341,31 +335,36 @@ function odetails_show_hide(orel) {
 	}
 }
 
-var GATrafficSource = (function(){
-	var pairs = (/(?:^|; )__utmz=([^;]*)/.exec(document.cookie)||[]).slice(1).pop().split('.').slice(4).join('.').split('|');
-	var vals = {};
-	for (var i = 0; i < pairs.length; i++) {
-		var temp = pairs[i].split('=');
-		vals[temp[0]] = temp[1];
-	}
-	return  {
-		'utm_source': (vals.utmgclid) ? "google" : vals.utmcsr,
-		'utm_medium': (vals.utmgclid) ? "cpc" : vals.utmcmd,
-		'utm_campaign': vals.utmccn,
-		'utm_content': vals.utmcct,
-		'utm_term': vals.utmctr
-	};
-}());
-
-function get_utm_param(param) {
-	eval("var utm_param = GATrafficSource."+param+";");
-	if (utm_param != undefined) {
-		return utm_param;
+/* UTM Params */
+function get_utm_param2(param) {
+	if (utmz != '') {
+		var utm_param = '';
+		var utm_params = {};
+		var utmzfvals = utmz.split('|');
+		for (var p=0; p<utmzfvals.length; p++) {
+			var utmzvals = utmzfvals[p].split('=');
+			utm_params[utmzvals[0]] = utmzvals[1];
+		}
+		if (param == 'utm_source') {
+			utm_param = (utm_params.utmgclid) ? "google" : utm_params.utmcsr;
+		} else if (param == 'utm_medium') {
+			utm_param = (utm_params.utmgclid) ? "cpc" : utm_params.utmcmd;
+		} else if (param == 'utm_campaign') {
+			utm_param = utm_params.utmccn;
+		} else if (param == 'utm_content') {
+			utm_param = utm_params.utmcct;
+		} else if (param == 'utm_term') {
+			utm_param = utm_params.utmctr;
+		}
+		//eval("var utm_param = GATrafficSource."+param+";");
+		if (utm_param != undefined) {
+			return utm_param;
+		}
 	}
 	return '';
 }
 
-function get_utm_param2(param) {
+function get_utm_param(param) {
 	var utm_params = utm_from_cookie();
 	eval("var utm_param = utm_params."+param+";");
 	if (utm_param != undefined) {
@@ -406,65 +405,4 @@ function _uGC(l,n,s) {
 		c = l.substring((i+i3),i2);
 	}
 	return c;
-}
-
-function get_utm_param3(param) {
-	var utm_params = get_utm_from_cookie();
-	eval("var utm_param = utm_params."+param+";");
-	if (utm_param != undefined) {
-		return utm_param;
-	}
-	return '';
-}
-
-function get_utm_from_cookie() {
-	var gc = '';
-	var c_name = "__utmz";
-	var ga_utm_params = {
-		'utm_source':'',
-		'utm_medium':'',
-		'utm_campaign':'',
-		'utm_content':'',
-		'utm_term':''
-	};
-	if (document.cookie.length > 0) {
-		c_start=document.cookie.indexOf(c_name + "=");
-		if (c_start!=-1) {
-			c_start = c_start + c_name.length + 1;
-			c_end = document.cookie.indexOf(";", c_start);
-			if (c_end == -1) { c_end = document.cookie.length; }
-			gc = unescape(document.cookie.substring(c_start, c_end));
-		}
-	}
-	if(gc != "") {
-		var z = gc.split('.'); 
-		if(z.length >= 4) {
-			var y = z[4].split('|');
-			for(i=0; i<y.length; i++){
-				if(y[i].indexOf('utmcsr=') >= 0) { ga_utm_params.utm_source = y[i].substring(y[i].indexOf('=')+1); }
-				if(y[i].indexOf('utmccn=') >= 0) { ga_utm_params.utm_campaign = y[i].substring(y[i].indexOf('=')+1); }
-				if(y[i].indexOf('utmcmd=') >= 0) { ga_utm_params.utm_medium = y[i].substring(y[i].indexOf('=')+1); }
-				if(y[i].indexOf('utmctr=') >= 0) { ga_utm_params.utm_term = y[i].substring(y[i].indexOf('=')+1); }
-				if(y[i].indexOf('utmcct=') >= 0) { ga_utm_params.utm_content = y[i].substring(y[i].indexOf('=')+1); }
-			}
-		}
-	}
-	return ga_utm_params;
-}
-
-function test1() {
-	var str = 'utm_source='+get_utm_param('utm_source')+'\n';
-	str += 'utm_medium='+get_utm_param('utm_medium')+'\n';
-	str += 'utm_campaign='+get_utm_param('utm_campaign')+'\n';
-	str += 'utm_content='+get_utm_param('utm_content')+'\n';
-	str += 'utm_term='+get_utm_param('utm_term')+'\n';
-	alert(str);
-}
-function test2() {
-	var str = 'utm_source='+get_utm_param2('utm_source')+'\n';
-	str += 'utm_medium='+get_utm_param2('utm_medium')+'\n';
-	str += 'utm_campaign='+get_utm_param2('utm_campaign')+'\n';
-	str += 'utm_content='+get_utm_param2('utm_content')+'\n';
-	str += 'utm_term='+get_utm_param2('utm_term')+'\n';
-	alert(str);
 }

@@ -60,6 +60,18 @@ if ($submission_form_brands) {
 		}
 	}
 }
+
+$seller_categories = array();
+$scategories = get_terms('seller-category', 'hide_empty=0');
+if ($scategories) {
+	foreach($scategories as $scategory) {
+		if ($scategory->parent) {
+			$seller_categories[$scategory->parent]['childs'][$scategory->term_id] = $scategory->name;
+		} else {
+			$seller_categories[$scategory->term_id]['name'] = $scategory->name;
+		}
+	}
+}
 ?>
 <?php if (have_posts()) : while (have_posts()) : the_post(); ?>
 
@@ -84,12 +96,16 @@ jQuery(function(){ swf_upload_init(1); });
 			<div class="column width-216 item-category">
 				<label>Category *</label>
 				<div class="custom-select">
-					<?php $seller_categories = get_terms('seller-category', 'hide_empty=0&orderby=id&order=asc');
-					if ($seller_categories) { ?>
+					<?php if ($seller_categories) { ?>
 					<select name="item_category" onchange="indivseller_change_cat(0, this.value);">
 						<option value="">-- Select Category --</option>
-						<?php foreach($seller_categories as $seller_category) { ?>
-						<option value="<?php echo $seller_category->term_id; ?>"<?php if ($item_category == $seller_category->term_id) { echo ' SELECTED'; } ?>><?php echo $seller_category->name; ?></option>
+						<?php foreach($seller_categories as $scid => $seller_category) { $s = ''; if ($scid == $item_category) { $s = ' SELECTED'; } ?>
+						<option value="<?php echo $scid; ?>"<?php echo $s; ?>><?php echo $seller_category['name']; ?></option>
+							<?php if ($seller_category['childs']) {
+								foreach($seller_category['childs'] as $subcid => $subname) { $s = ''; if ($subcid == $item_category) { $s = ' SELECTED'; } ?>
+									<option value="<?php echo $subcid; ?>"<?php echo $s; ?>>-- <?php echo $subname; ?></option>
+								<?php } ?>
+							<?php } ?>
 						<?php } ?>
 					</select>
 					<?php } ?>

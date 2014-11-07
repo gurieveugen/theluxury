@@ -328,7 +328,7 @@ jQuery(document).ready(function(){
 		}
 		init_alerts_action();
 	}
-	jQuery('.search-filter-form .f-block .jqTransformCheckbox').click(function(){
+	jQuery('.search-filter-form .jqTransformCheckbox').click(function(){
 		var sfid = jQuery(this).parent().find('input').attr('id');
 		var sfname = jQuery(this).parent().parent().find('label').attr('title');
 		if (jQuery(this).hasClass('jqTransformChecked')) {

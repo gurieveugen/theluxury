@@ -1,101 +1,160 @@
 <div class="accordion">
 <?php
+global $OPTION;
+$wps_excluded_categories = unserialize($OPTION['wps_excluded_sellers_categories']);
+
+$categories = get_the_category($post->ID);
+$category_ids = array();
+if ($categories) {
+	foreach($categories as $category){
+		if (!in_array($category->term_id, $wps_excluded_categories)) {
+			$category_ids[] = $category->term_id;
+		}
+	}
+}
+$post_brand_id = $wpdb->get_var(sprintf("SELECT tt.term_id FROM %sterm_taxonomy tt LEFT JOIN %sterm_relationships tr ON tr.term_taxonomy_id = tt.term_taxonomy_id WHERE tr.object_id = %s AND tt.taxonomy = 'brand' LIMIT 0, 1", $wpdb->prefix, $wpdb->prefix, $post->ID));
+$post_colour_id = $wpdb->get_var(sprintf("SELECT tt.term_id FROM %sterm_taxonomy tt LEFT JOIN %sterm_relationships tr ON tr.term_taxonomy_id = tt.term_taxonomy_id WHERE tr.object_id = %s AND tt.taxonomy = 'colour' LIMIT 0, 1", $wpdb->prefix, $wpdb->prefix, $post->ID));
+$post_size_id = $wpdb->get_var(sprintf("SELECT tt.term_id FROM %sterm_taxonomy tt LEFT JOIN %sterm_relationships tr ON tr.term_taxonomy_id = tt.term_taxonomy_id WHERE tr.object_id = %s AND tt.taxonomy = 'size' LIMIT 0, 1", $wpdb->prefix, $wpdb->prefix, $post->ID));
+$post_ring_size_id = $wpdb->get_var(sprintf("SELECT tt.term_id FROM %sterm_taxonomy tt LEFT JOIN %sterm_relationships tr ON tr.term_taxonomy_id = tt.term_taxonomy_id WHERE tr.object_id = %s AND tt.taxonomy = 'ring-size' LIMIT 0, 1", $wpdb->prefix, $wpdb->prefix, $post->ID));
+$post_clothes_size_id = $wpdb->get_var(sprintf("SELECT tt.term_id FROM %sterm_taxonomy tt LEFT JOIN %sterm_relationships tr ON tr.term_taxonomy_id = tt.term_taxonomy_id WHERE tr.object_id = %s AND tt.taxonomy = 'clothes-size' LIMIT 0, 1", $wpdb->prefix, $wpdb->prefix, $post->ID));
+$post_tags = wp_get_post_terms($post->ID, 'post_tag');
 // ---------------------------------------------------------------
 // YOU MAY ALSO LIKE
 // ---------------------------------------------------------------
 $ymal_posts = array();
-$ymal_ex_posts = array();
-$post_brand_id = $wpdb->get_var(sprintf("SELECT tt.term_id FROM %sterm_taxonomy tt LEFT JOIN %sterm_relationships tr ON tr.term_taxonomy_id = tt.term_taxonomy_id WHERE tr.object_id = %s AND tt.taxonomy = 'brand' LIMIT 0, 1", $wpdb->prefix, $wpdb->prefix, $post->ID));
-// find items with such all tags
-$post_tags = wp_get_post_terms($post->ID, 'post_tag');
-if ($post_tags) {
-	$tag_ids = array();
-	foreach($post_tags as $post_tag) {
-		$tag_ids[] = $post_tag->term_id;
-	}
-	$args = array(
-		'tag__and' 		   => $tag_ids,
-		'post__not_in' 	   => array($post->ID),
-		'posts_per_page'   => $OPTION['wps_tag_relatedProds_num'], 
-		'orderby' 		   => 'date',
-		'order' 		   => 'DESC',
-		'suppress_filters' => false
-	);
-	$recently_where = true;
-	add_filter('posts_where', 'recently_added_where');
-	$ymal_posts = get_posts($args);
-	if (!$ymal_posts) {
-		$args = array(
-			'tag__in' 		   => $tag_ids,
-			'post__not_in' 	   => array($post->ID),
-			'posts_per_page'   => $OPTION['wps_tag_relatedProds_num'], 
-			'orderby' 		   => 'date',
-			'order' 		   => 'DESC',
-			'suppress_filters' => false
-		);
-		$recently_where = true;
-		add_filter('posts_where', 'recently_added_where');
-		$ymal_posts = get_posts($args);
-	}
+$ymal_ex_posts = array($post->ID);
+
+$def_args = array(
+	'posts_per_page'	=> 3, 
+	'orderby' 			=> $OPTION['wps_cat_relatedProds_orderby'],
+	'order' 			=> $OPTION['wps_cat_relatedProds_order']
+);
+// category, brand, colour, sizes
+$args = $def_args;
+$args['post__not_in'] = $ymal_ex_posts;
+if ($category_ids) {
+	$args['category__and'] = $category_ids;
+}
+if ($post_brand_id) {
+	$args['tax_query'][] = array('taxonomy' => 'brand', 'terms' => $post_brand_id);
+}
+if ($post_colour_id) {
+	$args['tax_query'][] = array('taxonomy' => 'colour', 'terms' => $post_colour_id);
+}
+if ($post_size_id) {
+	$args['tax_query'][] = array('taxonomy' => 'size', 'terms' => $post_size_id);
+}
+if ($post_ring_size_id) {
+	$args['tax_query'][] = array('taxonomy' => 'ring-size', 'terms' => $post_ring_size_id);
+}
+if ($post_clothes_size_id) {
+	$args['tax_query'][] = array('taxonomy' => 'clothes-size', 'terms' => $post_clothes_size_id);
+}
+$recently_where = true;
+add_filter('posts_where', 'recently_added_where');
+$ymal_posts = get_posts($args);
+if (!$ymal_posts || count($ymal_posts) < 3) {
 	if ($ymal_posts) {
 		foreach($ymal_posts as $ymal_post) {
 			$ymal_ex_posts[] = $ymal_post->ID;
 		}
 	}
-	// find items with such tags and brand
-	if (count($ymal_posts) < 3 && $post_brand_id) {
-		if ($post_brand_id) {
-		$args = array(
-			'tag__in' 		   => $tag_ids,
-			'post__not_in' 	   => array($post->ID),
-			'posts_per_page'   => $OPTION['wps_tag_relatedProds_num'],
-			'orderby' 		   => 'date',
-			'order' 		   => 'DESC',
-			'suppress_filters' => false,
-			'tax_query' => array(
-				array(
-					'taxonomy' => 'brand',
-					'terms' => $post_brand_id
-				)
-			)
-		);
-		$recently_where = true;
-		add_filter('posts_where', 'recently_added_where');
-		$tags_and_brands_posts = get_posts($args);
-		if ($tags_and_brands_posts) {
-			foreach($tags_and_brands_posts as $tags_and_brands_post) {
-				if (!in_array($tags_and_brands_post->ID, $ymal_ex_posts) && count($ymal_posts) < 3) {
-					$ymal_posts[] = $tags_and_brands_post;
-					$ymal_ex_posts[] = $tags_and_brands_post->ID;
-				}
-			}
-		}
-	}
-}
-if (count($ymal_posts) < 3) {
-	// find items with such brand
-	$ppp = $OPTION['wps_tag_relatedProds_num'] - count($ymal_posts);
-	$args = array(
-		'post__not_in' 	   => array($post->ID),
-		'posts_per_page'   => $OPTION['wps_tag_relatedProds_num'],
-		'orderby' 		   => 'date',
-		'order' 		   => 'DESC',
-		'suppress_filters' => false,
-		'tax_query' => array(
-			array(
-				'taxonomy' => 'brand',
-				'terms' => $post_brand_id
-			)
-		)
-	);
+	// category, brand, colour
+	$args = $def_args;
+	$args['post__not_in'] = $ymal_ex_posts;
+	if ($category_ids) { $args['category__and'] = $category_ids; }
+	if ($post_brand_id) { $args['tax_query'][] = array('taxonomy' => 'brand', 'terms' => $post_brand_id); }
+	if ($post_colour_id) { $args['tax_query'][] = array('taxonomy' => 'colour', 'terms' => $post_colour_id); }
 	$recently_where = true;
 	add_filter('posts_where', 'recently_added_where');
-	$brands_posts = get_posts($args);
-	if ($brands_posts) {
-		foreach($brands_posts as $brands_post) {
-			if (!in_array($brands_post->ID, $ymal_ex_posts) && count($ymal_posts) < 3) {
-				$ymal_posts[] = $brands_post;
-				$ymal_ex_posts[] = $brands_post->ID;
+	$restricted_ymal_posts = get_posts($args);
+	if ($restricted_ymal_posts) {
+		foreach($restricted_ymal_posts as $restricted_ymal_post) {
+			$ymal_posts[] = $restricted_ymal_post;
+			$ymal_ex_posts[] = $restricted_ymal_post->ID;
+		}
+	}
+	if (!$ymal_posts || count($ymal_posts) < 3) {
+		// category, brand
+		$args = $def_args;
+		$args['post__not_in'] = $ymal_ex_posts;
+		if ($category_ids) { $args['category__and'] = $category_ids; }
+		if ($post_brand_id) { $args['tax_query'][] = array('taxonomy' => 'brand', 'terms' => $post_brand_id); }
+		$recently_where = true;
+		add_filter('posts_where', 'recently_added_where');
+		$restricted_ymal_posts = get_posts($args);
+		if ($restricted_ymal_posts) {
+			foreach($restricted_ymal_posts as $restricted_ymal_post) {
+				$ymal_posts[] = $restricted_ymal_post;
+				$ymal_ex_posts[] = $restricted_ymal_post->ID;
+			}
+		}
+		if (!$ymal_posts || count($ymal_posts) < 3) {
+			// category
+			$args = $def_args;
+			$args['post__not_in'] = $ymal_ex_posts;
+			if ($category_ids) { $args['category__and'] = $category_ids; }
+			$recently_where = true;
+			add_filter('posts_where', 'recently_added_where');
+			$restricted_ymal_posts = get_posts($args);
+			if ($restricted_ymal_posts) {
+				foreach($restricted_ymal_posts as $restricted_ymal_post) {
+					$ymal_posts[] = $restricted_ymal_post;
+					$ymal_ex_posts[] = $restricted_ymal_post->ID;
+				}
+			}
+			if (!$ymal_posts || count($ymal_posts) < 3) {
+				if ($post_tags) {
+					$tag_ids = array();
+					foreach($post_tags as $post_tag) {
+						$tag_ids[] = $post_tag->term_id;
+					}
+					// tags (AND)
+					$args = $def_args;
+					$args['post__not_in'] = $ymal_ex_posts;
+					$args['tag__and'] = $tag_ids;
+					$recently_where = true;
+					add_filter('posts_where', 'recently_added_where');
+					$restricted_ymal_posts = get_posts($args);
+					if ($restricted_ymal_posts) {
+						foreach($restricted_ymal_posts as $restricted_ymal_post) {
+							$ymal_posts[] = $restricted_ymal_post;
+							$ymal_ex_posts[] = $restricted_ymal_post->ID;
+						}
+					}
+					if (!$ymal_posts || count($ymal_posts) < 3) {
+						// tags (IN)
+						$args = $def_args;
+						$args['post__not_in'] = $ymal_ex_posts;
+						$args['tag__in'] = $tag_ids;
+						$recently_where = true;
+						add_filter('posts_where', 'recently_added_where');
+						$restricted_ymal_posts = get_posts($args);
+						if ($restricted_ymal_posts) {
+							foreach($restricted_ymal_posts as $restricted_ymal_post) {
+								$ymal_posts[] = $restricted_ymal_post;
+								$ymal_ex_posts[] = $restricted_ymal_post->ID;
+							}
+						}
+						if (!$ymal_posts || count($ymal_posts) < 3) {
+							if ($post_brand_id) {
+								// brand
+								$args = $def_args;
+								$args['post__not_in'] = $ymal_ex_posts;
+								$args['tax_query'][] = array('taxonomy' => 'brand', 'terms' => $post_brand_id);
+								$recently_where = true;
+								add_filter('posts_where', 'recently_added_where');
+								$restricted_ymal_posts = get_posts($args);
+								if ($restricted_ymal_posts) {
+									foreach($restricted_ymal_posts as $restricted_ymal_post) {
+										$ymal_posts[] = $restricted_ymal_post;
+										$ymal_ex_posts[] = $restricted_ymal_post->ID;
+									}
+								}
+							}
+						}
+					}
+				}
 			}
 		}
 	}
@@ -109,11 +168,12 @@ if (count($ymal_posts)) {
 		</div>
 		<div class="content">
 			<div class="products-list">
-				<?php foreach($ymal_posts as $ymal_post) {
+				<?php $ymalnmb = 1; foreach($ymal_posts as $ymal_post) {
 					$pimage = get_product_thumb($ymal_post->ID);
 					$price = get_post_meta($ymal_post->ID, 'price', true);
 					$new_price = get_post_meta($ymal_post->ID, 'new_price', true);
 					if($new_price) { $price = $new_price; }
+					if ($ymalnmb < 4) {
 				?>
 				<div class="item">
 					<a href="<?php echo get_permalink($ymal_post->ID); ?>" class="image" title="<?php echo $ymal_post->post_title; ?>">
@@ -124,17 +184,16 @@ if (count($ymal_posts)) {
 						<h4><?php product_prices_list($price); ?></h4>
 					</div>
 				</div>
-				<?php } ?>
+				<?php $ymalnmb++; }} ?>
 			</div>
 		</div>
 	</div>
-<?php }
+<?php
 } ?>
 <?php
 // ---------------------------------------------------------------
 // RECENTLY ADDED
 // ---------------------------------------------------------------
-$categories = get_the_category($post->ID);
 if ($categories) {
 	$category_ids = array();
 	foreach($categories as $individual_category){
@@ -144,7 +203,7 @@ if ($categories) {
 	$args = array(
 		'category__in' 		=> $category_ids,
 		'post__not_in' 		=> array($post->ID),
-		'showposts'			=> $OPTION['wps_cat_relatedProds_num'], 
+		'posts_per_page'	=> $OPTION['wps_cat_relatedProds_num'], 
 		'orderby' 			=> $OPTION['wps_cat_relatedProds_orderby'],
 		'order' 			=> $OPTION['wps_cat_relatedProds_order']
 	);

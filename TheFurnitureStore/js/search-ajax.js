@@ -105,15 +105,8 @@ filter.filter = function(event, obj){
 	last_args.offset = 0;
 	last_args.cats = filter.getCheckedData();
 	filter.filterAJAX(event, obj);
-	filter.checkedItemsMoveToTop();
-	init_alerts_action();
-};
-
-filter.checkedItemsMoveToTop = function(){
-	jQuery('.search-filter-form input:checkbox:checked').each(function(){
-	  jQuery(this).parent().parent().parent().prepend(jQuery(this).parent().parent());    
-	});
 	filter.updateScrollBars();
+	init_alerts_action();
 };
 
 filter.updateScrollBars = function(){
@@ -164,6 +157,7 @@ filter.filterAJAX = function(event, obj){
 			jQuery('#products-container').removeClass('loading');
 			filter.updateItemsEffects();
 			change_currency();
+			init_alerts_action();
 		}
 	});
 };

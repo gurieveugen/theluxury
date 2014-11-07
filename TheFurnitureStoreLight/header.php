@@ -175,6 +175,7 @@ $lostPass	= get_page_by_title($OPTION['wps_passLostPg']);
 		var fapp_id = '<?php echo get_option('fbc_app_key_option'); ?>';
 		var is_prof_add_item_page = '<?php if (is_page($OPTION['wps_profreseller_add_item_page'])) { echo 'true'; } ?>';
 		var mcevilpopupclick = <?php echo (int)$_COOKIE['MCEvilPopupClick']; ?>;
+		var utmz = '<?php if (strlen($_COOKIE['__utmz'])) { echo substr($_COOKIE['__utmz'], strrpos($_COOKIE['__utmz'], '.') + 1); } ?>';
 		</script>
 		<script type="text/javascript" src="<?php bloginfo('template_url') ?>/js/jquery-ui.min.js"></script>
 		<script src="<?php bloginfo('stylesheet_directory'); ?>/js/jquery.colorbox-min.js"></script>

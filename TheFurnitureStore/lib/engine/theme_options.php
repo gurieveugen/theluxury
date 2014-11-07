@@ -2328,31 +2328,6 @@ array ( 	"name" 	=> __('Shop','wpShop'),
 								"id" 	=> $CONFIG_WPS['shortname']."_layaway_percent",
 								"type" 	=> "text",
 								"std" 	=> "25%"),
-					array(  	"name" 	=> __('Popup Heading','wpShop'),
-								"desc" 	=> __('Heading text of popup. {PRODUCT_NAME}, {USD_AMOUNT}, {AED_AMOUNT}','wpShop'),
-								"id" 	=> $CONFIG_WPS['shortname']."_layaway_popup_heading",
-								"type" 	=> "text",
-								"std" 	=> ""),
-					array(  	"name" 	=> __('Popup Text','wpShop'),
-								"desc" 	=> __('Text of popup. {PRODUCT_NAME}, {USD_AMOUNT}, {AED_AMOUNT}','wpShop'),
-								"id" 	=> $CONFIG_WPS['shortname']."_layaway_popup_text",
-								"type" 	=> "textarea",
-								"std" 	=> ""),
-					array(  	"name" 	=> __('Terms Text','wpShop'),
-								"desc" 	=> __('Enter the terms text, your customers must agree to before continue.','wpShop'),
-								"id" 	=> $CONFIG_WPS['shortname']."_layaway_terms_text",
-								"type" 	=> "textarea",
-								"std" 	=> ""),
-					array(  	"name" 	=> __('Payment Popup Text','wpShop'),
-								"desc" 	=> __('Payment popup text for question mark.','wpShop'),
-								"id" 	=> $CONFIG_WPS['shortname']."_layaway_payment_popup_text",
-								"type" 	=> "textarea",
-								"std" 	=> ""),
-					array(  	"name" 	=> __('Request Popup Text','wpShop'),
-								"desc" 	=> __('Enter request product popup text.','wpShop'),
-								"id" 	=> $CONFIG_WPS['shortname']."_layaway_request_popup_text",
-								"type" 	=> "textarea",
-								"std" 	=> ""),
 					array(  	"name" 	=> __('Reminder Email Subject','wpShop'),
 								"id" 	=> $CONFIG_WPS['shortname']."_layaway_reminder_email_subject",
 								"type" 	=> "text",
@@ -3694,48 +3669,6 @@ array ( 	"name" 	=> __('Shop','wpShop'),
 								"type" 	=> "tax-list",
 								"std" 	=> "false"),
 
-					array(  	"name" 	=> __('Submitted Items Description','wpShop'),
-								"desc" 	=> __('Submitted Items question mark description.','wpShop'),
-								"id" 	=> $CONFIG_WPS['shortname']."_sellers_submitted_items_description",
-								"type" 	=> "textarea",
-								"std" 	=> ""),
-
-					array(  	"name" 	=> __('Select your Payout Description','wpShop'),
-								"desc" 	=> __('Select your Payout question mark description.','wpShop'),
-								"id" 	=> $CONFIG_WPS['shortname']."_sellers_select_your_payout_description",
-								"type" 	=> "textarea",
-								"std" 	=> ""),
-
-					array(  	"name" 	=> __('Awaiting Pickup Items Description','wpShop'),
-								"desc" 	=> __('Awaiting Pickup Items question mark description.','wpShop'),
-								"id" 	=> $CONFIG_WPS['shortname']."_sellers_awaiting_pickup_items_description",
-								"type" 	=> "textarea",
-								"std" 	=> ""),
-
-					array(  	"name" 	=> __('Your Items on sale Description','wpShop'),
-								"desc" 	=> __('Your Items on sale question mark description.','wpShop'),
-								"id" 	=> $CONFIG_WPS['shortname']."_sellers_your_items_on_sale_description",
-								"type" 	=> "textarea",
-								"std" 	=> ""),
-
-					array(  	"name" 	=> __('Sold Items Description','wpShop'),
-								"desc" 	=> __('Sold Items question mark description.','wpShop'),
-								"id" 	=> $CONFIG_WPS['shortname']."_sellers_sold_items_description",
-								"type" 	=> "textarea",
-								"std" 	=> ""),
-
-					array(  	"name" 	=> __('Terms and conditions text','wpShop'),
-								"desc"  => __('Terms and conditions text on submit item form.','wpShop'),
-								"id" 	=> $CONFIG_WPS['shortname']."_sellers_terms_and_conditions_text",
-								"type" 	=> "textarea",
-								"std" 	=> ""),
-
-					array(  	"name" 	=> __('No Quote message','wpShop'),
-								"desc"  => __('Message is shown to seller if no quotation.','wpShop'),
-								"id" 	=> $CONFIG_WPS['shortname']."_sellers_no_quote_message",
-								"type" 	=> "textarea",
-								"std" 	=> ""),
-
 				array(   	"type" => "close"),
 			array(   	"type" => "close"),
 
@@ -4078,6 +4011,132 @@ array ( 	"name" 	=> __('Shop','wpShop'),
 
 				array(   	"type" => "close"),
 			array(   	"type" => "close"),
+		array (		"type" 	=> "fieldset_end"),	
+
+//###############################################################################################################
+		//Tab 12 Texts
+		array (		"type" 	=> "fieldset_start",
+					"class" =>"shop",
+					"id" 	=>"sec_texts"),
+
+			array ( 	"name" 	=> __('Texts','wpShop'),
+						"type" 	=> "title"),
+							
+				array(    	"type" 	=> "open"),
+
+					array(  	"name" 	=> __('Terms and conditions text','wpShop'),
+								"desc"  => __('Terms and conditions text on submit item form.','wpShop'),
+								"id" 	=> $CONFIG_WPS['shortname']."_sellers_terms_and_conditions_text",
+								"type" 	=> "textarea",
+								"std" 	=> ""),
+
+					array(  	"name" 	=> __('No Quote message','wpShop'),
+								"desc"  => __('Message is shown to seller if no quotation.','wpShop'),
+								"id" 	=> $CONFIG_WPS['shortname']."_sellers_no_quote_message",
+								"type" 	=> "textarea",
+								"std" 	=> ""),
+
+				array(   	"type" => "close"),
+			array(   	"type" => "close"),
+
+			array ( 	"name" 	=> __('Checkout Pages','wpShop'),
+						"type" 	=> "title"),
+				array(    	"type" 	=> "open"),
+
+					array(  	"name" 	=> __('3 Day Returns','wpShop'),
+								"desc" 	=> __('Checkout 3 Day Returns popup text.','wpShop'),
+								"id" 	=> $CONFIG_WPS['shortname']."_checkout_3_day_returns_popup_text",
+								"type" 	=> "textarea",
+								"std" 	=> ""),
+
+					array(  	"name" 	=> __('Authenticity Guarantee','wpShop'),
+								"desc" 	=> __('Checkout Authenticity Guarantee popup text.','wpShop'),
+								"id" 	=> $CONFIG_WPS['shortname']."_checkout_authenticity_guarantee_popup_text",
+								"type" 	=> "textarea",
+								"std" 	=> ""),
+
+					array(  	"name" 	=> __('Pick up text','wpShop'),
+								"desc" 	=> __('Text is shown for Pick up.','wpShop'),
+								"id" 	=> $CONFIG_WPS['shortname']."_checkout_pickup_text",
+								"type" 	=> "textarea",
+								"std" 	=> ""),
+
+					array(  	"name" 	=> __('Delivery text','wpShop'),
+								"desc" 	=> __('Text is shown for Delivery.','wpShop'),
+								"id" 	=> $CONFIG_WPS['shortname']."_checkout_delivery_text",
+								"type" 	=> "textarea",
+								"std" 	=> ""),
+
+					array(  	"name" 	=> __('Delivery outside UAE text','wpShop'),
+								"desc" 	=> __('Text is shown for Delivery.','wpShop'),
+								"id" 	=> $CONFIG_WPS['shortname']."_checkout_delivery_outside_uae_text",
+								"type" 	=> "textarea",
+								"std" 	=> ""),
+
+					array(  	"name" 	=> __('Credit Card text','wpShop'),
+								"desc" 	=> __('Text is shown for Credit Card payment.','wpShop'),
+								"id" 	=> $CONFIG_WPS['shortname']."_checkout_credit_card_text",
+								"type" 	=> "textarea",
+								"std" 	=> ""),
+
+					array(  	"name" 	=> __('PayPal text','wpShop'),
+								"desc" 	=> __('Text is shown for PayPal payment.','wpShop'),
+								"id" 	=> $CONFIG_WPS['shortname']."_checkout_paypal_text",
+								"type" 	=> "textarea",
+								"std" 	=> ""),
+
+					array(  	"name" 	=> __('Pay On Location text','wpShop'),
+								"desc" 	=> __('Text is shown for Pay On Location payment.','wpShop'),
+								"id" 	=> $CONFIG_WPS['shortname']."_checkout_pay_on_location_text",
+								"type" 	=> "textarea",
+								"std" 	=> ""),
+
+					array(  	"name" 	=> __('Bank Transfer text','wpShop'),
+								"desc" 	=> __('Text is shown for Bank Transfer payment.','wpShop'),
+								"id" 	=> $CONFIG_WPS['shortname']."_checkout_bank_transfer_text",
+								"type" 	=> "textarea",
+								"std" 	=> ""),
+
+					array(  	"name" 	=> __('Cash On Delivery text','wpShop'),
+								"desc" 	=> __('Text is shown for Bank Transfer payment.','wpShop'),
+								"id" 	=> $CONFIG_WPS['shortname']."_checkout_cash_on_delivery_text",
+								"type" 	=> "textarea",
+								"std" 	=> ""),
+
+				array(   	"type" => "close"),
+			array(   	"type" => "close"),
+
+			array ( 	"name" 	=> __('Installments','wpShop'),
+						"type" 	=> "title"),
+				array(    	"type" 	=> "open"),
+
+					array(  	"name" 	=> __('Popup Heading','wpShop'),
+								"desc" 	=> __('Heading text of popup. {PRODUCT_NAME}, {USD_AMOUNT}, {AED_AMOUNT}','wpShop'),
+								"id" 	=> $CONFIG_WPS['shortname']."_layaway_popup_heading",
+								"type" 	=> "text",
+								"std" 	=> ""),
+
+					array(  	"name" 	=> __('Popup Text','wpShop'),
+								"desc" 	=> __('Text of popup. {PRODUCT_NAME}, {USD_AMOUNT}, {AED_AMOUNT}','wpShop'),
+								"id" 	=> $CONFIG_WPS['shortname']."_layaway_popup_text",
+								"type" 	=> "textarea",
+								"std" 	=> ""),
+
+					array(  	"name" 	=> __('Terms Text','wpShop'),
+								"desc" 	=> __('Enter the terms text, your customers must agree to before continue.','wpShop'),
+								"id" 	=> $CONFIG_WPS['shortname']."_layaway_terms_text",
+								"type" 	=> "textarea",
+								"std" 	=> ""),
+
+					array(  	"name" 	=> __('Payment Popup Text','wpShop'),
+								"desc" 	=> __('Payment popup text for question mark.','wpShop'),
+								"id" 	=> $CONFIG_WPS['shortname']."_layaway_payment_popup_text",
+								"type" 	=> "textarea",
+								"std" 	=> ""),
+
+				array(   	"type" => "close"),
+			array(   	"type" => "close"),
+
 		array (		"type" 	=> "fieldset_end"),	
 //###############################################################################################################
 	array (		"type" 	=> "section_end"),
@@ -4688,7 +4747,7 @@ function NWS_theme_admin()
 							</tr>
 							<tr>
 								<td>Amount:</td>
-								<td><input type="text" name="voucher_amount" maxlength="5" style="width:247px;" value="<?php echo $_POST['voucher_amount']; ?>" /></td>
+								<td><input type="text" name="voucher_amount" style="width:247px;" value="<?php echo $_POST['voucher_amount']; ?>" /></td>
 							</tr>
 							<tr>
 								<td>Expired Date:</td>
@@ -6794,13 +6853,9 @@ function NWS_dashboard() {
 						
 						<tbody>
 						   <tr>
-								<td><p><?php if ($totalVouchers['all']) { echo $totalVouchers['all']; } else { echo __('None Found','wpShop'); }?></p></td>
-								<td>
-									<p><?php if ($totalVouchers['single_use']) { echo $totalVouchers['single_use']; } else { echo __('None Found','wpShop'); }?></p>
-									<p><?php _e('Of these Redeemed ','wpShop'); if ($totalVouchers['single_use'] && $totalVouchers['redeemed']) { echo $totalVouchers['redeemed']; } else { echo __('0','wpShop'); }?></p>
-									<p><?php _e('Of these Unclaimed ','wpShop'); if ($totalVouchers['single_use'] && $totalVouchers['unclaimed']) { echo $totalVouchers['unclaimed']; } else { echo __('0','wpShop'); }?></p>
-								</td>
-								<td><p><?php if ($totalVouchers['multi_use']) { echo $totalVouchers['multi_use']; } else { echo __('None Found','wpShop'); }?></p></td>
+								<td><p><?php echo $totalVouchers['all']; ?></p></td>
+								<td><p><?php echo $totalVouchers['single_use']; ?></p></td>
+								<td><p><?php echo $totalVouchers['multi_use']; ?></p></td>
 						   </tr>
 						</tbody>
 					</table>

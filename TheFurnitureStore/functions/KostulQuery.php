@@ -104,7 +104,7 @@ class KostulQuery{
 		
 		return array(
 			'posts'         => $posts,
-			'visible_terms' => $this->getVisibleTerms($posts_all),
+			'visible_terms' => $this->getVisibleTerms($args['cats']),
 			'last_args'     => $this->getLastArgs(),
 			'last_query'    => $this->getLastQuery(),
 			'count'         => count($posts_all),
@@ -208,54 +208,54 @@ class KostulQuery{
 	 * @param  array $args --- query arguments
 	 * @return array --- visible categories
 	 */
-	public function getVisibleTerms($posts)
-	{
-		$visible    = array();
-		$taxonomies = $this->getAllowedTaxonomies();
+	// public function getVisibleTerms($posts)
+	// {
+	// 	$visible    = array();
+	// 	$taxonomies = $this->getAllowedTaxonomies();
 
-		if(is_array($posts) AND count($posts))
-		{
-			foreach ($taxonomies as $tax) 
-			{
-				foreach ($posts as $p) 
-				{
-					if(!in_array($p->{$tax}, $visible))
-					{
-						array_push($visible, $p->{$tax});
-					}		
-				}
-			}	
-		}
-		return $visible;
-	}
+	// 	if(is_array($posts) AND count($posts))
+	// 	{
+	// 		foreach ($taxonomies as $tax) 
+	// 		{
+	// 			foreach ($posts as $p) 
+	// 			{
+	// 				if(!in_array($p->{$tax}, $visible))
+	// 				{
+	// 					array_push($visible, $p->{$tax});
+	// 				}		
+	// 			}
+	// 		}	
+	// 	}
+	// 	return $visible;
+	// }
 
 	/**
 	 * Get visible categories
 	 * @param  array $args --- query arguments
 	 * @return array --- visible categories
 	 */
-	// public function getVisibleTerms($args)
-	// {
-	// 	$fields = $this->getAllowedTaxonomies();
-	// 	$visible = array();
-	// 	$tmp = array();
+	public function getVisibleTerms($args)
+	{
+		$fields = $this->getAllowedTaxonomies();
+		$visible = array();
+		$tmp = array();
 		
-	// 	foreach ($fields as $field) 
-	// 	{
-	// 		$item = $this->getVisibleTermsByBlock($args, $field);
-	// 		if(is_array($item) AND count($item))
-	// 		{
-	// 			foreach ($item as $el) 
-	// 			{
-	// 				if(!in_array($el->{$field}, $visible))
-	// 				{
-	// 					array_push($visible, $el->{$field});
-	// 				}	
-	// 			}
-	// 		}
-	// 	}
-	// 	return $visible;
-	// }
+		foreach ($fields as $field) 
+		{
+			$item = $this->getVisibleTermsByBlock($args, $field);
+			if(is_array($item) AND count($item))
+			{
+				foreach ($item as $el) 
+				{
+					if(!in_array($el->{$field}, $visible))
+					{
+						array_push($visible, $el->{$field});
+					}	
+				}
+			}
+		}
+		return $visible;
+	}
 
 	/**
 	 * Filter not needed terms.
@@ -263,28 +263,28 @@ class KostulQuery{
 	 * @param  string $exclude --- exclude tax
 	 * @return array --- query result
 	 */
-	// public function getVisibleTermsByBlock($args, $exclude)
-	// {
-	// 	global $wpdb;
-	// 	$args  = array_merge($this->getDefaultTaxValues(), $args);
-	// 	unset($args[$exclude]);
-	// 	$where = $this->initWhere($args);
-	// 	if(is_array($where) AND count($where))
-	// 	{
-	// 		$where = ' AND '.implode(' AND ', $where);
-	// 	}
-	// 	else
-	// 	{
-	// 		$where = '';
-	// 	}
-	// 	$query = sprintf(
-	// 		'SELECT DISTINCT %s FROM %sposts WHERE `post_status` = "publish" AND `post_type` = "post"%s', 
-	// 		$exclude,
-	// 		$wpdb->prefix, 
-	// 		$where
-	// 	);
-	// 	return $wpdb->get_results($query);
-	// }
+	public function getVisibleTermsByBlock($args, $exclude)
+	{
+		global $wpdb;
+		$args  = array_merge($this->getDefaultTaxValues(), $args);
+		unset($args[$exclude]);
+		$where = $this->initWhere($args);
+		if(is_array($where) AND count($where))
+		{
+			$where = ' AND '.implode(' AND ', $where);
+		}
+		else
+		{
+			$where = '';
+		}
+		$query = sprintf(
+			'SELECT DISTINCT %s FROM %sposts WHERE `post_status` = "publish" AND `post_type` = "post"%s', 
+			$exclude,
+			$wpdb->prefix, 
+			$where
+		);
+		return $wpdb->get_results($query);
+	}
 
 	/**
 	 * Get Last args

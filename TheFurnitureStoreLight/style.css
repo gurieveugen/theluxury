@@ -1230,7 +1230,7 @@ body.shopping_cart #header ul .current_page_item a{
 }
 .whereAmI{
 	padding:0px;
-	margin-bottom:0px;
+	margin-bottom:10px;
 	font: 21px/23px Cabin, Arial, Helvetica, sans-serif;
 }
 .whereAmI a{
@@ -5543,7 +5543,7 @@ h4+.num-list{
 	margin:0 2px 0 0;
 }
 .category-items.inner li{
-	margin:0 10px 0 0;
+	margin:0 8px 8px 0;
 }
 .category-items a{
 	display:block;
@@ -5692,6 +5692,12 @@ h4+.num-list{
 }
 .open .a-content{
 	display:block;
+}
+.myitems-sec-desc{
+	margin:-5px 0 10px 0;
+	padding:0 0 7px 0;
+	text-align:center;
+	border-bottom:1px solid #EEE;
 }
 .product-item{
 	margin: 0 0 10px;
