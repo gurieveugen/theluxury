@@ -1,7 +1,7 @@
 <?php global $OPTION, $current_user, $wp_query; ?>
 
 			<!--</div>--><!-- container -->
-		<!--</div>--><!-- floatswrap-->
+			<!--</div><!-- floatswrap-->
 		</div><!-- .center-content -->
 	</div><!-- #pg_wrap -->
 	<?php if(!is_cart_page() && !is_checkout_page()): ?>
@@ -25,7 +25,11 @@
 				
 				<div class="footer_box secure">
 					<div class="footer_inner_box clearfix">
+						<?php if (is_checkout_page()) { ?>
+							<?php if ( is_sidebar_active('footer_right_checkout_widget_area') ) : dynamic_sidebar('footer_right_checkout_widget_area'); endif;?>
+						<?php } else { ?>
 							<?php if ( is_sidebar_active('footer_right_widget_area') ) : dynamic_sidebar('footer_right_widget_area'); endif;?>
+						<?php } ?>
 					</div>
 				</div>
 			</div><!-- end footer -->
@@ -125,7 +129,7 @@ function _kms(u){
 _kms('//i.kissmetrics.com/i.js');
 _kms('//doug1izaerwt3.cloudfront.net/' + _kmk + '.1.js');
 </script>
-<?php if ((is_front_page() || is_page('authenticity')) && !isset($_GET['showCart']) && !isset($_GET['orderNow']) && !isset($_GET['confirm'])) { ?>
+<?php $getkudos = false; if ($getkudos) { ?>
 <!-- Start of GetKudos Script -->
 <script>
 (function(w,t,gk,d,s,fs){if(w[gk])return;d=w.document;w[gk]=function(){
@@ -156,5 +160,22 @@ type='text/javascript';e.parentNode.insertBefore($,e)})(document,'script');
 	}
 </script>
 <!-- end utm params -->
+<script>
+	(function() {
+	var _fbq = window._fbq || (window._fbq = []);
+	if (!_fbq.loaded) {
+	var fbds = document.createElement('script');
+	fbds.async = true;
+	fbds.src = '//connect.facebook.net/en_US/fbds.js';
+	var s = document.getElementsByTagName('script')[0];
+	s.parentNode.insertBefore(fbds, s);
+	_fbq.loaded = true;
+	}
+	_fbq.push(['addPixelId', '540535596054575']);
+	})();
+	window._fbq = window._fbq || [];
+	window._fbq.push(['track', 'PixelInitialized', {}]);
+</script>
+<noscript><img height="1" width="1" alt="" style="display:none" src="https://www.facebook.com/tr?id=540535596054575&ev=PixelInitialized" /></noscript>
 </body>
 </html>

@@ -15,7 +15,7 @@ $type = $_GET['type'];
 				<li<?php if ($type == 'bags') { echo ' class="active"'; } ?>><a href="<?php the_permalink(); ?>?type=bags">BAGS DESIGNERS</a></li>
 				<li<?php if ($type == 'clothes') { echo ' class="active"'; } ?>><a href="<?php the_permalink(); ?>?type=clothes">CLOTHES DESIGNERS</a></li>
 				<li<?php if ($type == 'shoes') { echo ' class="active"'; } ?>><a href="<?php the_permalink(); ?>?type=shoes">SHOES DESIGNERS</a></li>
-				<li<?php if ($type == 'jewelry') { echo ' class="active"'; } ?>><a href="<?php the_permalink(); ?>?type=jewelry">JEWELRY DESIGNERS</a></li>
+				<li<?php if ($type == 'jewelry') { echo ' class="active"'; } ?>><a href="<?php the_permalink(); ?>?type=jewelry">FINE JEWELRY DESIGNERS</a></li>
 				<li<?php if ($type == 'accessories') { echo ' class="active"'; } ?>><a href="<?php the_permalink(); ?>?type=accessories">ACCESSORIES DESIGNERS</a></li>
 				<li<?php if ($type == 'watches') { echo ' class="active"'; } ?>><a href="<?php the_permalink(); ?>?type=watches">WATCHES DESIGNERS</a></li>
 			</ul>

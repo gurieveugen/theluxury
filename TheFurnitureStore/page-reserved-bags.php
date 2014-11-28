@@ -8,84 +8,44 @@ Template Name: Reserved Bags
 check_logged_in();
 
 get_header();
-	$WPS_sidebar		= $OPTION['wps_sidebar_option'];
-	switch($WPS_sidebar){
-		case 'alignRight':
-			$the_float_class 	= 'alignleft';
-		break;
-		case 'alignLeft':
-			$the_float_class 	= 'alignright';
-		break;
-	}
 
-	$WPS_tagCol			= $OPTION['wps_tagCol_option'];
-	$WPS_sidebar		= $OPTION['wps_sidebar_option'];
+$DEFAULT = show_default_view();
 
-	switch($WPS_sidebar){
-		case 'alignRight':
-			$the_float_class 	= 'alignleft';
-		break;
-		case 'alignLeft':
-			$the_float_class 	= 'alignright';
-		break;
-	}
-
-	if($OPTION['wps_teaser_enable_option']) {$the_eqcol_class = 'eqcol'; }
-	//which column option?
-	switch($WPS_tagCol){
-		case 'tagCol1':
-			$the_div_class 	= 'theTags clearfix tagCol1 '.$the_float_class.' '.$the_eqcol_class;
-			$counter = 1;      
-		break;
+if($DEFAULT) { ?>
+	<div class="alignright" id="main_col">
+		<?php
+		product_sort_select();
 		
-		case 'tagCol2':
-			$the_div_class 	= 'theTags clearfix tagCol2 '.$the_float_class.' '.$the_eqcol_class;
-			$counter = 2;      
-		break;
+		global $OPTION;
+		$_GET['wnew']    = 'true';
+		$kostul_query  = new KostulQuery();
+		$request       = $kostul_query->makeRequestFromArgs($_GET);
+		$columns       = intval(str_replace('tagCol', '', $OPTION['wps_tagCol_option']));
+		$html          = '';
+		$pagination    = new Pagination($request['count'], $request['last_args']['count'], $request['last_args']['offset']);
 		
-		case 'tagCol3':
-			$the_div_class 	= 'theTags clearfix tagCol3 '.$the_float_class.' '.$the_eqcol_class;
-			$counter = 3;      
-		break;
-			
-		case 'tagCol4':
-			$the_div_class 	= 'theTags clearfix tagCol4 '.$the_float_class.' '.$the_eqcol_class;
-			$counter = 4;      
-		break;
-	}
-	
-	?>
-	
-	<div id="main_col" class="<?php echo $the_float_class;?>">
-	
-		<?php product_sort_select(); ?>
-		<div class="<?php echo $the_div_class;?>" id="products-container">
-		
-			<?php //set the counter according to the column selection from the theme options
-			$a = 1;
-
-			// allow user to order their Products as the want to
-			$orderBy = $OPTION['wps_prods_orderbyOption'];
-			$order 	 = $OPTION['wps_prods_orderOption'];
-			$paged   = (get_query_var('paged')) ? get_query_var('paged') : 1;
-
-			$args = array(
-				'post_type'   => 'post',
-				'orderby'   => $orderBy,
-				'order'     => $order,				
-				'paged'     => $paged
-			);
-			
-			add_filter('posts_where', 'reserved_posts_where');
-			$args                             = product_sort_process($args);	
-			$OPTION['custom_args'] 			  = $args;		
-			//add_filter( 'posts_where', 'filter_where' );			
-			get_template_part('loop', 'products');
-			?>
-			
-		</div><!-- theTags -->
-	</div><!-- main_col -->		
-<?php	
-	include (TEMPLATEPATH . '/widget_ready_areas.php');		
-get_footer(); ?>
+		if(is_array($request['posts']) AND count($request['posts']))
+		{
+			foreach ($request['posts'] as $p) 
+			{
+				$post = new KostulHTML($p, $columns, $OPTION);
+				$html.= $post->getHTML();
+			}
+		}
+		?>
+		<div id="products-container" class="theProds clearfix  alignright eqcol">
+			<script>
+				var last_args = <?php echo json_encode($request['last_args']); ?>;
+				var visible_terms = <?php echo json_encode($request['visible_terms']); ?>;
+			</script>
+			<?php echo $html.$pagination->getHTML(); ?>
+		</div>
+	</div>
+	<?php
+}  ?>
+<div class="sidebar page_sidebar noprint alignleft" data-ttttt="">
+	<?php dynamic_sidebar('category_widget_area'); ?>
+</div>
+<div class="whats-new-pg" style="display:none;">true</div>
+<?php get_footer(); ?>
 		

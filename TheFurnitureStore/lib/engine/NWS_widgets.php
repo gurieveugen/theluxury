@@ -27,7 +27,26 @@ function theme_widgets_init() {
 		'before_title' 	=> '<h3 class="widget-title">',
 		'after_title' 	=> '</h3>',
 	));
-	
+
+	// Frontpage Bottom
+	register_sidebar( array (
+		'name' 			=> 'Frontpage Bottom',
+		'id' 			=> 'frontpage_bottom_widget_area',
+		'before_widget' => '<div id="%1$s" class="widget %2$s">',
+		'after_widget' 	=> '</div>',
+		'before_title' 	=> '<h3 class="widget-title">',
+		'after_title' 	=> '</h3>',
+	));
+	// Frontpage Middle
+	register_sidebar( array (
+		'name' 			=> 'Frontpage Middle',
+		'id' 			=> 'frontpage_middle_widget_area',
+		'before_widget' => '<div id="%1$s" class="widget %2$s">',
+		'after_widget' 	=> '</div>',
+		'before_title' 	=> '<h3 class="widget-title">',
+		'after_title' 	=> '</h3>',
+	));
+
 // index page 3 col left
 	register_sidebar( array (
 		'name' 			=> 'Frontpage Bottom Left(3 col)',
@@ -328,25 +347,16 @@ if ($OPTION['wps_footer_option'] =='large_footer') {
 		'before_title' 	=> '<h3 class="widget-title">',
 		'after_title' 	=> '</h3>',
 	));
+	register_sidebar( array (
+		'name' 			=> 'Footer Right(Checkout)',
+		'id' 			=> 'footer_right_checkout_widget_area',
+		'before_widget' => '<div id="%1$s" class="widget %2$s">',
+		'after_widget' 	=> '</div>',
+		'before_title' 	=> '<h3 class="widget-title">',
+		'after_title' 	=> '</h3>',
+	));
+
 }	
-	// Frontpage Bottom
-	register_sidebar( array (
-		'name' 			=> 'Frontpage Bottom',
-		'id' 			=> 'frontpage_bottom_widget_area',
-		'before_widget' => '<div id="%1$s" class="widget %2$s">',
-		'after_widget' 	=> '</div>',
-		'before_title' 	=> '<h3 class="widget-title">',
-		'after_title' 	=> '</h3>',
-	));
-	// Frontpage Middle
-	register_sidebar( array (
-		'name' 			=> 'Frontpage Middle',
-		'id' 			=> 'frontpage_middle_widget_area',
-		'before_widget' => '<div id="%1$s" class="widget %2$s">',
-		'after_widget' 	=> '</div>',
-		'before_title' 	=> '<h3 class="widget-title">',
-		'after_title' 	=> '</h3>',
-	));
 	// Footer Copyright Text
 	register_sidebar( array (
 		'name' 			=> 'Footer Copyright Text',
@@ -4604,27 +4614,37 @@ class ShopSearchFilterWidget extends WP_Widget {
 	 * @return string               - HTML
 	 */
 	function dispalyAllNodes($child_nodes, $parent_id, $depth = 0, $before_nodes = '<div class="sub-category" style="%s">', $after_nodes = "</div>", $before_node = '<div class="f-row %s" %s>', $after_node = "</div>", $display_cats = array())
-	{		
+	{
 		$queried_object = get_queried_object();		
 		$str            = "";		
 		$arr            = array();
-		$parent_id      = $parent_id === NULL ? "NULL" : $parent_id;		
+		$parent_id      = $parent_id === NULL ? "NULL" : $parent_id;
 
 		if (isset($child_nodes[$parent_id])) 
 		{
 		    foreach ($child_nodes[$parent_id] as $id) 
 		    {
 
-				$cat            = get_category($id);		    			        
-				$child_dn       = self::dispalyAllNodes($child_nodes, $id, ($depth+1), $before_nodes, $after_nodes, $before_node, $after_node, $display_cats);
-				$checked        = (is_category($cat->name)) ? 'checked' : '';
-				$checked        = $this->isNodeCheck($cat->term_id) ? 'checked' : $checked;
+				$cat      = get_category($id);		    			        
+				$child_dn = self::dispalyAllNodes($child_nodes, $id, ($depth+1), $before_nodes, $after_nodes, $before_node, $after_node, $display_cats);
+				$checked  = (is_category($cat->name)) ? 'checked' : '';
+				$disabled = '';
+				if($this->isNodeCheck($cat->term_id))
+				{
+					$checked  = 'checked';
+					$disabled = 'disabled="disabled"';
+				}
+				$frozen   = '';
+				if($this->isFrozenCat($cat->term_id))
+				{
+					$frozen   = 'frozen';
+				}
 				$rel            = '';
 				$rel            = (strpos($cat->slug, 'shoes') !== false) ? 'shoes' : $cat->slug;
 				$rel            = (strpos($cat->slug, 'clothes') !== false) ? 'clothes' : $rel;
 				$rel            = (strpos($cat->slug, 'rings') !== false) ? 'rings' : $rel;
 				
-				$input          = ($depth > 0) ? '<input data-block="shop-by-category" autocomplete="off" onchange="filter.filter(event, this)" type="checkbox" name="filter-category[]" data-depth="'.$depth.'" value="'.$cat->slug.'" id="category-'.$cat->term_id.'" rel="'.$rel.'" '.$checked.' />' : '';
+				$input          = ($depth > 0) ? '<input '.$disabled.' class="'.$frozen.'" data-block="shop-by-category" autocomplete="off" onchange="filter.filter(event, this)" type="checkbox" name="filter-category[]" data-depth="'.$depth.'" value="'.$cat->slug.'" id="category-'.$cat->term_id.'" rel="'.$rel.'" '.$checked.' />' : '';
 				$search_replace = array('Women\'s ', 'Men\'s ');
 				$name           = str_replace($search_replace, '', $cat->name);
 				$parent_ids     = getParentsIDs($queried_object->term_id, $queried_object->taxonomy);
@@ -4685,6 +4705,34 @@ class ShopSearchFilterWidget extends WP_Widget {
 			}
 		}
 		if(in_array($id, $cats)) return true;
+		
+		return false;
+	}
+
+	function isFrozenCat($id)
+	{
+		global $OPTION;
+		$qo = get_queried_object();
+		$frozen_cats = array(
+			$OPTION['wps_sale_category'],
+			$OPTION['wps_women_bags_category'],
+			$OPTION['wps_women_shoes_category'],
+			$OPTION['wps_women_watches_category'],
+			$OPTION['wps_women_sunglasses_category'],
+			$OPTION['wps_women_jewelry_category'],
+			$OPTION['wps_women_accessories_category'],
+			$OPTION['wps_women_clothes_category'],
+			$OPTION['wps_women_limited_edition_category'],
+			$OPTION['wps_men_bags_category'],
+			$OPTION['wps_men_shoes_category'],
+			$OPTION['wps_men_watches_category'],
+			$OPTION['wps_men_sunglasses_category'],
+			$OPTION['wps_men_jewelry_category'],
+			$OPTION['wps_men_accessories_category'],
+			$OPTION['wps_men_clothes_category'],
+			$OPTION['wps_men_limited_edition_category']
+		);
+		if(($id == $qo->term_id) && in_array($id, $frozen_cats)) return true;
 		
 		return false;
 	}

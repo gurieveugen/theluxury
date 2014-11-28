@@ -79,3 +79,23 @@ function status_act() {
 		jQuery('.order-cancel-reason').hide();
 	}
 }
+
+function admin_ga_refund_event(txn) {
+	ga('require', 'ec');
+	ga('ec:setAction', 'refund', { 'id': txn });
+}
+
+function admin_change_orders_status() {
+	var stat = jQuery('.order-status-act').val();
+	alert(stat);
+	if (stat == '0' || stat == 'delete') {
+		jQuery('.nws_manage_orders .move-ch').each(function(){
+			if (jQuery(this).is(':checked')) {
+				var oid = jQuery(this).attr('name');
+				var txnid = jQuery('.order-'+oid).attr('rel');
+				alert(oid+' - '+txnid);
+				admin_ga_refund_event(txnid);
+			}
+		});
+	}
+}

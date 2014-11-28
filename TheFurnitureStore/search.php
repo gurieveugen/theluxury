@@ -1,55 +1,39 @@
 <?php 
-if(is_category('member-bags') || is_category('reserved-bags') || is_category('sale'))
-{
-	auth_redirect_theme_login();
-}
 get_header();
-?>
-<script>var is_search_page = true; </script>
-<?php
-//collect options
-$WPS_prodCol       = $OPTION['wps_prodCol_option'];
-$WPS_catCol        = $OPTION['wps_catCol_option'];
-$WPS_sidebar       = $OPTION['wps_sidebar_option'];
-$WPS_showposts     = $OPTION['wps_showpostsOverwrite_Option'];
+$DEFAULT = show_default_view();
 
-$this_category     = get_category($cat);
-
-$topParent         = NWS_get_root_category($cat,'allData');
-$topParentSlug     = $topParent->slug;
-$this_categorySlug = $this_category->slug;
-
-//collect options
-$orderBy           = $OPTION['wps_secondaryCat_orderbyOption'];
-$order             = $OPTION['wps_secondaryCat_orderOption'];
-
-// sidebar location?
-switch($WPS_sidebar)
-{
-	case 'alignRight':
-		$the_float_class 	= 'alignleft';
-	break;
-	case 'alignLeft':
-		$the_float_class 	= 'alignright';
-	break;
-}
-// teaser?
-if($OPTION['wps_teaser_enable_option']) {$the_eqcol_class = 'eqcol'; }
-
-//set the div class	
-$the_div_class 	= 'theProds clearfix '.$prodCol_class. ' '.$the_float_class.' '.$the_eqcol_class;
-	
-if($OPTION['wps_catDescr_enable']) 
-{
-	echo term_description();
-} ?>
-<div id="main_col" class="<?php echo $the_float_class;?>">	
-<?php
-product_sort_select(); ?>
-	<div class="<?php echo $the_div_class;?>" id="products-container">
-		<?php get_template_part('loop', 'products'); ?>
-	</div><!-- theProds -->
-</div><!-- main_col -->
-<?php
-include (TEMPLATEPATH . '/widget_ready_areas.php');
-get_footer(); ?>
+if($DEFAULT) { ?>
+	<div class="alignright" id="main_col">
+		<?php
+		product_sort_select();
+		
+		global $OPTION;
+		$kostul_query  = new KostulQuery();
+		$request       = $kostul_query->makeRequestFromArgs($_GET);
+		$columns       = intval(str_replace('tagCol', '', $OPTION['wps_tagCol_option']));
+		$html          = '';
+		$pagination    = new Pagination($request['count'], $request['last_args']['count'], $request['last_args']['offset']);
+		
+		if(is_array($request['posts']) AND count($request['posts']))
+		{
+			foreach ($request['posts'] as $p) 
+			{
+				$post = new KostulHTML($p, $columns, $OPTION);
+				$html.= $post->getHTML();
+			}
+		}
+		?>
+		<div id="products-container" class="theProds clearfix  alignright eqcol">
+			<script>
+				var last_args = <?php echo json_encode($request['last_args']); ?>;
+				var visible_terms = <?php echo json_encode($request['visible_terms']); ?>;
+			</script>
+			<?php echo $html.$pagination->getHTML(); ?>
+		</div>
+	</div>
+	<?php
+}  ?>
+<div class="sidebar page_sidebar noprint alignleft" data-ttttt="">
+	<?php dynamic_sidebar('category_widget_area'); ?>
+</div>
+<?php get_footer(); ?>

@@ -16,23 +16,45 @@ function create_customer_id(){
 	}
 }
 
-function cod_available()
-{
-	// needs to do....
-	if($OPTION['wps_shop_mode']=='Inquiry email mode'){	$table = is_dbtable_there('inquiries');	}
-	else{	$table = is_dbtable_there('orders');}	
-	$qStr 	= "SELECT * FROM $table WHERE who = '$_SESSION[cust_id]' LIMIT 1";
-	$res 	= mysql_query($qStr);  
-	$order 	= mysql_fetch_assoc($res);
-	if($order['p_option'] != 'cod') return TRUE;
-	else if($order['d_addr'] == '1') 
-	{
-		$delivery_addr = retrieve_delivery_addr();
-		if($delivery_addr['country'] == 'UNITED ARAB EMIRATES') return TRUE;
-		else return FALSE;
+function update_who_activity() {
+	global $wpdb, $current_user;
+	$table = is_dbtable_there('who_activity');
+	if(isset($_SESSION['cust_id'])) {
+		$orderNow = (int)$_GET['orderNow'];
+		$check_out = 1;
+		if($orderNow > 0 && $orderNow < 4) { $check_out = 2; }
+		
+		$who = $_SESSION['cust_id'];
+
+		$data = array();
+		$data['User_Id'] = $current_user->ID;
+		$data['Last_Activity'] = current_time('mysql');
+		$data['Check_Out'] = $check_out;
+
+		$check = $wpdb->get_var(sprintf("SELECT COUNT(Id) FROM %s WHERE Who = '%s'", $table, $who));
+		if ($check) {
+			$wpdb->update($table, $data, array('Who' => $who));
+		} else {
+			$data['Who'] = $who;
+			$wpdb->insert($table, $data);
+		}
 	}
-	else if($order['country'] == 'UNITED ARAB EMIRATES') return TRUE;
-	else return FALSE;
+}
+
+function check_cod_available() {
+	$order = get_current_order();
+	$p_option = $_POST['p_option'];
+	if ($p_option == 'cod' && $order['d_option'] != 'pickup') {
+		$country = $order['country'];
+		if($order['d_addr'] == '1') {
+			$delivery_addr = retrieve_delivery_addr();
+			$country = $delivery_addr['country'];
+		}
+		if ($country != 'UNITED ARAB EMIRATES') {
+			return false;
+		}
+	}
+	return true;
 }
 
 function is_dbtable_there($table_name){
@@ -267,6 +289,176 @@ function update_cart_activity_date() {
 	}
 }
 
+function update_cart(){
+	global $OPTION, $wpdb;
+
+	$table 			= is_dbtable_there('shopping_cart');
+	$table3 		= is_dbtable_there('shopping_cart_log');	
+	$stock_feedback = array();
+
+	foreach($_POST as $k => $v){
+		// amount action
+		$findMe   	= 'amount_';
+		$pos 		= strpos($k, $findMe);
+		if ($pos !== false){
+			$parts 	= explode("_",$k);
+			
+			// in case sb. types in 0 or worse negative amounts - we transform it to 1
+			$v = (int) $v;
+			if($v < 1){$v = 1;}
+			
+			// we only update if the amount is an integer and not a null and not a float
+			$needle 		= '.';
+			$dot_found 		= strpos($v,$needle);
+			$dot_found		= ($dot_found === FALSE ? 'no' : 'yes');
+			
+			// no point in updating the amount of an digital product which has no lkey's 
+			$digital_ok		= 'positive';
+			$digital 		= is_it_digital('UPDATE-CHECK',$parts[1]);
+						
+			if($digital === TRUE){			
+				$license_op 	= $OPTION['wps_l_mode'];
+				
+				if($license_op == 'SIMPLE'){		
+					$digital_ok	= 'negative';
+				}
+			}			
+
+			if((is_numeric($v)) && ($v != '0') && ($dot_found == 'no') && ($digital_ok == 'positive')){
+			
+			if ($v > 1) { $v = 1; } // item can't added more 1 stock
+			// stock control
+				if($OPTION['wps_track_inventory']=='active'){
+					$attr = retrieve_attributes($parts[1]);						
+					$sc_item = $wpdb->get_row(sprintf("SELECT * FROM %s WHERE cid = %s", $table, $parts[1]));
+					$item_id = $sc_item->item_id;
+					$post_id = $sc_item->postID;
+					$prod_stock = get_item_inventory($post_id, $item_id);
+					if ($v <= $prod_stock) {
+						$wpdb->query("UPDATE $table SET item_amount='$v' WHERE cid = $parts[1]");
+						// for logging
+						$wpdb->query("UPDATE $table3 SET item_amount='$v' WHERE cid = $parts[1]");
+						$url_add = NULL;
+					} else {
+						$stock_feedback[$parts[1]] = $prod_stock;
+						$items = NULL;
+						foreach($stock_feedback as $k => $v){
+							if(!empty($v)){
+								$items .= $k.'-'.$v.',';
+							}
+						}
+						$url_add 	= '&sw='.substr($items,0,-1);
+					}
+				}
+				else {
+					$wpdb->query("UPDATE $table SET item_amount='$v' WHERE cid = $parts[1]");
+				}
+			}			
+		}
+	
+		// remove action
+		if (substr($k, 0, 3) == 'rm_' && $v == 1) {
+			$parts 	= explode("_",$k);
+			$cid	= (int)$parts[1];
+
+			$wpdb->query("DELETE FROM $table WHERE cid='$cid'"); //deleting
+			$wpdb->query("DELETE FROM $table3 WHERE cid='$cid'");
+			
+			//remove also any existing records in the personalize table
+			$table2	= is_dbtable_there('personalize'); 
+			$wpdb->query("DELETE FROM $table2 WHERE cid = $cid");
+			
+		}				
+	}
+	update_cart_activity_date();
+
+	// update cookies cart items
+	update_cookie_cart_items();
+
+	// redirect to same page + stock control
+	$url 	= current_page(3).$url_add;
+	if($_GET['updateQty'] == '1'){
+	
+		if($OPTION['wps_enforce_ssl'] == 'force_ssl'){
+			$parts 	= explode("://",get_option('home'));
+			$url 	= 'https://'.$parts[1];
+		}
+		else {
+			$url 	= $OPTION['home'];
+		}
+		$url = $url.'/index.php?orderNow=3'.$url_add;
+	}
+	//echo 'fhgfhg';
+	header('Location: ' . $url);
+	exit(NULL);	
+}
+
+function show_cart($order=0,$cust_id=0){
+	if($cust_id == 0){
+		$cust_id = $_SESSION['cust_id'];
+	}
+
+	$table 	= is_dbtable_there('shopping_cart');	
+	$CART 	= array();
+	$qStr 	= "SELECT * FROM $table WHERE who = '$cust_id'";
+	
+	if(is_array($order)){
+	$qStr 			= "SELECT * FROM $table WHERE who = '$order[who]'";
+	}
+	
+	$res 			= mysql_query($qStr);
+	$num 			= mysql_num_rows($res);
+	
+	// remember page visitor came from 
+	if((!isset($_GET['orderNow'])) && (isset($_GET['cPage']) && $_GET['cPage'] != '0') && (!isset($_POST['update']))){
+   
+		   if(isset($_GET['cPage'])){
+				$_SESSION['cPage'] = $_GET['cPage'];
+		   } 
+	}
+
+	if($num < 1){
+		$CART['status'] 	= 'empty';
+	}
+	else {
+	
+		$CART['status']				= 'filled';
+		$CART['total_item_num'] 	= 0;
+		$CART['total_price'] 		= 0;
+		$CART['total_weight'] 		= 0;
+		$CART['content'] 			= array();
+
+		$item			= array();
+		$i				= 0;
+		
+		
+			while($row = mysql_fetch_assoc($res)) {
+					
+				$personalize 			=  retrieve_personalization($row['cid']); // Personalization 
+								
+				$item[$i]['num']		=  $row['item_amount'];
+				$item[$i]['price'] 		=  $row['item_price'] * $row['item_amount'];
+				$item[$i]['weight'] 	=  $row['item_weight'] * $row['item_amount'];				
+				$CART['content'][$i]	=  $row['cid'].'|'.$row['item_amount'].'|'.$row['item_name'].'|'.$row['item_price'];
+				$CART['content'][$i]	.= '|'.sprintf("%01.2f",$item[$i]['price']).'|'.$row['item_id'].'|'.$row['item_thumb'];
+				$CART['content'][$i]	.= '|'.$row['item_attributs'].'|'.$row['postID'].'|'.$personalize;
+				$i++;				
+			}	
+			
+			
+			for($a=0;$a<$i;$a++)
+			{
+				$CART['total_item_num'] 	= $CART['total_item_num'] + $item[$a]['num'];
+				$CART['total_weight']		= $CART['total_weight'] + $item[$a]['weight'];
+				$CART['total_price'] 		= $CART['total_price'] + $item[$a]['price'];				
+			}
+			
+			$CART['total_price'] = sprintf("%01.2f", $CART['total_price']);
+			
+		}		
+	return $CART;
+}
+
 function collect_attributes($option=1,$prefix = 'item_attr_'){
 
 	$output = NULL;
@@ -460,178 +652,6 @@ function get_price($itemID){
 	$row 	= mysql_fetch_assoc($res);
 
 return $row[price];
-}
-
-
-function show_cart($order=0,$cust_id=0){
-	if($cust_id == 0){
-		$cust_id = $_SESSION['cust_id'];
-	}
-
-	$table 	= is_dbtable_there('shopping_cart');	
-	$CART 	= array();
-	$qStr 	= "SELECT * FROM $table WHERE who = '$cust_id'";
-	
-	if(is_array($order)){
-	$qStr 			= "SELECT * FROM $table WHERE who = '$order[who]'";
-	}
-	
-	$res 			= mysql_query($qStr);
-	$num 			= mysql_num_rows($res);
-	
-	// remember page visitor came from 
-	if((!isset($_GET['orderNow'])) && (isset($_GET['cPage']) && $_GET['cPage'] != '0') && (!isset($_POST['update']))){
-   
-		   if(isset($_GET['cPage'])){
-				$_SESSION['cPage'] = $_GET['cPage'];
-		   } 
-	}
-
-	if($num < 1){
-		$CART['status'] 	= 'empty';
-	}
-	else {
-	
-		$CART['status']				= 'filled';
-		$CART['total_item_num'] 	= 0;
-		$CART['total_price'] 		= 0;
-		$CART['total_weight'] 		= 0;
-		$CART['content'] 			= array();
-
-		$item			= array();
-		$i				= 0;
-		
-		
-			while($row = mysql_fetch_assoc($res)) {
-					
-				$personalize 			=  retrieve_personalization($row['cid']); // Personalization 
-								
-				$item[$i]['num']		=  $row['item_amount'];
-				$item[$i]['price'] 		=  $row['item_price'] * $row['item_amount'];
-				$item[$i]['weight'] 	=  $row['item_weight'] * $row['item_amount'];				
-				$CART['content'][$i]	=  $row['cid'].'|'.$row['item_amount'].'|'.$row['item_name'].'|'.$row['item_price'];
-				$CART['content'][$i]	.= '|'.sprintf("%01.2f",$item[$i]['price']).'|'.$row['item_id'].'|'.$row['item_thumb'];
-				$CART['content'][$i]	.= '|'.$row['item_attributs'].'|'.$row['postID'].'|'.$personalize;
-				$i++;				
-			}	
-			
-			
-			for($a=0;$a<$i;$a++)
-			{
-				$CART['total_item_num'] 	= $CART['total_item_num'] + $item[$a]['num'];
-				$CART['total_weight']		= $CART['total_weight'] + $item[$a]['weight'];
-				$CART['total_price'] 		= $CART['total_price'] + $item[$a]['price'];				
-			}
-			
-			$CART['total_price'] = sprintf("%01.2f", $CART['total_price']);
-			
-		}		
-return $CART;
-}
-
-
-function update_cart(){
-	global $OPTION, $wpdb;
-
-	$table 			= is_dbtable_there('shopping_cart');
-	$table3 		= is_dbtable_there('shopping_cart_log');	
-	$stock_feedback = array();
-
-	foreach($_POST as $k => $v){
-		// amount action
-		$findMe   	= 'amount_';
-		$pos 		= strpos($k, $findMe);
-		if ($pos !== false){
-			$parts 	= explode("_",$k);
-			
-			// in case sb. types in 0 or worse negative amounts - we transform it to 1
-			$v = (int) $v;
-			if($v < 1){$v = 1;}
-			
-			// we only update if the amount is an integer and not a null and not a float
-			$needle 		= '.';
-			$dot_found 		= strpos($v,$needle);
-			$dot_found		= ($dot_found === FALSE ? 'no' : 'yes');
-			
-			// no point in updating the amount of an digital product which has no lkey's 
-			$digital_ok		= 'positive';
-			$digital 		= is_it_digital('UPDATE-CHECK',$parts[1]);
-						
-			if($digital === TRUE){			
-				$license_op 	= $OPTION['wps_l_mode'];
-				
-				if($license_op == 'SIMPLE'){		
-					$digital_ok	= 'negative';
-				}
-			}			
-
-			if((is_numeric($v)) && ($v != '0') && ($dot_found == 'no') && ($digital_ok == 'positive')){
-			
-			if ($v > 1) { $v = 1; } // item can't added more 1 stock
-			// stock control
-				if($OPTION['wps_track_inventory']=='active'){
-					$attr = retrieve_attributes($parts[1]);						
-					$sc_item = $wpdb->get_row(sprintf("SELECT * FROM %s WHERE cid = %s", $table, $parts[1]));
-					$item_id = $sc_item->item_id;
-					$post_id = $sc_item->postID;
-					$prod_stock = get_item_inventory($post_id, $item_id);
-					if ($v <= $prod_stock) {
-						$wpdb->query("UPDATE $table SET item_amount='$v' WHERE cid = $parts[1]");
-						// for logging
-						$wpdb->query("UPDATE $table3 SET item_amount='$v' WHERE cid = $parts[1]");
-						$url_add = NULL;
-					} else {
-						$stock_feedback[$parts[1]] = $prod_stock;
-						$items = NULL;
-						foreach($stock_feedback as $k => $v){
-							if(!empty($v)){
-								$items .= $k.'-'.$v.',';
-							}
-						}
-						$url_add 	= '&sw='.substr($items,0,-1);
-					}
-				}
-				else {
-					$wpdb->query("UPDATE $table SET item_amount='$v' WHERE cid = $parts[1]");
-				}
-			}			
-		}
-	
-		// remove action
-		if (substr($k, 0, 3) == 'rm_' && $v == 1) {
-			$parts 	= explode("_",$k);
-			$cid	= (int)$parts[1];
-
-			$wpdb->query("DELETE FROM $table WHERE cid='$cid'"); //deleting
-			$wpdb->query("DELETE FROM $table3 WHERE cid='$cid'");
-			
-			//remove also any existing records in the personalize table
-			$table2	= is_dbtable_there('personalize'); 
-			$wpdb->query("DELETE FROM $table2 WHERE cid = $cid");
-			
-		}				
-	}
-	update_cart_activity_date();
-
-	// update cookies cart items
-	update_cookie_cart_items();
-
-	// redirect to same page + stock control
-	$url 	= current_page(3).$url_add;
-	if($_GET['updateQty'] == '1'){
-	
-		if($OPTION['wps_enforce_ssl'] == 'force_ssl'){
-			$parts 	= explode("://",get_option('home'));
-			$url 	= 'https://'.$parts[1];
-		}
-		else {
-			$url 	= $OPTION['home'];
-		}
-		$url = $url.'/index.php?orderNow=3'.$url_add;
-	}
-	//echo 'fhgfhg';
-	header('Location: ' . $url);
-	exit(NULL);	
 }
 
 function order_review_update(){
@@ -986,8 +1006,9 @@ return $output;
 
 function process_order($step = 1) // function manages also inquiries
 {
-	global $OPTION, $wpdb;
+	global $OPTION, $wpdb, $current_user;
 	$feedback = false;
+	$who = $_SESSION['cust_id'];
 	$table = is_dbtable_there('orders');
 	$table2 = is_dbtable_there('delivery_addr');	
 	$table3	= is_dbtable_there('shopping_cart');
@@ -996,6 +1017,197 @@ function process_order($step = 1) // function manages also inquiries
 	update_cart_activity_date();
 
 	switch($step)
+	{
+		case 1: 
+			$d_option = $_POST['d_option'];
+			if ($d_option == 'pickup') {
+				$f_name = trim($_POST['pickup_f_name']);
+				$l_name = trim($_POST['pickup_l_name']);
+				$email = trim($_POST['pickup_email']);
+				$telephone = trim($_POST['pickup_telephone']);
+			} else {
+				$f_name = trim($_POST['f_name']);
+				$l_name = trim($_POST['l_name']);
+				$email = trim($_POST['email']);
+				$telephone = trim($_POST['telephone']);
+				$country = trim($_POST['country']);
+				$street = trim($_POST['street']);
+				$region = trim($_POST['region']);
+				$state = trim($_POST['state']);
+				$zip = trim($_POST['zip']);
+				$town = trim($_POST['town']);
+			}
+			$order_there = order_exists($table);
+			if($order_there == 0) {
+				$insert = array();
+				$insert['who']        = $who;
+				$insert['d_option']   = $d_option;
+				$insert['f_name'] 	  = $f_name;
+				$insert['l_name'] 	  = $l_name;
+				$insert['email'] 	  = $email;
+				$insert['telephone']  = $telephone;
+
+				$insert['country']	  = $country;
+				$insert['street'] 	  = $street;
+				$insert['state'] 	  = $state;
+				$insert['town'] 	  = $town;
+				$insert['zip'] 		  = $zip;
+
+				$insert['hsno'] 	  = trim($_POST['hsno']);
+				$insert['strno'] 	  = trim($_POST['strno']);
+				$insert['strnam']	  = trim($_POST['strnam']);
+				$insert['po'] 		  = trim($_POST['po']);
+				$insert['pb'] 		  = trim($_POST['pb']);
+				$insert['pzone'] 	  = trim($_POST['pzone']);
+				$insert['crossstr']   = trim($_POST['crossstr']);
+				$insert['colonyn'] 	  = trim($_POST['colonyn']);
+				$insert['district']   = trim($_POST['district']);
+				$insert['region']     = trim($_POST['region']);
+				$insert['d_addr']     = (int)$_POST['delivery_address_yes'];
+				$insert['level']      = '1';
+				$insert['created']    = time();
+				$insert['user_agent'] = $_SERVER['HTTP_USER_AGENT'];
+				$wpdb->insert($table, $insert);
+				$order_id = $wpdb->insert_id;
+
+				update_utm_params('orders', $order_id);
+
+				// add record in delivery address table
+				$insert = array();
+				$insert['who'] = $who;
+				$wpdb->insert($table2, $insert);
+
+				$_POST = array(); // in case user uses back button of browser
+			} else {
+				$order_id = $wpdb->get_var(sprintf("SELECT oid FROM %s WHERE who = '%s'", $table, $_SESSION['cust_id']));
+				if(isset($_POST['step1'])) {
+					$update	= array();
+					$update['d_option']   = $d_option;
+					$update['f_name'] 	  = $f_name;
+					$update['l_name'] 	  = $l_name;
+					$update['email'] 	  = $email;
+					$update['telephone']  = $telephone;
+
+					$update['country']	  = $country;
+					$update['street'] 	  = $street;
+					$update['state'] 	  = $state;
+					$update['town'] 	  = $town;
+					$update['zip'] 		  = $zip;
+
+					$update['hsno'] 	  = trim($_POST['hsno']);
+					$update['strno'] 	  = trim($_POST['strno']);
+					$update['strnam']	  = trim($_POST['strnam']);
+					$update['po'] 		  = trim($_POST['po']);
+					$update['pb'] 		  = trim($_POST['pb']);
+					$update['pzone'] 	  = trim($_POST['pzone']);
+					$update['crossstr']   = trim($_POST['crossstr']);
+					$update['colonyn'] 	  = trim($_POST['colonyn']);
+					$update['district']   = trim($_POST['district']);
+					$update['region']     = trim($_POST['region']);
+					$update['d_addr']     = (int)$_POST['delivery_address_yes'];
+
+					$wpdb->update($table, $update, array('who' => $who));
+				}
+			}			
+			// update order_id in shopping cart
+			$update = array();
+			$update['order_id'] = $order_id;
+			$wpdb->update($table3, $update, array('who' => $who));
+
+			// save delivery address
+			if($_POST['delivery_address_yes']) {
+				$update = array();
+				$update['l_name'] 	 = $_POST['l_name|2'];
+				$update['f_name'] 	 = $_POST['f_name|2'];
+				$update['street'] 	 = $_POST['street|2'];
+				$update['hsno'] 	 = $_POST['hsno|2'];
+				$update['strno'] 	 = $_POST['strno|2'];
+				$update['strnam']	 = $_POST['strnam|2'];
+				$update['po'] 		 = $_POST['po|2'];
+				$update['pb'] 		 = $_POST['pb|2'];
+				$update['pzone'] 	 = $_POST['pzone|2'];
+				$update['crossstr']  = $_POST['crossstr|2'];
+				$update['colonyn'] 	 = $_POST['colonyn|2'];
+				$update['district']  = $_POST['district|2'];
+				$update['region'] 	 = $_POST['region|2'];
+				$update['state'] 	 = $_POST['state|2'];
+				$update['zip'] 		 = $_POST['zip|2'];
+				$update['town'] 	 = $_POST['town|2'];
+				$update['country']	 = $_POST['country|2'];
+				$update['email'] 	 = $_POST['email'];
+				$update['telephone'] = $_POST['telephone'];
+				$wpdb->update($table2, $update, array('who' => $who));
+			}
+
+			// user order info
+			$user_order_info = array(
+				'fname' => $f_name,
+				'lname' => $l_name,
+				'email' => $email,
+				'telephone' => $telephone,
+				'country' => $_POST['country'],
+				'street' => $_POST['street'],
+				'state' => $_POST['state'],
+				'town' => $_POST['town'],
+				'zip' => $_POST['zip'],
+				'shipp_fname' => $f_name,
+				'shipp_lname' => $l_name,
+				'shipp_country' => $_POST['country'],
+				'shipp_street' => $_POST['street'],
+				'shipp_state' => $_POST['state'],
+				'shipp_town' => $_POST['town'],
+				'shipp_zip' => $_POST['zip']
+			);
+			if($_POST['delivery_address_yes'] == '1') {
+				$user_order_info['shipp_fname'] = $_POST['f_name|2'];
+				$user_order_info['shipp_lname'] = $_POST['l_name|2'];
+				$user_order_info['shipp_country'] = $_POST['country|2'];
+				$user_order_info['shipp_street'] = $_POST['street|2'];
+				$user_order_info['shipp_state'] = $_POST['state|2'];
+				$user_order_info['shipp_town'] = $_POST['town|2'];
+				$user_order_info['shipp_zip'] = $_POST['zip|2'];
+			}
+			nws_set_user_order_info($user_order_info);
+		break;
+		case 2:
+			$CART = show_cart();
+
+			$order 	= mysql_fetch_assoc(mysql_query("SELECT * FROM $table WHERE who = '$who' LIMIT 1"));
+
+			// get shipping fee
+			$shipping = 0;
+			$cart_comp 	= cart_composition($who);
+			if($cart_comp != 'digi_only' && $_SESSION['layaway_order'] == 0) { // no shipping for a digital product only
+				$order_country = get_order_shipping_country($order['oid']);
+				$shipping = calculate_shipping($order['d_option'],$CART['total_price'],$CART['total_weight'],$CART['total_item_num'],$order_country);
+			}
+			// get tax
+			$tax_amount = 0;
+			if ($_SESSION['layaway_order'] == 0) {
+				$tax_amount = calculate_tax($order, $CART['total_price']);
+			}
+			// voucher data
+			$voucher = '';
+			$voucher_amount = 0;
+			if ($_SESSION['checkout_voucher']) {
+				$vdata = $_SESSION['checkout_voucher'];
+				$voucher_amount = $vdata->amount;
+				$voucher = $vdata->code;
+				if ($vdata->option == 'P') {
+					$voucher_amount = round(($CART['total_price'] / 100) * $vdata->amount, 2);
+				}
+			}
+			// update the order
+			$update = array();
+			$update['p_option'] = $_POST['p_option'];
+			$update['voucher'] = $voucher;
+			$wpdb->update($table, $update, array('who' => $who));
+
+			update_order($CART['total_weight'], $shipping, $CART['total_price'], $voucher_amount, $tax_amount);
+		break;
+	}
+
+	/*switch($step)
 	{
 		case 1: 
 			// voucher
@@ -1176,7 +1388,7 @@ function process_order($step = 1) // function manages also inquiries
 			break;
 		case 4:		break; 
 		case 5:		break; 
-	}
+	}*/
 	return $feedback;	
 }
 
@@ -1237,40 +1449,171 @@ function get_order_shipping_country($oid) {
 	return $shipping_country;
 }
 
-function address_form_labels(){
+function address_form_labels() {
+	$LANG 						= array();
+	$LANG['lastname'] 			= __('Last Name','wpShop');
+	$LANG['firstname'] 			= __('First Name','wpShop');
+	$LANG['street_hsno'] 		= __('Address','wpShop');
+	$LANG['street']				= __('Street','wpShop');
+	$LANG['hsno']				= __('House No.','wpShop');
+	$LANG['strno']				= __('Street No.','wpShop');
+	$LANG['strnam']				= __('Street Name','wpShop');
+	$LANG['po']					= __('Post Office','wpShop');
+	$LANG['pb']					= __('Post Box','wpShop');
+	$LANG['pzone']				= __('Postal Zone','wpShop');
+	$LANG['crossstr']			= __('Cross Streets','wpShop');
+	$LANG['colonyn']			= __('Colony name','wpShop');
+	$LANG['district']			= __('District','wpShop');		
+	$LANG['region']				= __('Region','wpShop');			
+	$LANG['island']				= __('Island','wpShop');		
+	$LANG['state_province'] 	= __('State/Province','wpShop'); 
+	$LANG['zip'] 				= __('Postcode','wpShop');
+	$LANG['town']				= __('City','wpShop');
+	$LANG['country']			= __('Country','wpShop');
+	$LANG['email']				= __('Email','wpShop');
+	$LANG['terms']				= __('Terms &amp; Conditions:','wpShop');
+	$LANG['accept_terms']		= __('I accept the Terms &amp; Conditions of','wpShop');
+	$LANG['next_step'] 			= __('Next Step','wpShop');		
+	$LANG['field_not_empty']	= __(' - Field cannot be Empty.','wpShop');	
+	$LANG['format_email']		= __('The Format of your Email Address is not Correct.','wpShop');	
+	$LANG['terms_need_accepted']= __('Terms need to be Accepted.','wpShop');
 
-		$LANG 						= array();
-
-		$LANG['lastname'] 			= __('Last Name','wpShop');
-		$LANG['firstname'] 			= __('First Name','wpShop');
-		$LANG['street_hsno'] 		= __('Address','wpShop');
-		$LANG['street']				= __('Street','wpShop');
-		$LANG['hsno']				= __('House No.','wpShop');
-		$LANG['strno']				= __('Street No.','wpShop');
-		$LANG['strnam']				= __('Street Name','wpShop');
-		$LANG['po']					= __('Post Office','wpShop');
-		$LANG['pb']					= __('Post Box','wpShop');
-		$LANG['pzone']				= __('Postal Zone','wpShop');
-		$LANG['crossstr']			= __('Cross Streets','wpShop');
-		$LANG['colonyn']			= __('Colony name','wpShop');
-		$LANG['district']			= __('District','wpShop');		
-		$LANG['region']				= __('Region','wpShop');			
-		$LANG['island']				= __('Island','wpShop');		
-		$LANG['state_province'] 	= __('State/Province','wpShop'); 
-		$LANG['zip'] 				= __('Postcode','wpShop');
-		$LANG['town']				= __('City','wpShop');
-		$LANG['country']			= __('Country','wpShop');
-		$LANG['email']				= __('Email','wpShop');
-		$LANG['terms']				= __('Terms &amp; Conditions:','wpShop');
-		$LANG['accept_terms']		= __('I accept the Terms &amp; Conditions of','wpShop');
-		$LANG['next_step'] 			= __('Next Step','wpShop');		
-		$LANG['field_not_empty']	= __(' - Field cannot be Empty.','wpShop');	
-		$LANG['format_email']		= __('The Format of your Email Address is not Correct.','wpShop');	
-		$LANG['terms_need_accepted']= __('Terms need to be Accepted.','wpShop');
-
-return $LANG;
+	return $LANG;
 }
 
+$LANG['billing_address'] 			= __('Billing Address:','wpShop');
+$LANG['shipping_address'] 			= __('Delivery Address:','wpShop');
+$LANG['shipping_address_message'] 	= __('Fill In Only If Different From Billing Address','wpShop');
+$LANG['lastname'] 					= __('Last Name','wpShop');
+$LANG['firstname'] 					= __('First Name','wpShop');
+$LANG['street_hsno'] 				= __('Address','wpShop');
+$LANG['street']						= __('Address','wpShop');
+$LANG['hsno']						= __('House No.','wpShop');
+$LANG['strno']						= __('Street No.','wpShop');
+$LANG['strnam']						= __('Street Name','wpShop');
+$LANG['po']							= __('Post Office','wpShop');
+$LANG['pb']							= __('Post Box','wpShop');
+$LANG['pzone']						= __('Post Zone','wpShop');
+$LANG['crossstr']					= __('Cross Streets','wpShop');
+$LANG['colonyn']					= __('Colony name','wpShop');
+$LANG['district']					= __('District','wpShop');		
+$LANG['region']						= __('Region','wpShop');			
+$LANG['island']						= __('Island','wpShop');		
+$LANG['state_province'] 			= __('State/Province','wpShop'); 
+$LANG['zip'] 						= __('Postcode','wpShop');
+$LANG['town']						= __('City','wpShop');
+$LANG['country']					= __('Country','wpShop');
+$LANG['email']						= __('Email','wpShop');
+$LANG['telephone']					= __('Telephone','wpShop');		
+$LANG['terms']						= __('Terms &amp; Conditions','wpShop');
+$LANG['next_step'] 					= __('Next Step','wpShop');		
+$LANG['field_not_empty']			= __(' - Field cannot be Empty.','wpShop');	
+$LANG['format_email']				= __('Your Email Address is incorrect.','wpShop');
+$LANG['choose_billing_c']			= __('Select a country for your Billing Address.','wpShop');
+$LANG['choose_delivery_c']			= __('Select a country for your Delivery Address','wpShop');
+$LANG['terms_need_accepted']		= __('Terms must be Accepted.','wpShop');
+$LANG['wait_for_field'] 			= __('Error: You clicked on "Next" before all fields of the address form were fully loaded.','wpShop'); 
+$LANG['refresh_and_wait'] 			= __('Please <a href="?orderNow=reload_form">click here to refresh the page </a> and wait for the address fields to appear after you have selected your country.','wpShop'); 
+
+function check_address_form()
+{
+	global $LANG;
+
+	// verify data from address form 
+	$feedback 				= array();
+	$feedback['e_message']	= NULL;		
+	$feedback['e_message2']	= NULL;			
+	$feedback['error']		= 0;
+	
+	// Labels for field
+	$labels = array();
+	$labels['l_name'] 	= $LANG['lastname'];
+	$labels['f_name'] 	= $LANG['firstname'];
+	$labels['street'] 	= $LANG['street'];
+	
+	$labels['hsno'] 	= $LANG['hsno'];
+	$labels['strno'] 	= $LANG['strno'];			
+	$labels['strnam'] 	= $LANG['strnam'];			
+	$labels['po'] 		= $LANG['po'];			
+	$labels['pb'] 		= $LANG['pb'];	
+	$labels['pzone'] 	= $LANG['pzone'];				
+	$labels['crossstr'] = $LANG['crossstr'];
+	$labels['colonyn'] 	= $LANG['colonyn'];	
+	$labels['district'] = $LANG['district'];
+	$labels['region'] 	= $LANG['region'];
+	$labels['state']  	= $LANG['state_province'];
+	$labels['zip'] 		= $LANG['zip'];
+	$labels['town'] 	= $LANG['town'];
+	$labels['email'] 	= $LANG['email'];
+	$labels['telephone']= $LANG['telephone'];
+
+	$diff_daddress = $_POST['delivery_address_yes'];
+	$email = $_POST['email'];
+	$telephone = $_POST['telephone'];
+
+	// Any fields empty?
+	$d_option = $_POST['d_option'];
+	if ($d_option == 'pickup') {
+		$email = $_POST['pickup_email'];
+		$telephone = $_POST['pickup_telephone'];
+		if (!strlen($_POST['pickup_f_name'])) {
+			$feedback['e_message'] .= '<span class="error">'.$labels['f_name'].' '.$LANG['field_not_empty'].'</span><br/>';
+			$feedback['error'] = 1;
+		}
+		if (!strlen($_POST['pickup_l_name'])) {
+			$feedback['e_message'] .= '<span class="error">'.$labels['l_name'].' '.$LANG['field_not_empty'].'</span><br/>';
+			$feedback['error'] = 1;
+		}
+	} else {
+		if(isset($_POST['country']) && $_POST['country'] == 'bc'){
+			$feedback['e_message'] .= "<span class='error'>$LANG[choose_billing_c]</span><br/>";  	
+			$feedback['error'] 	= 1;
+		}
+		$allowed_fields = array('f_name', 'l_name', 'street', 'state', 'town', 'zip');
+		foreach($allowed_fields as $afield) {
+			if (!strlen($_POST[$afield])) {
+				$feedback['e_message'] .= '<span class="error">'.$labels[$afield].' '.$LANG['field_not_empty'].'</span><br/>';
+				$feedback['error'] = 1;	
+			}
+		}
+	}
+
+	// Format of email ok?
+	if(!strlen($email)){
+		$feedback['e_message'] .= '<span class="error">'.$labels['email'].' '.$LANG['field_not_empty'].'</span><br/>';
+		$feedback['error'] = 1;
+	} else {
+		if(!is_email($email)){
+			$feedback['e_message'] .= "<span class='error'>$LANG[format_email]</span><br/>";  
+			$feedback['error'] = 1;
+		}
+	}
+	if(!strlen($telephone)){
+		$feedback['e_message'] .= "<span class='error'>$LANG[telephone] $LANG[field_not_empty]</span><br/>";  
+		$feedback['error'] = 1;	
+	}
+
+	if ($_POST['delivery_address_yes']) {
+		if(isset($_POST['country|2']) && $_POST['country|2'] == 'dc'){
+			$feedback['e_message2'] .= "<span class='error'>$LANG[choose_delivery_c]</span><br/>";  			
+		}			
+		foreach($allowed_fields as $afield) {
+			if (!strlen($_POST[$afield.'|2'])) {
+				$feedback['e_message'] .= '<span class="error">Delivery '.$labels[$afield].' '.$LANG['field_not_empty'].'</span><br/>';
+				$feedback['error'] = 1;	
+			}
+		}
+	}
+
+	// were the terms accepted? 
+	$accepted = terms_accepted();
+	if($accepted == FALSE){
+		$feedback['e_message'] .= "<span class='error' id='errorTermsaccepted'>$LANG[terms_need_accepted]</span><br/>";  
+		$feedback['error'] = 1;							
+	}
+
+	return $feedback;
+}
 
 function create_address_form($option = 'billing',$only_one_c = 'no'){	
 	
@@ -1405,161 +1748,16 @@ function create_address_form($option = 'billing',$only_one_c = 'no'){
 	}
 }
 
-function check_address_form()
-{
-	global $LANG;
-	// verify data from address form 
-	$feedback 				= array();
-	$feedback['e_message']	= NULL;		
-	$feedback['e_message2']	= NULL;			
-	$feedback['error']		= 0;
-	
-	// Labels for field
-	$labels = array();
-	$labels['l_name'] 	= $LANG['lastname'];
-	$labels['f_name'] 	= $LANG['firstname'];
-	$labels['street'] 	= $LANG['street'];
-	
-	$labels['hsno'] 	= $LANG['hsno'];
-	$labels['strno'] 	= $LANG['strno'];			
-	$labels['strnam'] 	= $LANG['strnam'];			
-	$labels['po'] 		= $LANG['po'];			
-	$labels['pb'] 		= $LANG['pb'];	
-	$labels['pzone'] 	= $LANG['pzone'];				
-	$labels['crossstr'] = $LANG['crossstr'];
-	$labels['colonyn'] 	= $LANG['colonyn'];	
-	$labels['district'] = $LANG['district'];
-	$labels['region'] 	= $LANG['region'];
-	$labels['state']  	= $LANG['state_province'];
-	$labels['zip'] 		= $LANG['zip'];
-	$labels['town'] 	= $LANG['town'];
-	$labels['email'] 	= $LANG['email'];
-	$labels['telephone']= $LANG['telephone'];
-	$_POST['step2']		= TRUE; // actually a fix, if designer removes value from submit button
-
-	// delete fields from $_POST array which shouldn't be checked
-	unset($_POST['v_no']);
-	$tmp = '';
-	if(isset($_POST['custom_note']))
-	{
-		$tmp = $_POST['custom_note']; 
-		unset($_POST['custom_note']);
-	}
-	unset($_POST['step1']);
-
-	if(!isset($_POST['delivery_address_yes']))
-	{
-		unset($_POST['f_name|2']);
-		unset($_POST['l_name|2']);
-		unset($_POST['country|2']);
-		unset($_POST['street|2']);
-		unset($_POST['hsno|2']);
-		unset($_POST['strnam|2']);
-		unset($_POST['strno|2']);
-		unset($_POST['po|2']);
-		unset($_POST['pb|2']);
-		unset($_POST['pzone|2']);
-		unset($_POST['crossstr|2']);
-		unset($_POST['colonyn|2']);
-		unset($_POST['district|2']);
-		unset($_POST['region|2']);
-		unset($_POST['state|2']);
-		unset($_POST['zip|2']);
-		unset($_POST['place|2']);
-		unset($_POST['town|2']);
-	}	
-
-	// were countries chosen?
-	if(isset($_POST['country']) && $_POST['country'] == 'bc'){
-		$feedback['e_message'] .= "<span class='error'>$LANG[choose_billing_c]</span><br/>";  	
-		$feedback['error'] 	= 1;
-	}
-	if(isset($_POST['country|2']) && $_POST['country|2'] == 'dc'){
-		$feedback['e_message2'] .= "<span class='error'>$LANG[choose_delivery_c]</span><br/>";  			
-	}			
-	$cntr = (isset($_POST['country']))? $_POST['country']: 'UNITED ARAB EMIRATES';
-	//which variables should be in the post array (based on the country)?		
-	$table			= is_dbtable_there('countries');
-	$country_col 	= 'country';
-	if(WPLANG == 'de_DE'){$country_col = 'de';}
-	if(WPLANG == 'fr_FR'){$country_col = 'fr';}
-	
-	$qStr 	= "SELECT address_format FROM $table WHERE $country_col = '$cntr' LIMIT 0,1";
-	$res 	= mysql_query($qStr);
-	$row 	= mysql_fetch_assoc($res);
-	
-	$address_format = str_replace('#',NULL,$row['address_format']);		
-	$address_format = str_replace('%PLACE%','%TOWN%',$address_format);
-	$address_format = str_replace('%place%','%town%',$address_format);
-	$address_format = str_replace('name',NULL,$address_format);
-	$address_format = str_replace('NAME',NULL,$address_format);
-			
-	$address_format = str_replace('(',NULL,$address_format);
-	$address_format = str_replace(')',NULL,$address_format);
-	$pAddress 		= explode('%',$address_format);
-	
-	$array['error'] = 0;
-	for($i=0;$i<10;$i++){
-		if(!isset($pAddress[$i])) break; 
-		if((strlen($pAddress[$i]) > 1)&&(array_key_exists(strtolower($pAddress[$i]),$_POST) === FALSE)){
-			$array['error'] = 1;
-			$abc 			= $pAddress[$i];
-			if($i<5) { $array['error'] = 0; break; } 
-		}	
-	}
-	if($array['error'] == 1 ){
-		$feedback['error'] 		= 1;
-		$feedback['e_message'] 	.= "<span class='error'>$LANG[wait_for_field] $LANG[refresh_and_wait]</span><br/>"; 	
-	}
-			
-	$diff_daddress = $_POST['delivery_address_yes'];
-	// Any fields empty?
-	foreach($_POST as $k => $v){
-		$_POST[$k] = strip_tags($v); // HTML tags are removed - if any 
-		if(substr($k,-2) !== '|2'){
-			if($v == '' && $k != 'zip'){ 
-				$feedback['e_message'] .= "<span class='error'>$labels[$k] $LANG[field_not_empty]</span><br/>";  
-				$feedback['error'] = 1;	
-			}				
-		}
-		else{				
-			if($diff_daddress && $v == ''){
-				$k = substr($k,0,-2);
-				$feedback['e_message2'] .= "<span class='error'>$labels[$k]  $LANG[field_not_empty]</span><br/>";  
-				$feedback['error'] = 1;	
-			}				
-		}			
-	}
-	// Format of email ok?
-	if(isset($_POST['email'])){
-		$em_ok = NWS_validate_email($_POST['email']);
-		if($em_ok == FALSE){
-		
-			$feedback['e_message'] .= "<span class='error'>$LANG[format_email]</span><br/>";  
-			$feedback['error'] = 1;	
-		}
-	}
-	// were the terms accepted? 
-	$accepted = terms_accepted();
-	if($accepted == FALSE){
-			$feedback['e_message'] .= "<span class='error' id='errorTermsaccepted'>$LANG[terms_need_accepted]</span><br/>";  
-			$feedback['error'] = 1;							
-	}
-	$_POST['custom_note'] = htmlspecialchars(strip_tags($tmp),ENT_QUOTES); 			
-			
-	return $feedback;
-}
-
 function redisplay_address_form($option = 'billing') {
 	global $LANG;
+
+	$order = get_current_order();
 
 	$b_country = 'UNITED ARAB EMIRATES';
 	$d_country = 'UNITED ARAB EMIRATES';
 
-	if ($_POST['order_step'] == 2) {
+	if ($_POST['order_step'] == 1) {
 		$b_country	 = trim($_POST['country']);
-		$email		 = trim($_POST['email']);
-		$telephone	 = trim($_POST['telephone']);
 		$street		 = trim($_POST['street']);
 		$state		 = trim($_POST['state']);
 		$town		 = trim($_POST['town']);
@@ -1570,28 +1768,8 @@ function redisplay_address_form($option = 'billing') {
 		$state_2	 = trim($_POST['state|2']);
 		$town_2		 = trim($_POST['town|2']);
 		$zip_2		 = trim($_POST['zip|2']);
-		$email_2	 = trim($_POST['email|2']);
-		$telephone_2 = trim($_POST['telephone|2']);
-	} else if (isset($_SESSION['order_data'])) {
-		$b_country	 = $_SESSION['order_data']['country'];
-		$email		 = $_SESSION['order_data']['email'];
-		$telephone	 = $_SESSION['order_data']['telephone'];
-		$street		 = $_SESSION['order_data']['street'];
-		$state		 = $_SESSION['order_data']['state'];
-		$town		 = $_SESSION['order_data']['town'];
-		$zip		 = $_SESSION['order_data']['zip'];
-
-		$d_country	 = $_SESSION['order_data']['shipp_country'];
-		$street_2	 = $_SESSION['order_data']['shipp_street'];
-		$state_2	 = $_SESSION['order_data']['shipp_state'];
-		$town_2		 = $_SESSION['order_data']['shipp_town'];
-		$zip_2		 = $_SESSION['order_data']['shipp_zip'];
-		$email_2	 = $_SESSION['order_data']['shipp_email'];
-		$telephone_2 = $_SESSION['order_data']['shipp_telephone'];
 	} else if (isset($_SESSION['layaway_order_data'])) {
 		$b_country	 = $_SESSION['layaway_order_data']['country'];
-		$email		 = $_SESSION['layaway_order_data']['email'];
-		$telephone	 = $_SESSION['layaway_order_data']['telephone'];
 		$street		 = $_SESSION['layaway_order_data']['street'];
 		$state		 = $_SESSION['layaway_order_data']['state'];
 		$town		 = $_SESSION['layaway_order_data']['town'];
@@ -1602,11 +1780,32 @@ function redisplay_address_form($option = 'billing') {
 		$state_2	 = $_SESSION['layaway_order_data']['shipp_state'];
 		$town_2		 = $_SESSION['layaway_order_data']['shipp_town'];
 		$zip_2		 = $_SESSION['layaway_order_data']['shipp_zip'];
-		$email_2	 = $_SESSION['layaway_order_data']['shipp_email'];
-		$telephone_2 = $_SESSION['layaway_order_data']['shipp_telephone'];
+	} else if (isset($_SESSION['order_data'])) {
+		$b_country	 = $_SESSION['order_data']['country'];
+		$street		 = $_SESSION['order_data']['street'];
+		$state		 = $_SESSION['order_data']['state'];
+		$town		 = $_SESSION['order_data']['town'];
+		$zip		 = $_SESSION['order_data']['zip'];
+
+		$d_country	 = $_SESSION['order_data']['shipp_country'];
+		$street_2	 = $_SESSION['order_data']['shipp_street'];
+		$state_2	 = $_SESSION['order_data']['shipp_state'];
+		$town_2		 = $_SESSION['order_data']['shipp_town'];
+		$zip_2		 = $_SESSION['order_data']['shipp_zip'];
+	}
+	if ($order && !strlen($b_country)) {
+		$b_country	 = $order['country'];
+		$street		 = $order['street'];
+		$state		 = $order['state'];
+		$town		 = $order['town'];
+		$zip		 = $order['zip'];
 	}
 
-	
+	if (!strlen($b_country)) {
+		$b_country = 'UNITED ARAB EMIRATES';
+		$d_country = 'UNITED ARAB EMIRATES';
+	}
+
 	if($option == 'billing'){
 		$ad	= get_address_format($b_country, 'filter');
 		// loop thru address fields and produce input fields accordingly
@@ -1672,11 +1871,6 @@ function redisplay_address_form($option = 'billing') {
 				value='$town' maxlength='255' />";
 			}
 		}
-		echo "<label for='email'>$LANG[email]:</label><input  id='email' type='text' name='email' 
-		value='$email' maxlength='255' />";
-	
-		echo "<label for='telephone'>$LANG[telephone]:</label><input id='telephone' type='text' name='telephone' 
-		value='$telephone' maxlength='255' />";
 	}
 
 	if($option == 'shipping'){
@@ -1746,11 +1940,6 @@ function redisplay_address_form($option = 'billing') {
 				name='town|2' value='".$town_2."' maxlength='255' />";			
 			}
 		}
-		echo "<label for='demail'>$LANG[email]:</label><input  id='demail' type='text' name='email|2' 
-		value='$email_2' maxlength='255' />";
-	
-		echo "<label for='dtelephone'>$LANG[telephone]:</label><input id='dtelephone' type='text' name='telephone|2' 
-		value='$telephone_2' maxlength='255' />";
 	}
 }
 
@@ -2019,6 +2208,13 @@ function is_flat_limit_shipping_free($subtotal) {
 		}
 	}
 	return false;
+}
+
+function get_current_order() {
+	global $wpdb;
+	$who = $_SESSION['cust_id'];
+	$table = is_dbtable_there('orders');
+	return mysql_fetch_assoc(mysql_query("SELECT * FROM $table WHERE who = '$who' LIMIT 1"));
 }
 
 function update_order($weight, $shipping, $subtotal, $voucher=0, $tax=0){
@@ -4073,7 +4269,7 @@ function province_me($ct,$sel=1,$option='billing'){
 		$data .= "<option value='$kv[0]' {$selected}>$kv[1]</option>";
 	}
 	
-	$data .= "</select><br />";
+	$data .= "</select>";
 	
 return $data;
 }
@@ -4264,8 +4460,9 @@ return $ID_item;
 ##################################################################################################################################
 // 												GOOGLE  
 ##################################################################################################################################
-function google_analytics($profile_id='1111'){
-	?>
+function google_analytics(){
+	global $OPTION;
+	if($OPTION['wps_google_analytics'] == 'active') { ?>
 	<!-- Google Analytics -->
 	<script>
 	(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
@@ -4273,12 +4470,14 @@ function google_analytics($profile_id='1111'){
 	m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
 	})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
 
-	ga('create', '<?php echo $profile_id; ?>', 'auto');
+	ga('create', '<?php echo $OPTION['wps_google_analytics_id']; ?>', 'auto');
+	ga('require', 'displayfeatures');
 	ga('send', 'pageview');
 
 	</script>
 	<!-- End Google Analytics -->
 	<?php
+	}
 }
 
 function google_adsense($ad_no){
@@ -4811,58 +5010,57 @@ return $hash;
 ##################################################################################################################################
 function format_price($price, $ccode = false){
 	global $OPTION;
+	$price = (float)$price;
 
-	if ($price) {
-		switch($OPTION['wps_price_format']){
+	switch($OPTION['wps_price_format']){
+	
+		case '1':
+			$price = number_format($price, 2, ',', '');
+		break;		
 		
-			case '1':
-				$price = number_format($price, 2, ',', '');
-			break;		
-			
-			case '2':
-				$price = number_format($price, 2, '.', '');
-			break;		
-			
-			case '3':
-				$price = number_format($price, 2, ',', '.');
-			break;		
-			
-			case '4':
-				$price = number_format($price, 2, '.', ',');
-			break;		
-			
-			case '5':
-				$price = number_format($price, 2, ',', ' ');
-			break;		
-			
-			case '6':
-				$price = number_format($price, 2, ',', "'");
-			break;
-			
-			case '7':
-				$price = number_format($price, 0, ',',' ');
-			break;
-			
-			case '8':
-				$price = number_format($price, 0, '.', ',');
-			break;		
-			
-			case '9':
-				$price = number_format($price, 0);
-			break;
-			
-			default:
-			break;
-		}
-		if ($ccode) {
-			if ($_SESSION['currency-code'] != 'USD') {
-				$price = $price . ' ' . $_SESSION['currency-code'];
-			} else {
-				$price = '$'.$price;
-			}
+		case '2':
+			$price = number_format($price, 2, '.', '');
+		break;		
+		
+		case '3':
+			$price = number_format($price, 2, ',', '.');
+		break;		
+		
+		case '4':
+			$price = number_format($price, 2, '.', ',');
+		break;		
+		
+		case '5':
+			$price = number_format($price, 2, ',', ' ');
+		break;		
+		
+		case '6':
+			$price = number_format($price, 2, ',', "'");
+		break;
+		
+		case '7':
+			$price = number_format($price, 0, ',',' ');
+		break;
+		
+		case '8':
+			$price = number_format($price, 0, '.', ',');
+		break;		
+		
+		case '9':
+			$price = number_format($price, 0);
+		break;
+		
+		default:
+		break;
+	}
+	if ($ccode) {
+		if ($_SESSION['currency-code'] != 'USD') {
+			$price = $price . ' ' . $_SESSION['currency-code'];
+		} else {
+			$price = '$'.$price;
 		}
 	}
-	
+
 	return $price;
 }
 
@@ -5260,8 +5458,8 @@ function wps_shop_process_steps($step = 1) {
 	$siteurl = get_bloginfo('url');
 	$steps = array(
 		1 => array('title' => 'Your Order', 'url' => get_cart_url()),
-		2 => array('title' => 'Payment &amp; Delivery Options', 'url' => get_checkout_url().'/?orderNow=1'),
-		3 => array('title' => 'Delivery &amp; Billing', 'url' => get_checkout_url().'/?orderNow=2&dpchange=1'),
+		2 => array('title' => 'Delivery Options', 'url' => get_checkout_url().'/?orderNow=1'),
+		3 => array('title' => 'Payment Options', 'url' => get_checkout_url().'/?orderNow=2&dpchange=1'),
 		4 => array('title' => 'Order Review', 'url' => get_checkout_url().'/?orderNow=3'),
 		5 => array('title' => 'Confirmation', 'url' => '')
 	);

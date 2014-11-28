@@ -1,5 +1,6 @@
 var filter = new Object();
 var search_list = new Object();
+var last_args = {};
 
 filter.tmp = 1;
 
@@ -39,7 +40,7 @@ filter.enableItem = function(id){
 	var input        = jQuery('#row-'+ id + ' > span > input');
 	var check_square = jQuery('#row-'+ id + ' > span > a');
 	var label        = jQuery('#row-'+ id + ' > label');
-
+	if(input.hasClass('frozen')) return false;
 	input.prop('disabled', false);
 	check_square.removeClass('disabled-check');
 	check_square.removeClass('disabled-jqTransformCheckbox');
@@ -101,8 +102,12 @@ filter.sort = function(key){
 };
 
 filter.filter = function(event, obj){
+	console.log(event);
+	if(jQuery(obj).hasClass('frozen')) return false;
 	if(jQuery(obj).is(':disabled')) return false;
 	last_args.offset = 0;
+	last_args.wnew = jQuery('.whats-new-pg').html();
+	last_args.s = jQuery('.search-form #s').val();
 	last_args.cats = filter.getCheckedData();
 	filter.filterAJAX(event, obj);
 	filter.updateScrollBars();
@@ -224,6 +229,7 @@ filter.getCheckedData = function(){
 		tax_cat_3:           [],
 		tax_cat_4:           [],
 		tax_cat_5:           [],
+		tax_sale:            [],
 		tax_colours:         [], 
 		tax_sizes:           [],
 		tax_ring_sizes:      [],
@@ -250,11 +256,13 @@ filter.getCheckedData = function(){
 	var block_tax     = '';
 	var block_replace = '';
 	
-	if(typeof(last_args.cats.tag) != 'undefined')
-	{
-		if(!isNaN(parseInt(last_args.cats.tag)))
+	if(last_args.cats) {
+		if(typeof(last_args.cats.tag) != 'undefined')
 		{
-			tax_cat['tag'].push(parseInt(last_args.cats.tag));
+			if(!isNaN(parseInt(last_args.cats.tag)))
+			{
+				tax_cat['tag'].push(parseInt(last_args.cats.tag));
+			}
 		}
 	}
 	// ==============================================================
@@ -264,6 +272,10 @@ filter.getCheckedData = function(){
 		tax_key = 'tax_cat_' + (1 + parseInt(jQuery(this).data('depth')));
 		tax_cat[tax_key].push(jQuery(this).attr('id').replace('category-', ''));
 	});
+	if (jQuery('.sale-category-pg').size()) {
+		var scd = jQuery('.sale-category-pg').html().split(';');
+		tax_cat['tax_sale'].push(scd[0]);
+	}
 
 	for (var i = 0; i < Object.keys(blocks).length; i++) 
 	{
@@ -540,5 +552,12 @@ jQuery(document).ready(function(){
 	// ==============================================================
 	jQuery('.shop-by-brand h4').click(function(){
 		jQuery('.shop-by-brand .checkbox-list-search').toggle();
+	});
+
+	// ==============================================================
+	// 
+	// ==============================================================
+	jQuery('.search-filter-form .jqTransformCheckbox').click(function(e){
+		e.preventDefault();
 	});
 });

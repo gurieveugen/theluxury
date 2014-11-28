@@ -3,11 +3,11 @@ global $OPTION;
 
 if(isset($_GET['orderNow']) && $_GET['orderNow'] == '1') // checkout payments and delivery
 {
-	include WP_CONTENT_DIR.'/themes/'.WPSHOP_THEME_NAME.'/lib/pages/shop_checkout_payment.php';
+	include WP_CONTENT_DIR.'/themes/'.WPSHOP_THEME_NAME.'/lib/pages/shop_checkout_delivery.php';
 }
 elseif(isset($_GET['orderNow']) && $_GET['orderNow'] == '2') // checkout billing & shipping
 {
-	include WP_CONTENT_DIR.'/themes/'.WPSHOP_THEME_NAME.'/lib/pages/shop_checkout_billing.php';
+	include WP_CONTENT_DIR.'/themes/'.WPSHOP_THEME_NAME.'/lib/pages/shop_checkout_payment.php';
 }
 elseif(isset($_GET['orderNow']) && $_GET['orderNow'] == '3') // checkout order review
 {

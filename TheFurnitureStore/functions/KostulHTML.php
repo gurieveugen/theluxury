@@ -79,10 +79,12 @@ class KostulHTML{
 	 */
 	public function displayDaysAgo()
 	{
-		$days_ago = ceil((time() - $this->post->post_date) / 86400);
+		$days_ago = ceil((time() - strtotime($this->post->post_date)) / 86400);
 		if ($days_ago > 0 && $days_ago <= 30)
 		{
-			printf('<span class="date-info">added %s days ago</span>', $days_ago);
+			$dlbl = 'day';
+			if ($days_ago > 1) { $dlbl = 'days'; }
+			printf('<span class="date-info">added %s %s ago</span>', $days_ago, $dlbl);
 		}
 	}
 

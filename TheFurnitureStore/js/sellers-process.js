@@ -680,7 +680,7 @@ jQuery(document).ready(function(){
 		jQuery('.popup-box').fadeOut();
 		return false;
 	});
-	jQuery('#indivseller-add-item .btn-aaitem').click(function(){
+	jQuery('#indivseller-add-item .btn-add-another-item').click(function(){
 		itemnmb++;
 		var new_item_form = jQuery('.new-item-form').html();
 		var inf = new_item_form.indexOf('(IN)');
@@ -690,6 +690,7 @@ jQuery(document).ready(function(){
 		}
 		jQuery('#forms-box').append(new_item_form);
 		swf_upload_init(itemnmb);
+		jQuery('#item-form-1 .remove-item-box').show();
 		return false;
 	});
 	jQuery('.uploaded-pics li .cancel').bind('click', function(){
@@ -890,32 +891,44 @@ function seller_presubmit_form() {
 }
 
 function indivseller_change_cat(n, val) {
-	jQuery('.item-brand-'+n+' .catop').removeAttr('selected').hide();
-	jQuery('.item-brand-'+n+' option').eq(0).attr('selected', 'selected');
+	var opts = '<option value="">-- Select Brand --</option>';
 	if (val != '') {
-		jQuery('.item-brand-'+n+' .cid-'+val).show();
+		opts += jQuery('.cat-brands-'+n+'-'+val).html();
+		opts += '<option value="other" style="margin-top:7px;">Other</option>';
 	}
+	jQuery('.item-brand-'+n).html(opts);
 }
 
 function indivseller_presubmit_form() {
 	var gloaberror = false;
 	var errors = '';
+	var errorstext = '';
 	var item_user_email = jQuery('#item-user-email input').val();
 	var item_user_pass = jQuery('#item-user-pass input').val();
 	var item_user_phone = jQuery('#item-user-phone input').val();
 	var item_user = jQuery('#item-user input').val();
 	var item_terms_agree = jQuery('#item-terms-agree input').is(':checked');
 
-	jQuery('form.form-add label').removeClass('error');
+	jQuery('form.form-add label, form.form-add input, form.form-add select').removeClass('error');
+	jQuery('#indivseller-add-item .errors').hide();
 
+	var itemtotalnmb = 0;
+	for (var f=1; f<=itemnmb; f++) {
+		if (jQuery('#item-form-'+f).size()) {
+			itemtotalnmb++;
+		}
+	}
+	var itemfornmb = 1;
 	for (var f=1; f<=itemnmb; f++) {
 		if (jQuery('#item-form-'+f).size()) {
 			var ferrors = '';
 			var item_category = jQuery('#item-form-'+f+' .item-category select').val();
 			var item_name = jQuery('#item-form-'+f+' .item-name input').val();
+			var item_price = jQuery('#item-form-'+f+' .item-your-price input').val();
 			var item_brand = jQuery('#item-form-'+f+' .item-brand select').val();
 			var item_condition = jQuery('#item-form-'+f+' .item-condition input:checked').val();
 			var item_photos = jQuery('#item-form-'+f+' .item-photos .uploaded-pics li').size();
+			var item_photos_ex = jQuery('#item-form-'+f+' .item-pictures-box').size();
 			var iphotos = '';
 			if (item_photos > 0) {
 				jQuery('#item-form-'+f+' .item-photos .uploaded-pics li img').each(function(){
@@ -930,36 +943,47 @@ function indivseller_presubmit_form() {
 			if (item_condition == undefined) { item_condition = ''; }
 			if (item_category == '') { ferrors += ';category'; }
 			if (item_name == '') { ferrors += ';name'; }
+			if (item_price == '') { ferrors += ';your-price'; }
 			if (item_brand == '') { ferrors += ';brand'; }
 			if (item_condition == '') { ferrors += ';condition'; }
-			if (iphotos == '') { ferrors += ';photos'; }
+			if (item_photos_ex && iphotos == '') { ferrors += ';photos'; }
 			if (ferrors != '') {
 				gloaberror = true;
 				var ferrs = ferrors.split(';');
-				for (var i=1; i<=ferrs.length; i++) {
+				for (var i=1; i<ferrs.length; i++) {
 					jQuery('#item-form-'+f+' .item-'+ferrs[i]+' label').addClass('error');
+					jQuery('#item-form-'+f+' .item-'+ferrs[i]+' input').addClass('error');
+					jQuery('#item-form-'+f+' .item-'+ferrs[i]+' select').addClass('error');
+					errorstext += indivseller_get_form_error(ferrs[i], itemfornmb, itemtotalnmb);
 				}
 			} else {
 				jQuery('#item-form-'+f+' .item-photos .ipictures').val(iphotos);
 			}
+			itemfornmb++;
 		}
 	}
 
 	if (jQuery('#item-user-email').size() > 0) {
 		if (item_user_email == '') {
 			errors += ';user-email';
+			errorstext += 'Please enter Your Email.<br />';
 		} else if (!/^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,4})+$/.test(item_user_email)) {
 			errors += ';user-email';
+			errorstext += 'Email address is incorrect.<br />';
 		}
 		if (item_user_pass == '') { errors += ';user-pass'; }
 	}
 	if (jQuery('#item-user-phone').size() > 0) {
 		if (item_user_phone == '') {
 			errors += ';user-phone';
+			errorstext += 'Please enter Telephone no.<br />';
+			jQuery('form.form-add #item-user-phone input').addClass('error');
 		} else {
 			var intRegex = /^\d+$/;
 			if (!intRegex.test(item_user_phone)) {
 				errors += ';user-phone';
+				errorstext += 'Telephone should be numbers only.<br />';
+				jQuery('form.form-add #item-user-phone input').addClass('error');
 			}
 		}
 	}
@@ -968,6 +992,7 @@ function indivseller_presubmit_form() {
 	}
 	if (jQuery('#item-terms-agree').size() > 0 && !item_terms_agree) {
 		errors += ';terms-agree';
+		errorstext += "Please agree to the Luxury Closet's terms & conditions.<br />";
 	}
 
 	if (errors != '') {
@@ -977,13 +1002,53 @@ function indivseller_presubmit_form() {
 		}
 		gloaberror = true;
 	}
+	if (errorstext != '') {
+		jQuery('#indivseller-add-item .errors').html(errorstext);
+		jQuery('#indivseller-add-item .errors').animate({height: 'show'}, 300);
+	}
 
 	if (gloaberror) {
 		return false;
 	} else {
-		jQuery('#indivseller-add-item .item-number').val(itemnmb);
-		return true;
+		if (isloggedin) {
+			jQuery('#indivseller-add-item .item-number').val(itemnmb);
+			return true;
+		} else {
+			var ahref = window.location.href;
+			show_login_popup('def', ahref);
+			jQuery('.popup-login .login-tab-link').trigger('click');
+			return false;
+		}
 	}
+}
+
+function indivseller_get_form_error(tp, nf, tot) {
+	var error = '';
+	switch (tp) {
+	   case 'category':
+		  error = 'Please select category';
+		  break;
+	   case 'name':
+		  error = 'Please fill in item name/description';
+		  break;
+	   case 'your-price':
+		  error = 'Please fill in your asking price';
+		  break;
+	   case 'brand':
+		  error = 'Please select brand';
+		  break;
+	   case 'condition':
+		  error = 'Please select condition';
+		  break;
+	   case 'photos':
+		  error = 'Please attach picture(s)';
+		  break;
+	}
+	if (tot > 1) {
+		error += ' in item '+nf;
+	}
+	error += '.<br />';
+	return error;
 }
 
 function seller_remove_picture(pid, aid, act) {

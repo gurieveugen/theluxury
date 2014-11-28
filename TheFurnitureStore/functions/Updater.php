@@ -1,8 +1,8 @@
 <?php
-require($_SERVER["DOCUMENT_ROOT"].'/wp-blog-header.php');
+/*require($_SERVER["DOCUMENT_ROOT"].'/wp-blog-header.php');
 ini_set('display_startup_errors',1);
 ini_set('display_errors',1);
-error_reporting(-1);
+error_reporting(-1);*/
 set_time_limit (6000);
 
 class Updater{
@@ -21,7 +21,8 @@ class Updater{
 	//   / /_/ / /  / /_/ / /_/ /  __/ /  / /_/ /  __(__  ) 
 	//  / .___/_/   \____/ .___/\___/_/   \__/_/\___/____/  
 	// /_/              /_/                                 
-	private $allowed_parent_ids;
+	private $mens_category_ids;
+	private $womens_category_ids;
 	private $updated;
 	private $thumbnail_size_w;
 	private $thumbnail_size_h;
@@ -32,39 +33,38 @@ class Updater{
 	//   / __ `__ \/ _ \/ __/ __ \/ __ \/ __  / ___/
 	//  / / / / / /  __/ /_/ / / / /_/ / /_/ (__  ) 
 	// /_/ /_/ /_/\___/\__/_/ /_/\____/\__,_/____/  
-	public function __construct($request)
+	public function __construct()
 	{
 		global $OPTION, $wpdb;
 		$this->option = $OPTION;
 		$this->thumbnail_size_w = get_option('thumbnail_size_w');
 		$this->thumbnail_size_h = get_option('thumbnail_size_h');
 		$this->updated = array();
-		$this->allowed_parent_ids = array(156, 418);
-		if(isset($request['offset']) AND isset($request['posts_per_page']))
-		{
-			$query = sprintf(
-				'SELECT * FROM %sposts WHERE `post_type` = "post" ORDER BY `post_date` DESC LIMIT %d,%d', 
-				$wpdb->prefix, 
-				$request['offset'], 
-				$request['posts_per_page']
-			);
-			
-			$posts   = $wpdb->get_results($query);
+		$this->mens_category_ids = array(156);
+		$this->womens_category_ids = array(418);
+
+		$mcats = get_categories('child_of=156&hide_empty=0');
+		if ($mcats) {
+			foreach($mcats as $mcat) {
+				$this->mens_category_ids[] = $mcat->term_id;
+			}
+		}
+		$wcats = get_categories('child_of=418&hide_empty=0');
+		if ($wcats) {
+			foreach($wcats as $wcat) {
+				$this->womens_category_ids[] = $wcat->term_id;
+			}
+		}
+
+		$posts = $wpdb->get_results(sprintf("SELECT * FROM %sposts WHERE post_type = 'post' AND upd = 0 ORDER BY ID DESC LIMIT 0, 1000", $wpdb->prefix));
+		if ($posts) {
+			$nmb = 1;
 			foreach ($posts as $p) 
 			{
 				$this->savePost($p->ID);
+				echo $nmb.'. '.$p->ID.'<br>';
+				$nmb++;
 			}
-			$this->mailDebug(
-				array(
-					intval($request['offset']), 
-					intval($request['posts_per_page']), 
-					$this->updated,
-					count($posts)
-				)
-			);
-			echo '<pre>';
-			var_dump($query, count($posts));
-			echo '</pre>';
 		}
 		
 	}
@@ -166,6 +166,7 @@ class Updater{
 			$tags = '';
 		}
 		$row['tag'] = $tags;
+		$row['upd'] = '1';
 
 		return $row;
 	}
@@ -286,8 +287,16 @@ class Updater{
 				} 
 				else
 				{
-					$depth          = count($this->getParents($cat));
-					$result[$depth] = $cat->term_id;
+					if (in_array($cat->term_id, $this->womens_category_ids) || in_array($cat->term_id, $this->mens_category_ids)) {
+						$depth = count($this->getParents($cat));
+						if ($result[$depth] > 0) {
+							$depth++;
+							if ($result[$depth] > 0) {
+								$depth++;
+							}
+						}
+						$result[$depth] = $cat->term_id;
+					}
 				}
 			}
 		}
@@ -383,4 +392,10 @@ class Updater{
 // ==============================================================
 // Launch
 // ==============================================================
-$update = new Updater($_GET);
+add_action('init', 'updater_init');
+function updater_init() {
+	if ($_GET['mpp'] == 'update') {
+		$update = new Updater();
+		exit;
+	}
+}

@@ -14,61 +14,14 @@ $soldnmb = $wpdb->get_var(sprintf("SELECT COUNT(sc.item_id) FROM %swps_shopping_
 <script type="text/javascript" src="<?php echo TEMPLURL; ?>/js/swfupload/swfupload.js"></script>
 <script type="text/javascript" src="<?php echo TEMPLURL; ?>/js/jquery.swfupload.js"></script>
 
-<div class="cf add-item-main">
+<div class="add-item-main">
+	<img src="<?php echo bloginfo('stylesheet_directory'); ?>/images/img-add-item.png" height="539" width="324" alt="" class="img-bg" />
+	<div class="holder">
+	<div class="frame cf">
 	<div class="add-item-content">
-		<div class="row-counter">
-			<strong class="items-counter">
-				<?php for ($s=1; $s<=strlen($soldnmb); $s++) {
-					$n = substr($soldnmb, $s - 1, 1);
-					$class = 'num'.$s;
-					if ($s == 1) { $class .= ' first'; }
-					if ($s == strlen($soldnmb)) { $class .= ' last'; }
-					?>
-					<span class="<?php echo $class; ?>"><i data-num="<?php echo $n; ?>"><?php echo $s; ?></i></span>
-				<?php } ?>
-			</strong> designer items sold
-		</div>
-		<script type="text/javascript">
-			var cstop = 0;
-			jQuery(document).ready(function(){
-				var cnmb = jQuery('.items-counter span').size();
-				for (var s=1; s<=cnmb; s++) {
-					sellcounter(s, 1);
-				}
-				cstop = 1;
-			});
-			function sellcounter(n, tm) {
-				if (cstop < n) {
-					jQuery('.items-counter .num'+n+' i').css('margin-top', '-324px');
-					jQuery('.items-counter .num'+n+' i').animate({'margin-top':-36}, '', function(){
-						tm++;
-						sellcounter(n, tm);
-					});
-				} else {
-					var num = jQuery('.items-counter .num'+n+' i').attr('data-num');
-					var mtop = 324 - (num * 36);
-					jQuery('.items-counter .num'+n+' i').animate({'margin-top':-mtop});
-					setTimeout(function(){ cstop++; }, 200);
-				}
-			}
-		</script>
-		<ul>
-			<li>Most items sell within 60 days</li>
-			<li>Get paid by cheque or bank transfer after your item sells</li>
-			<li>Selling made easy: we do all the work for you!</li>
-		</ul>
-		<h3 style="padding: 21px 0"><a href="#what-you-can-sell" class="what-you-can-sell">What You Can Sell</a></h3>
-		<h4>Questions?</h4>
-		<div class="contact-row v1">
-			<p>
-				See our <a href="/faqs#selling">FAQs</a> or
-				<span class="i-phone"><?php echo $OPTION['wps_shop_questions_phone']; ?></span>
-				<a class="i-email" href="mailto:<?php echo $OPTION['wps_shop_questions_email']; ?>"><?php echo $OPTION['wps_shop_questions_email']; ?></a>
-			</p>
-		</div>
-		<div class="contact-row v2">
-			<h4>ARE YOU A PROFESSIONAL SELLER?</h4>
-			<a class="btn-orange" href="<?php echo get_permalink($OPTION['wps_professional_seller_page']); ?>">CLICK HERE</a>
+		<?php the_content(); ?>
+		<div class="prof-contact-row">
+			<p>Are you a professional seller? <a href="<?php echo get_permalink($OPTION['wps_professional_seller_page']); ?>">Click Here</a></p>
 		</div>
 	</div>
 <?php
@@ -112,38 +65,27 @@ if ($scategories) {
 		}
 	}
 }
+$step_nmb = 0;
 ?>
-	<form id="indivseller-add-item" method="POST" class="form-add add-item" enctype="multipart/form-data" onsubmit="return indivseller_presubmit_form();">
+	<form id="indivseller-add-item" method="POST" class="form-add add-item indivseller-add-item" enctype="multipart/form-data" onsubmit="return indivseller_presubmit_form();">
 		<input type="hidden" name="SellersAction" value="indivseller_add_item">
 		<input type="hidden" name="item_number" value="" class="item-number">
-		<h3>Submit an Item</h3>
-		<?php if (strlen($sellers_error)) {
-			echo '<p class="errors" style="color:#FF0000">'.$sellers_error.'</p>';
-		} ?>
-		<?php if (!is_user_logged_in()) { ?>
-		<div class="row border-bottom">
-			<div class="column width-206" id="item-user-email">
-				<label>Your Email</label>
-				<input type="text" name="user_email" value="<?php echo $user_email; ?>">
-			</div>
-			<div class="column width-206" id="item-user-pass">
-				<label>Create or enter existing password</label>
-				<input type="password" name="user_pass" value="<?php echo $user_pass; ?>">
-			</div>
-		</div>
-		<?php } ?>
+		<h3>Submit an Item <small>to get a quick quote</small></h3>
 		<?php if (!strlen($item_user_phone) && $_GET['tlcadditem'] != 'true') { ?>
-		<div class="row">
-			<div id="item-user-phone">
-				<label class="left"> Telephone no.*</label>
-				<input name="user_phone" type="text" class="right width-320" value="<?php echo $user_phone; ?>" placeholder="only numbers">
+		<div class="f-block">
+			<strong class="num"><?php $step_nmb++; echo $step_nmb; ?>.</strong>
+			<div id="item-user-phone" class="ovh">
+				<input name="user_phone" type="text" class="width-270" value="<?php echo $user_phone; ?>" placeholder="Telephone no. * only numbers">
 			</div>
 		</div>
 		<?php } ?>
 		<?php if ($_GET['tlcadditem'] == 'true') { ?>
-		<div class="row" id="item-user">
-			<label>Select User *</label>
-			<input type="text" name="item_user" value="<?php echo $item_user; ?>" style="width:260px; float:left;"><img src="<?php bloginfo('template_url'); ?>/images/loading-ajax.gif" style="float:left; margin:4px 0 0 5px; display:none;">
+		<div class="f-block" id="item-user">
+			<strong class="num"><?php $step_nmb++; echo $step_nmb; ?>.</strong>
+			<div class="ovh">
+				<input type="text" name="item_user" value="<?php echo $item_user; ?>" style="width:260px; float:left;" placeholder="Select User *">
+				<img src="<?php bloginfo('template_url'); ?>/images/loading-ajax.gif" style="float:left; margin:4px 0 0 5px; display:none;">
+			</div>
 		</div>
 		<?php } ?>
 		<div id="forms-box">
@@ -163,203 +105,234 @@ if ($scategories) {
 					$show_form = true;
 				}
 				if ($show_form) {
+					if ($in > 1) { $step_nmb = 0; }
 				?>
 					<div id="item-form-<?php echo $in; ?>">
-						<div class="row<?php if ($in > 1) { echo ' border-top'; } ?>">
-							<div class="column width-206 item-category">
-								<label>Category *</label>
-								<div class="custom-select">
-									<?php if ($seller_categories) { ?>
-									<select name="item_category[<?php echo $in; ?>]" onchange="indivseller_change_cat(<?php echo $in; ?>, this.value);">
-										<option value="">-- Select Category --</option>
-										<?php foreach($seller_categories as $scid => $seller_category) { $s = ''; if ($scid == $item_category) { $s = ' SELECTED'; } ?>
-										<option value="<?php echo $scid; ?>"<?php echo $s; ?>><?php echo $seller_category['name']; ?></option>
-											<?php if ($seller_category['childs']) {
-												foreach($seller_category['childs'] as $subcid => $subname) { $s = ''; if ($subcid == $item_category) { $s = ' SELECTED'; } ?>
-													<option value="<?php echo $subcid; ?>"<?php echo $s; ?>>-- <?php echo $subname; ?></option>
+						<div class="f-block">
+							<strong class="num"><?php $step_nmb++; echo $step_nmb; ?>.</strong>
+							<div class="ovh">
+								<div class="column width-176 item-category">
+									<div class="custom-select">
+										<?php if ($seller_categories) { ?>
+										<select name="item_category[<?php echo $in; ?>]" onchange="indivseller_change_cat(<?php echo $in; ?>, this.value);">
+											<option value="">-- Select Category --</option>
+											<?php foreach($seller_categories as $scid => $seller_category) { $s = ''; if ($scid == $item_category) { $s = ' SELECTED'; } ?>
+											<option value="<?php echo $scid; ?>"<?php echo $s; ?>><?php echo $seller_category['name']; ?></option>
+												<?php if ($seller_category['childs']) {
+													foreach($seller_category['childs'] as $subcid => $subname) { $s = ''; if ($subcid == $item_category) { $s = ' SELECTED'; } ?>
+														<option value="<?php echo $subcid; ?>"<?php echo $s; ?>>-- <?php echo $subname; ?></option>
+													<?php } ?>
 												<?php } ?>
 											<?php } ?>
+										</select>
 										<?php } ?>
-									</select>
-									<?php } ?>
+									</div>
 								</div>
-							</div>
-							<div class="column width-206 item-brand">
-								<label>Brand *</label>
-								<div class="custom-select">
-									<?php
-									if ($catbrands) { ?>
-									<select name="item_brand[<?php echo $in; ?>]" class="item-brand-<?php echo $in; ?>">
-										<option value="">-- Select Brand --</option>
-										<?php foreach($catbrands as $cid => $tbrands) {
-											foreach($tbrands as $brand_id => $brand_name) {
-												$s = '';
-												$dnstyle = ' style="display:none;"';
-												if ($cid == $item_category) {
-													 $dnstyle = '';
-													if ($brand_id == $item_brand) { $s = ' SELECTED'; }
-												}
-												?>
-												<option value="<?php echo $brand_id; ?>" class="catop cid-<?php echo $cid; ?>"<?php echo $dnstyle.$s; ?>><?php echo $brand_name; ?></option>
+								<div class="column width-176 item-brand">
+									<div class="custom-select">
+										<?php
+										if ($catbrands) { ?>
+										<select name="item_brand[<?php echo $in; ?>]" class="item-brand-<?php echo $in; ?>">
+											<option value="">-- Select Brand --</option>
+										</select>
+										<div style="display:none;">
+											<?php foreach($catbrands as $cid => $tbrands) { ?>
+												<div class="cat-brands-<?php echo $in; ?>-<?php echo $cid; ?>">
+												<?php foreach($tbrands as $brand_id => $brand_name) {
+													$s = '';
+													if ($cid == $item_category && $brand_id == $item_brand) { $s = ' SELECTED'; } ?>
+													<option value="<?php echo $brand_id; ?>"<?php echo $s; ?>><?php echo $brand_name; ?></option>
+												<?php } ?>
+												</div>
 											<?php } ?>
+										</div>
+										<?php if ($item_category) { ?>
+											<script>indivseller_change_cat(<?php echo $in; ?>, <?php echo $item_category; ?>);</script>
 										<?php } ?>
-										<option value="other" style="margin-top:7px;">Other</option>
-									</select>
+										<?php } ?>
+									</div>
+								</div>
+							</div>
+						</div>
+						<div class="f-block">
+							<strong class="num"><?php $step_nmb++; echo $step_nmb; ?>.</strong>
+							<div class="ovh">
+								<div class="column width-176 item-name">
+									<div id="item-name">
+										<input type="text" name="item_name[<?php echo $in; ?>]" value="<?php echo $item_name; ?>" placeholder="Item Name/Description">
+									</div>
+								</div>
+								<div class="column width-176 item-your-price">
+									<!--<label>Your Asking Price, <?php echo $_SESSION["currency-code"]; ?></label>-->
+									<input type="text" name="item_your_price[<?php echo $in; ?>]" value="<?php echo $item_your_price; ?>" placeholder="Your Asking Price, <?php echo $_SESSION["currency-code"]; ?>">
+								</div>
+								<p class="small">Louis Vuitton Damier Ebene Speedy 30 <i>or</i> <br>Prada Small Purple Leather Bag</p>
+							</div>
+						</div>
+						<div class="f-block item-condition">
+							<strong class="num"><?php $step_nmb++; echo $step_nmb; ?>.</strong>
+							<div class="ovh">
+								<label>Condition: *</label>
+								<div class="row-check">
+									<?php
+									if ($OPTION['wps_excluded_selections']) {
+										$excl = unserialize($OPTION['wps_excluded_selections']);
+										$excl = implode(',', $excl);
+									}
+									$tax_selections = get_terms('selection', 'hide_empty=0&orderby=id&order=asc&exclude='.$excl);
+									if ($tax_selections) { ?>
+										<div class="item-conditions">
+										<?php foreach($tax_selections as $tax_selection) { $c = ''; if ($tax_selection->term_id == $item_selection) { $c = ' CHECKED'; } ?>
+											<span class="check-row">
+												<input type="radio" name="item_selection[<?php echo $in; ?>]" value="<?php echo $tax_selection->term_id; ?>"<?php echo $c; ?>>
+												<span class="label"><?php echo $tax_selection->name; ?> (<?php echo $tax_selection->description; ?>)</span>
+											</span>
+										<?php } ?>
+										</div>
 									<?php } ?>
 								</div>
 							</div>
 						</div>
-						<div class="row border-bottom v1">
-							<div class="column width-206 item-name">
-								<label>Item Name/Description *</label>
-								<div id="item-name">
-									<input type="text" name="item_name[<?php echo $in; ?>]" value="<?php echo $item_name; ?>">
-								</div>
-							</div>
-							<div class="column width-206 item-your-price">
-								<label>Your Asking Price, <?php echo $_SESSION["currency-code"]; ?></label>
-								<input type="text" name="item_your_price[<?php echo $in; ?>]" value="<?php echo $item_your_price; ?>">
-							</div>
-							<p class="small">Louis Vuitton Damier Ebene Speedy 30 <i>or</i> <br>Prada Small Purple Leather Bag</p>
-						</div>
-						<div class="row border-bottom item-condition">
-							<label>Condition: *</label>
-							<div class="row-check">
-								<?php
-								if ($OPTION['wps_excluded_selections']) {
-									$excl = unserialize($OPTION['wps_excluded_selections']);
-									$excl = implode(',', $excl);
-								}
-								$tax_selections = get_terms('selection', 'hide_empty=0&orderby=id&order=asc&exclude='.$excl);
-								if ($tax_selections) { ?>
-									<div class="item-conditions">
-									<?php foreach($tax_selections as $tax_selection) { $c = ''; if ($tax_selection->term_id == $item_selection) { $c = ' CHECKED'; } ?>
-										<span class="check-row">
-											<input type="radio" name="item_selection[<?php echo $in; ?>]" value="<?php echo $tax_selection->term_id; ?>"<?php echo $c; ?>>
-											<span class="label"><?php echo $tax_selection->name; ?> (<?php echo $tax_selection->description; ?>)</span>
-										</span>
-									<?php } ?>
+						<div class="f-block item-photos">
+							<strong class="num"><?php $step_nmb++; echo $step_nmb; ?>.</strong>
+							<div class="ovh">
+								<label class="label-pictures">Attach Pictures: (max 5 pictures)</label>
+								<?php if (wp_is_mobile()) { ?>
+									<input type="file" name="item_pictures[<?php echo $in; ?>][]" multiple />
+								<?php } else { ?>
+									<div id="item-pictures-box-<?php echo $in; ?>" class="item-pictures-box">
+										<div class="max-upload-error">Please upload a maximum of 5 pictures.</div>
+										<input type="button" class="ipupload" />
+										<ol class="uploaded-pics">
+											<?php if ($item_pictures) { $item_pictures = explode(';', $item_pictures); ?>
+												<?php foreach($item_pictures as $item_picture) { ?>
+												<li><img src="<?php echo get_post_thumb($item_picture, 61, 61, true); ?>" rel="<?php echo get_post_thumb($item_picture); ?>"><span class="cancel" title="Remove" style="display:block;">&nbsp;</span></li>
+												<?php } ?>
+											<?php } ?>
+										</ol>
+										<input type="hidden" name="item_pictures[<?php echo $in; ?>]" class="ipictures" value="">
 									</div>
 								<?php } ?>
 							</div>
 						</div>
-						<div class="row item-photos">
-							<label>Attach Pictures: (max 5 pictures)</label>
-							<div id="item-pictures-box-<?php echo $in; ?>">
-								<div class="max-upload-error">Please upload a maximum of 5 pictures.</div>
-								<input type="button" class="ipupload" />
-								<ol class="uploaded-pics">
-									<?php if ($item_pictures) { $item_pictures = explode(';', $item_pictures); ?>
-										<?php foreach($item_pictures as $item_picture) { ?>
-										<li><img src="<?php echo get_post_thumb($item_picture, 61, 61, true); ?>" rel="<?php echo get_post_thumb($item_picture); ?>"><span class="cancel" title="Remove" style="display:block;">&nbsp;</span></li>
-										<?php } ?>
-									<?php } ?>
-								</ol>
-								<input type="hidden" name="item_pictures[<?php echo $in; ?>]" class="ipictures" value="">
-							</div>
+						<div class="remove-item-box"<?php if ($item_number < 2) { echo ' style="display:none;"'; } ?>>
+							<a href="#remove-item" class="remove-item" onclick="sell_us_remove_item(1); return false;">Remove Item</a>
 						</div>
 					</div>
 					<script type="text/javascript">jQuery(function(){ swf_upload_init(<?php echo $in; ?>); });</script>
 				<?php } // if (strlen($_POST['item_name'][$in])) { ?>
 			<?php } // for($in=1; $in<=$item_number; $in++) { ?>
 		</div>
-		<a href="#add-another-item" class="btn-aaitem">Add another item</a>
-		<div class="row row-1" id="item-terms-agree">
-			<span class="check-row">
+		<div class="f-block last" id="item-terms-agree">
+			<span class="check-row lh-26">
 				<input type="checkbox" name="terms_agree">
 				<label class="label">I agree to the Luxury Closet’s <a href="<?php echo get_permalink($OPTION['wps_terms_and_conditions_page']); ?>" target="_blank">Terms & Conditions</a></label>
 			</span>
 		</div>
-		<input type="submit" value="Submit" class="btn-orange w-128">
+		<div class="cf"><a href="#add-another-item" class="btn-add-another-item">Add another item+</a></div>
+		<p class="errors" style="color:#FF0000;<?php if (!strlen($sellers_error)) { echo ' display:none;'; } ?>"><?php echo $sellers_error; ?></p>
+		<input type="submit" value="Submit" class="btn-orange w-115">
 		<input type="hidden" name="utm_source" id="utm_source">
 		<input type="hidden" name="utm_medium" id="utm_medium">
 		<input type="hidden" name="utm_campaign" id="utm_campaign">
 		<input type="hidden" name="utm_content" id="utm_content">
 		<input type="hidden" name="utm_term" id="utm_term">
 	</form>
-</div>
+</div><!-- .frame -->
+</div><!-- .holder -->
+</div><!-- .add-item-main -->
 <script type="text/javascript">
 itemnmb = <?php echo $item_number; ?>;
 </script>
 
 <div class="new-item-form" style="display:none;">
-	<div id="item-form-(IN)">
-		<div class="row border-top">
-			<div class="column width-206 item-category">
-				<label>Category *</label>
-				<div class="custom-select">
-					<?php if ($seller_categories) { ?>
-					<select name="item_category[(IN)]" onchange="indivseller_change_cat((IN), this.value);">
-						<option value="">-- Select Category --</option>
-						<?php foreach($seller_categories as $scid => $seller_category) { ?>
-						<option value="<?php echo $scid; ?>"><?php echo $seller_category['name']; ?></option>
-							<?php if ($seller_category['childs']) {
-								foreach($seller_category['childs'] as $subcid => $subname) { ?>
-									<option value="<?php echo $subcid; ?>">-- <?php echo $subname; ?></option>
+	<div class="item-form-block" id="item-form-(IN)">
+		<div class="f-block">
+			<strong class="num">1.</strong>
+			<div class="ovh">
+				<div class="column width-176 item-category">
+					<div class="custom-select">
+						<?php if ($seller_categories) { ?>
+						<select name="item_category[(IN)]" onchange="indivseller_change_cat((IN), this.value);">
+							<option value="">-- Select Category --</option>
+							<?php foreach($seller_categories as $scid => $seller_category) { ?>
+							<option value="<?php echo $scid; ?>"><?php echo $seller_category['name']; ?></option>
+								<?php if ($seller_category['childs']) {
+									foreach($seller_category['childs'] as $subcid => $subname) { ?>
+										<option value="<?php echo $subcid; ?>">-- <?php echo $subname; ?></option>
+									<?php } ?>
 								<?php } ?>
 							<?php } ?>
+						</select>
 						<?php } ?>
-					</select>
-					<?php } ?>
+					</div>
 				</div>
-			</div>
-			<div class="column width-206 item-brand">
-				<label>Brand *</label>
-				<div class="custom-select">
-					<?php if ($catbrands) { ?>
-					<select name="item_brand[(IN)]" class="item-brand-(IN)">
-						<option value="">-- Select Brand --</option>
-						<?php foreach($catbrands as $cid => $tbrands) {
-							foreach($tbrands as $brand_id => $brand_name) {
-								$dnstyle = ' style="display:none;"';
-								if ($cid == $item_category) {
-									 $dnstyle = '';
-								}
-								?>
-								<option value="<?php echo $brand_id; ?>" class="catop cid-<?php echo $cid; ?>"<?php echo $dnstyle; ?>><?php echo $brand_name; ?></option>
+				<div class="column width-176 item-brand">
+					<div class="custom-select">
+						<?php if ($catbrands) { ?>
+						<select name="item_brand[(IN)]" class="item-brand-(IN)">
+							<option value="">-- Select Brand --</option>
+						</select>
+						<div style="display:none;">
+							<?php foreach($catbrands as $cid => $tbrands) { ?>
+								<div class="cat-brands-(IN)-<?php echo $cid; ?>">
+								<?php foreach($tbrands as $brand_id => $brand_name) { ?>
+									<option value="<?php echo $brand_id; ?>"><?php echo $brand_name; ?></option>
+								<?php } ?>
+								</div>
 							<?php } ?>
+						</div>
 						<?php } ?>
-						<option value="other" style="margin-top:7px;">Other</option>
-					</select>
-					<?php } ?>
+					</div>
 				</div>
 			</div>
 		</div>
-		<div class="row border-bottom v1">
-			<div class="column width-206 item-name">
-				<label>Item Name/Description *</label>
-				<div id="item-name">
-					<input type="text" name="item_name[(IN)]" value="">
+		<div class="f-block">
+			<strong class="num">2.</strong>
+			<div class="ovh">
+				<div class="column width-176 item-name">
+					<div id="item-name">
+						<input type="text" name="item_name[(IN)]" value="" placeholder="Item Name/Description *">
+					</div>
 				</div>
+				<div class="column width-176 item-your-price">
+					<input type="text" name="item_your_price[(IN)]" value="" placeholder="Your Asking Price, <?php echo $_SESSION["currency-code"]; ?>">
+				</div>
+				<p class="small">Louis Vuitton Damier Ebene Speedy 30 <i>or</i> <br>Prada Small Purple Leather Bag</p>
 			</div>
-			<div class="column width-206 item-your-price">
-				<label>Your Asking Price, <?php echo $_SESSION["currency-code"]; ?></label>
-				<input type="text" name="item_your_price[(IN)]" value="">
-			</div>
-			<p class="small">Louis Vuitton Damier Ebene Speedy 30 <i>or</i> <br>Prada Small Purple Leather Bag</p>
 		</div>
-		<div class="row border-bottom item-condition">
+		<div class="f-block item-condition">
+			<strong class="num">3.</strong>
 			<label>Condition: *</label>
-			<div class="row-check">
-				<?php if ($tax_selections) { ?>
-					<div class="item-conditions">
-					<?php foreach($tax_selections as $tax_selection) { ?>
-						<span class="check-row">
-							<input type="radio" name="item_selection[(IN)]" value="<?php echo $tax_selection->term_id; ?>">
-							<span class="label"><?php echo $tax_selection->name; ?> (<?php echo $tax_selection->description; ?>)</span>
-						</span>
+			<div class="ovh">
+				<div class="row-check">
+					<?php if ($tax_selections) { ?>
+						<div class="item-conditions">
+						<?php foreach($tax_selections as $tax_selection) { ?>
+							<span class="check-row">
+								<input type="radio" name="item_selection[(IN)]" value="<?php echo $tax_selection->term_id; ?>">
+								<span class="label"><?php echo $tax_selection->name; ?> (<?php echo $tax_selection->description; ?>)</span>
+							</span>
+						<?php } ?>
+						</div>
 					<?php } ?>
+				</div>
+			</div>
+		</div>
+		<div class="f-block item-photos">
+			<strong class="num">4.</strong>
+			<div class="ovh">
+				<label class="label-pictures">Attach Pictures: (max 5 pictures)</label>
+				<?php if (wp_is_mobile()) { ?>
+					<input type="file" name="item_pictures[(IN)][]" multiple />
+				<?php } else { ?>
+					<div id="item-pictures-box-(IN)" class="item-pictures-box">
+						<div class="max-upload-error">Please upload a maximum of 5 pictures.</div>
+						<input type="button" class="ipupload" />
+						<ol class="uploaded-pics"></ol>
+						<input type="hidden" name="item_pictures[(IN)]" class="ipictures" value="">
 					</div>
 				<?php } ?>
-			</div>
-		</div>
-		<div class="row item-photos">
-			<label>Attach Pictures: (max 5 pictures)</label>
-			<div id="item-pictures-box-(IN)">
-				<div class="max-upload-error">Please upload a maximum of 5 pictures.</div>
-				<input type="button" class="ipupload" />
-				<ol class="uploaded-pics"></ol>
-				<input type="hidden" name="item_pictures[(IN)]" class="ipictures" value="">
 			</div>
 		</div>
 		<div class="remove-item-box">
@@ -368,4 +341,65 @@ itemnmb = <?php echo $item_number; ?>;
 	</div>
 </div>
 
+<div class="featured-logos-block">
+	<h3 class="title-block-center">As Featured In</h3>
+	<ul class="featured-logos">
+		<li><img src="<?php echo bloginfo('stylesheet_directory'); ?>/images/logo-cosmopolitan.png" alt="cosmopolitan"></li>
+		<li><img src="<?php echo bloginfo('stylesheet_directory'); ?>/images/logo-elle.png" alt="elle"></li>
+		<li><img src="<?php echo bloginfo('stylesheet_directory'); ?>/images/logo-whatson.png" alt="whatson"></li>
+		<li><img src="<?php echo bloginfo('stylesheet_directory'); ?>/images/logo-grazia.png" alt="grazia"></li>
+		<li><img src="<?php echo bloginfo('stylesheet_directory'); ?>/images/logo-hello.png" alt="hello"></li>
+		<li><img src="<?php echo bloginfo('stylesheet_directory'); ?>/images/logo-timeout.png" alt="timeout"></li>
+		<li><img src="<?php echo bloginfo('stylesheet_directory'); ?>/images/logo-ahlan.png" alt="ahlan"></li>
+	</ul>
+</div>
+<script>
+	jQuery(function(){
+		jQuery('.accordion-information .acc-content').mCustomScrollbar();
+		jQuery('.accordion-information .head').click(function(){
+			jQuery(this).next().slideToggle(300,function(){
+				jQuery(this).parents('.block').toggleClass('open');
+				jQuery(this).mCustomScrollbar('update');
+			});
+		});	
+	});
+</script>
+<?php $sell_questions = get_posts('post_type=sell-question&posts_per_page=-1&orderby=menu_order&order=asc');
+if ($sell_questions) { $openc = ' open'; ?>
+<div class="information-block">
+	<h3 class="title-block-center">Questions?</h3>
+	<div class="accordion-information">
+		<?php foreach($sell_questions as $sell_question) { ?>
+		<div class="block<?php echo $openc; ?>">
+			<div class="head cf">
+				<h4><?php echo $sell_question->post_title; ?></h4>
+				<i class="ico"></i>
+			</div>
+			<div class="acc-content">
+				<div class="holder cf">
+					<?php echo wpautop($sell_question->post_content); ?>
+				</div>
+			</div>
+		</div>
+		<?php $openc = ''; } ?>
+	</div>
+</div>
+<?php } ?>
+<?php if ($_GET['tlcadditem'] == 'true') { ?>
+	<script type="text/javascript">
+		jQuery("#item-user input").autocomplete(
+			siteurl+'/index.php?non_cache=true&ajax_sellers_action=getusers',
+			{
+				delay:10,
+				minChars:2,
+				matchSubset:1,
+				matchContains:1,
+				cacheLength:10,
+				autoFill:true,
+				multiple: false,
+				scroll: false
+			}
+		);
+	</script>
+<?php } ?>
 <?php get_footer(); ?>

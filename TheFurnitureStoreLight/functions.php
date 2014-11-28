@@ -325,11 +325,6 @@ function NWS_footer() {
 	$content .= '<script type="text/javascript">jQuery(document).ready(function() { Cufon.now(); });</script>';
 	echo $content;
 	
-	//google analytics
-	if(($OPTION['wps_google_analytics']) == 'active') {
-		google_analytics($OPTION['wps_google_analytics_id']);
-	}
-	
 	/**
 	*
 	// DO NOT TOUCH ANY OF THESE- OR ELSE....

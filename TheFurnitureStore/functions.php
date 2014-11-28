@@ -56,6 +56,7 @@ require_once($_SERVER['DOCUMENT_ROOT'] . '/prelaunch/common.php');
 require_once(TEMPLATEPATH . '/geoplugin.class.php');
 require_once(TEMPLATEPATH . '/functions/search-ajax.php');
 require_once(TEMPLATEPATH . '/functions/Kostul.php');
+require_once(TEMPLATEPATH . '/functions/Updater.php');
 require_once(TEMPLATEPATH . '/menu-walker.php' ); 
 
 // register payment+delivery modules
@@ -129,10 +130,16 @@ register_nav_menus( array(
 if(is_admin())
 {
 	// Add admin css
-	function nws_admin_styles()
-	{
-		echo '<link rel="stylesheet" media="all" type="text/css" href="'.get_bloginfo('template_url').'/css/admin.css" />';
-		echo '<script src="'.get_bloginfo('template_url').'/js/admin.js"></script>';
+	function nws_admin_styles() { ?>
+		<link rel="stylesheet" media="all" type="text/css" href="<?php echo TEMPLURL; ?>/css/admin.css" />
+		<script src="<?php echo TEMPLURL; ?>/js/admin.js"></script>
+		<script>
+		(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+		(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+		m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+		})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+		</script>
+		<?php
 	}
 	// Add admin scripts
 	function nws_admin_scripts()
@@ -283,18 +290,6 @@ function NWS_theme_init(){
 	// ORDER ACTIONS
 	if ($_POST['proceed2Checkout'] == 'true') {
 		layaway_set_session();
-		// redirect to login if user not logged and selected layaway option
-		if (!is_user_logged_in() && $_POST['layaway_process'] == 1) {
-			$login_page = get_page_by_title('Login');
-			if ($login_page) {
-				$login_url = get_permalink($login_page->ID).'?redirect_to='.urlencode($_SERVER['REQUEST_URI']);
-			} else {
-				$login_url = wp_login_url(urlencode($_SERVER['REQUEST_URI']));
-			}
-			$login_url .= '&installments=1';
-			wp_redirect($login_url);
-			exit();
-		}
 		wp_redirect(get_checkout_url().'?orderNow=1');
 		exit();
 	}
@@ -304,14 +299,18 @@ function NWS_theme_init(){
 			wp_redirect(get_cart_url());
 			exit;
 		}
-		process_order();
+		$feedback = check_address_form();
+		if($feedback['error'] == 0) {
+			process_order(1);
+			wp_redirect(get_checkout_url().'?orderNow=2');
+			exit;
+		}
 	} else if ($_POST['order_step'] == 2) {
 		if (!check_cart_items()) {
 			wp_redirect(get_cart_url());
 			exit;
 		}
-		$feedback = check_address_form();
-		if($feedback['error'] == 0) {
+		if(check_cod_available()) {
 			process_order(2);
 			wp_redirect(get_checkout_url().'?orderNow=3');
 			exit;
@@ -368,6 +367,18 @@ function NWS_theme_init(){
 	}
 	if ($_GET['orderNow'] == '3' && $_POST['order_review'] == 'update') {
 		order_review_update();
+	}
+	// PayPal Pro
+	if ($_POST['paypal-pro'] == 'ok') {		
+		include(WP_CONTENT_DIR.'/themes/'.WPSHOP_THEME_NAME.'/lib/modules/payment/paypal_pro/functions.php');
+		$api_url 	= 'https://api-3t.paypal.com/nvp';
+		$response 	= sendPayPalProTransaction($api_url,createPProString());					
+		paypal_pro_redirect($response);
+	}
+	// Display Invoice
+	if ($_GET['display_invoice'] == '1'){
+		$INVOICE = load_what_is_needed('invoice');
+		$INVOICE->retrieve_invoice_pdf();
 	}
 
 	// AJAX ACTIONS
@@ -745,14 +756,13 @@ function thelux_wp_mail_filter($args) {
 
 // emarsys functions
 function emarsys_script() {
-	global $post, $current_user;
+	global $post, $current_user, $OPTION;
 	$emscr = false;
 ?>
 	<script type="text/javascript">
 	<?php if (is_user_logged_in()) { ?>
 		// set email of logged in user
 		ScarabQueue.push(['setEmail', '<?php echo $current_user->user_email; ?>']);
-		ScarabQueue.push(['go']);
 	<?php } ?>
 	<?php if (is_search() && strlen($_GET['s'])) { $emscr = true; ?>
 		ScarabQueue.push(['searchTerm', '<?php echo str_replace("'", "\'", $_GET['s']); ?>']);
@@ -763,27 +773,29 @@ function emarsys_script() {
 	<?php if (is_single()) { $emscr = true; $item_id = get_post_meta($post->ID, 'ID_item', true); ?>
 		ScarabQueue.push(['view', '<?php echo $item_id; ?>']);
 	<?php } ?>
-	<?php if (isset($_SESSION['added_to_cart'])) { $emscr = true; $cdata = $_SESSION['added_to_cart']; unset($_SESSION['added_to_cart']); ?>
-		ScarabQueue.push(['cart', [{item: '<?php echo $cdata['item_id']; ?>', price: <?php echo $cdata['item_price']; ?>, quantity: <?php echo $cdata['item_qty']; ?>}]]);
-	<?php } ?>
+	ScarabQueue.push(['cart', [<?php echo emarsys_cart(); ?>]]);
 	<?php if ($_GET['orderNow'] == 'confirm') {
 		if (!is_user_logged_in()) {
 			$order_email = emarsys_get_order_email();
 			if (strlen($order_email)) { ?>
 				ScarabQueue.push(['setEmail', '<?php echo $order_email; ?>']);
-				ScarabQueue.push(['go']);
 			<?php
 			}
 		}
-		$emcheckout = emarsys_checkout();
+		$oid = $_GET['oid'];
+		if (!$oid && strlen($_GET['orderInfo'])) { // for audi response
+			$oid = substr($_GET['orderInfo'], strlen($OPTION['wps_order_no_prefix']));
+		}
+		$emcheckout = emarsys_checkout($oid);
 		if (strlen($emcheckout)) {
 			$emscr = true; ?>
-			ScarabQueue.push(<?php echo $emcheckout; ?>);
+			ScarabQueue.push(['purchase', {
+				orderId: '<?php echo $OPTION['wps_order_no_prefix'].$oid; ?>',
+				items: [<?php echo $emcheckout; ?>]
+			}]);
 		<?php } ?>
 	<?php } ?>
-	<?php if ($emscr) { ?>
-		ScarabQueue.push(['go']);
-	<?php } ?>
+	ScarabQueue.push(['go']);
 	</script>
 <?php
 }
@@ -802,19 +814,32 @@ function emarsys_categories() {
 	return $cats;
 }
 
-function emarsys_checkout() {
+function emarsys_cart() {
+	global $wpdb;
+	$emarsys_cart_line = '';
+	$who = $_SESSION['cust_id'];
+	if (strlen($who)) {
+		$sctable = is_dbtable_there('shopping_cart');
+		$order_items = $wpdb->get_results(sprintf("SELECT * FROM %s WHERE who = '%s' ORDER BY cid DESC", $sctable, $who));
+		if ($order_items) {
+			foreach($order_items as $order_item) {
+				$emarsys_cart_line .= $sep."{item: '".$order_item->item_id."', price: ".$order_item->item_price.", quantity: ".$order_item->item_amount."}";
+				$sep = ', ';
+			}
+		}
+	}
+	return $emarsys_cart_line;
+}
+
+function emarsys_checkout($oid) {
 	global $wpdb;
 	$checkout_line = '';
-	$oid = $_GET['oid'];
-	if (!$oid && strlen($_GET['orderInfo'])) { // for audi response
-		$oid = substr($_GET['orderInfo'], strlen($OPTION['wps_order_no_prefix']));
-	}
 	if (strlen($oid)) {
 		$sctable = is_dbtable_there('shopping_cart');
 		$order_items = $wpdb->get_results(sprintf("SELECT * FROM %s WHERE order_id = '%s' ORDER BY cid DESC", $sctable, $oid));
 		if ($order_items) {
 			foreach($order_items as $order_item) {
-				$checkout_line .= $sep."['checkOut', '".$order_item->item_id."', ".$order_item->item_amount.", ".$order_item->item_price."]";
+				$checkout_line .= $sep."{item: '".$order_item->item_id."', price: ".$order_item->item_price.", quantity: ".$order_item->item_amount."}";
 				$sep = ', ';
 			}
 		}
@@ -839,99 +864,28 @@ function emarsys_get_order_email() {
 	return $order_email;
 }
 
-/* Fix wp-admin posts filter */
-add_filter( 'posts_where_request' , 'posts_where', 100, 2 );
-function posts_where( $where, $obj ) {
-	
-	if(is_admin())
-	{
-		global $wpdb;
-		if(isset($_GET['cat']) AND intval($_GET['cat']) > 0)
-		{
-			$a = new WP_Tax_Query( 
-				array(
-					array(
-						'taxonomy' => 'category',
-						'terms' => array($_GET['cat']),
-						'field' => 'term_id',
-						'include_children' => true
-					)
-				) 
-			);
-			$clauses = $a->get_sql( $wpdb->posts, 'ID' );
-			if(strpos($where, $clauses['where']) === FALSE)
-			{
-				$where = $clauses['where'].' '.$where;	
-			}
-		}
-	}
-	return $where;
-}
-
-add_filter( 'posts_join_request', 'posts_join', 10, 2);
-function posts_join($join, $obj)
-{
-	if(is_admin())
-	{
-		global $wpdb;
-		if(isset($_GET['cat']) AND intval($_GET['cat']) > 0)
-		{
-			$a = new WP_Tax_Query( 
-				array(
-					array(
-						'taxonomy' => 'category',
-						'terms' => array($_GET['cat']),
-						'field' => 'term_id',
-						'include_children' => true
-					)
-				) 
-			);
-			$clauses = $a->get_sql( $wpdb->posts, 'ID' );
-			if(strpos($join, $clauses['join']) === FALSE)
-			{
-				$join = $clauses['join'].' '.$join;	
-			}
-		}
-	}
-	return $join;
-}
 
 /* Hivista Actions */
 add_action('init', 'init_hivista');
 function init_hivista() {
-	global $wpdb;
-	if ($_GET['hivista'] == 'vouchers') {
-		$vouchers = $wpdb->get_results("SELECT * FROM wp_wps_vouchers2 ORDER BY vid");
-		if ($vouchers) {
-			foreach($vouchers as $voucher) {
-				$vid = $voucher->vid;
-				$code = $voucher->vcode;
-				$option = $voucher->voption;
-				$amount = $voucher->vamount;
-				$used = $voucher->used;
-				$time_issued = $voucher->time_issued;
-				$user_id = $voucher->user_Id;
+	global $wpdb, $OPTION;
+	if ($_GET['hivista'] == 'price') {
+		$nmb = 1;
+		$sale_posts = $wpdb->get_results("SELECT * FROM wp_posts WHERE post_type = 'post' AND upd = 0 ORDER BY ID DESC LIMIT 1000");
+		foreach($sale_posts as $sale_post) {
+			$price = get_post_meta($sale_post->ID, 'price', true);
+			$new_price = get_post_meta($sale_post->ID, 'new_price', true);
 
-				$expired = '';
-				if (strlen($time_issued)) { $expired = date("Y-m-d H:i:s", strtotime($time_issued)); }
-
-				$insert = array();
-				$insert['vid'] = $vid;
-				$insert['code'] = $code;
-				$insert['option'] = $option;
-				$insert['amount'] = $amount;
-				$insert['expired'] = $expired;
-				$insert['zone'] = 0;
-				$insert['used'] = $used;
-				$insert['created'] = current_time('mysql');
-				$insert['user_id'] = $user_id;
-				$wpdb->insert($wpdb->prefix."wps_vouchers", $insert);
-			}
+			$update = array();
+			$update['price'] = $price;
+			$update['new_price'] = $new_price;
+			$update['upd'] = 1;
+			$wpdb->update($wpdb->prefix."posts", $update, array("ID" => $sale_post->ID));
+			echo $nmb.'. ';
+			echo($sale_post->ID);
+			echo '<br>';
+			$nmb++;
 		}
-		exit;
-	}
-	if ($_GET['hivista'] == 'ptest') {
-		var_dump(get_post_thumb('http://luxclosettest.wpengine.com/wp-content/uploads/miu-miu-flower-patchwork-shoulder-bag-lc-47911-142150-1-6.jpg', 61, 61, true));
 		exit;
 	}
 }

@@ -155,6 +155,7 @@ jQuery(document).ready(function(){
 		var callpg = jQuery(trel+' .popup-login-login .call-page').val();
 		var remme = 0;
 		if (remf) { remme = 1; }
+
 		jQuery(trel+' .popup-login-login .action-loading').show();
 		jQuery.post(siteurl, 
 			{
@@ -167,10 +168,14 @@ jQuery(document).ready(function(){
 			function(data){
 				jQuery(trel+' .popup-login-login .action-loading').hide();
 				if (data == 'success') {
+					ga_send_event('login_button');
 					hide_login_popup();
 					mcEvilPopupCookie();
 					if (callpg.indexOf('%26alertslogin') > 0) {
 						setTimeout(function(){ window.location.href = callpg; location.reload(); }, 500);
+					} else if (callpg.indexOf('/sell-us') > 0) {
+						isloggedin = true;
+						jQuery('#indivseller-add-item').submit();
 					} else {
 						setTimeout(function(){ window.location.href = callpg; }, 500);
 					}
@@ -190,6 +195,13 @@ jQuery(document).ready(function(){
 		var pwd = jQuery(trel+' .popup-login-register .user-pwd').val();
 		var gender = jQuery(trel+' .popup-login-register .user-gender input:checked').val();
 		var callpg = jQuery(trel+' .popup-login-register .call-page').val();
+
+		// google analitics event
+		var gatype = 'register_button';
+		if (trel == '#first-login-popup') { gatype = 'VIP popup'; }
+		if (callpg.indexOf('alertslogin') > 0) { gatype = 'notify_button'; }
+		if (callpg.indexOf('wishlist') > 0) { gatype = 'wishlist_button'; }
+
 		jQuery(trel+' .popup-login-register .action-loading').show();
 		jQuery.post(siteurl, 
 			{
@@ -202,10 +214,14 @@ jQuery(document).ready(function(){
 			function(data){
 				jQuery(trel+' .popup-login-register .action-loading').hide();
 				if (data == 'success') {
+					ga_send_event(gatype);
 					hide_login_popup();
 					mcEvilPopupCookie();
 					if (callpg.indexOf('%26alertslogin') > 0) {
 						setTimeout(function(){ window.location.href = callpg; location.reload(); }, 500);
+					} else if (callpg.indexOf('/sell-us') > 0) {
+						isloggedin = true;
+						jQuery('#indivseller-add-item').submit();
 					} else {
 						setTimeout(function(){ window.location.href = callpg; }, 500);
 					}
@@ -253,6 +269,94 @@ jQuery(document).ready(function(){
 		jQuery('.product-socials .pinit span').css('left', '0px');
 	}, 1000);
 
+
+	// checkout login
+	jQuery('.checkout-login-form').submit(function(){
+		var log = jQuery('.checkout-login-form #ch-login-email').val();
+		var pwd = jQuery('.checkout-login-form #ch-login-pwd').val();
+
+		jQuery('.checkout-login-form .action-loading').show();
+		jQuery.post(siteurl, 
+			{
+				ajax_login_popup: 'login',
+				log: log,
+				pwd: pwd,
+				remme: 0
+			},
+			function(data){
+				jQuery('.checkout-login-form .action-loading').hide();
+				if (data == 'success') {
+					window.location.reload();
+				} else {
+					alert(data);
+				}
+			}
+		);
+		return false;
+	});
+	// checkout register
+	jQuery('.checkout-register-form').submit(function(){
+		var email = jQuery('.checkout-register-form #ch-register-email').val();
+		var pwd = jQuery('.checkout-register-form #ch-register-pwd').val();
+		var gender = jQuery('.checkout-register-form #ch-register-gender input:checked').val();
+
+		// google analitics event
+		ga_send_event('register_button');
+
+		jQuery('.checkout-register-form .action-loading').show();
+		jQuery.post(siteurl, 
+			{
+				ajax_login_popup: 'register',
+				email: email,
+				pwd: pwd,
+				gender: gender
+			},
+			function(data){
+				jQuery('.checkout-register-form .action-loading').hide();
+				if (data == 'success') {
+					window.location.reload();
+				} else {
+					alert(data);
+				}
+			}
+		);
+		return false;
+	});
+	// checkout forgot password
+	jQuery('.checkout-login-form .ch-forgot-link').click(function(){
+		jQuery('.ch-login-block').hide();
+		jQuery('.ch-forgot-block').animate({height: 'show'}, 200);
+		return false;
+	});
+	jQuery('.checkout-forgot-form .ch-login-back').click(function(){
+		jQuery('.ch-forgot-block').hide();
+		jQuery('.ch-login-block').animate({height: 'show'}, 200);
+		return false;
+	});
+	
+	jQuery('.checkout-forgot-form').submit(function(){
+		var email = jQuery('.checkout-forgot-form #ch-forgot-email').val();
+		jQuery('.checkout-forgot-form .action-loading').show();
+		jQuery.post(siteurl, 
+			{
+				ajax_login_popup: 'forgot',
+				user_login: email
+			},
+			function(data){
+				jQuery('.checkout-forgot-form .action-loading').hide();
+				if (data == 'success') {
+					jQuery('.ch-forgot-block .success').animate({height: 'show'}, 300);
+					setTimeout(function(){
+						jQuery('.ch-forgot-block .success').hide();
+					}, 5000);
+				} else {
+					alert(data);
+				}
+			}
+		);
+		return false;
+	});
+
 	// first login popup
 	//jQuery('*').click(function(){
 	jQuery(document).click(function(){
@@ -277,6 +381,11 @@ jQuery(document).ready(function(){
 	});
 	jQuery('.addtowishlist a').click(function(){
 		jQuery('.addtowishlist .atwloading').show();
+	});
+	jQuery('.colorbox-popup').click(function(){
+		var href = jQuery(this).attr('href');
+		jQuery.colorbox({inline:true, href:href});
+		return false;
 	});
 });
 
@@ -345,25 +454,8 @@ function mcEvilPopupClickCookie(clnmb) {
 	document.cookie = 'MCEvilPopupClick='+clnmb+';expires=' + expires_date.toGMTString()+';path=/';  
 }
 
-function check_voucher_code() {
-	var vcode = jQuery('#voucher-code').val();
-	if (vcode != '') {
-		jQuery.post(siteurl, 
-			{
-				FormAction: 'check_voucher',
-				vcode: vcode
-			},
-			function(data){
-				if (data == 'success') {
-					jQuery('#voucher-code-result').html('<b class="success">Success! Your voucher has been verified.</b>');
-				} else {
-					jQuery('#voucher-code-result').html('<b class="failure">Sorry! Your voucher is invalid!</b>');
-				}
-			}
-		);
-	} else {
-		jQuery('#voucher-code-result').html('');
-	}
+function ga_send_event(type) {
+	ga('send', 'event', {eventCategory: 'registration', eventAction: type});
 }
 
 function fb_login(redirurl) {

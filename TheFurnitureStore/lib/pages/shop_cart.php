@@ -27,6 +27,7 @@ $LANG['shipping_costs']			= $OPTION['wps_shippingInfo_linkTxt'];
 $LANG['update'] 				= __('Update','wpShop');	
 $LANG['shipping_fee_1']			= __('Shipping','wpShop');		
 
+wishlist_success('padding:0 18px');
 wps_shop_process_steps(1); ?>
 <div class="payment-section">
 	<h1 class="title">Your Order</h1>
@@ -51,12 +52,6 @@ wps_shop_process_steps(1); ?>
 			}
 			echo "<p class='failure'>$stock_note</p>";
 		}
-		// moved to wishlist - feedback 
-		if(isset($_GET['wltransfer']) && $_GET['wltransfer'] == 'OK'){
-			$customerArea	= get_page_by_title($OPTION['wps_customerAreaPg']);
-			$wishlist_url = get_permalink($customerArea->ID)."?myaccount=1&action=3"; ?>
-			<div class='success' style='margin:10px 0 15px 0'><?php printf(__ ('Your item has been successfully moved to your %s!', 'wpShop'), $OPTION['wps_wishListLink_option'])?> <a href="<?php echo $wishlist_url;?>"><?php printf(__ ('View %s','wpShop'), $OPTION['wps_wishListLink_option'])?></a></div>
-		<?php }
 
 		if($CART['status'] == 'filled')
 		{

@@ -10,6 +10,7 @@ class KostulQuery{
 	private $args;
 	private $last_query_args;
 	private $last_quer;
+	private $last_where;
 	private $allow_order_by_col;
 	private $allow_order_by_type;
 
@@ -24,6 +25,7 @@ class KostulQuery{
 		$this->last_query      = null;
 		$this->allow_order_by_col = array(
 			'post_date',
+			'post_modified',
 			'sort_price'
 		);
 		$this->allow_order_by_type = array(
@@ -99,8 +101,8 @@ class KostulQuery{
 			'order_by_type' => ''
 		);
 		$args      = array_merge($defaults, $args);
-		$posts     = $this->getProducts($args['cats'], $args['offset'], $args['count'], $args['order_by_col'], $args['order_by_type']);
-		$posts_all = $this->getProducts($args['cats'], $args['offset'], $args['count'], $args['order_by_col'], $args['order_by_type'], true);
+		$posts     = $this->getProducts($args);
+		$posts_all = $this->getProducts($args, true);
 		
 		return array(
 			'posts'         => $posts,
@@ -121,15 +123,32 @@ class KostulQuery{
 	 * @param  $order_by_type --- type order
 	 * @return array --- result
 	 */
-	public function getProducts($args = array(), $offset = 0, $count = 21, $order_by_col = 'post_date', $order_by_type = 'DESC', $unlimited = false)
+	public function getProducts($args, $unlimited = false)
 	{
 		global $wpdb;
 
-		$order_by_type = $this->allow($order_by_type, $this->allow_order_by_type);
-		$order_by_col  = $this->allow($order_by_col, $this->allow_order_by_col);
+		$offset = 0;
+		$count = 21;
+		$order_by_col = 'post_date';
+		$order_by_type = 'DESC';
 
-		$args   = array_merge($this->getDefaultTaxValues(), (array) $args);
-		$where  = $this->initWhere($args);
+		if ($args['cats']['tax_sale']) {
+			$order_by_col = 'post_modified';
+		}
+
+		if ($args['offset']) { $offset = $args['offset']; }
+		if ($args['count']) { $count = $args['count']; }
+		if ($args['order_by_col']) { $order_by_col = $args['order_by_col']; }
+		if ($args['order_by_type']) { $order_by_type = $args['order_by_type']; }
+
+		$order_by_col  = $this->allow($order_by_col, $this->allow_order_by_col);
+		$order_by_type = $this->allow($order_by_type, $this->allow_order_by_type);
+
+		$where_args = array_merge($this->getDefaultTaxValues(), (array) $args['cats']);
+		$where_args['wnew'] = $args['wnew'];
+		$where_args['s'] = $args['s'];
+
+		$where  = $this->initWhere($where_args);
 		$offset = intval($offset);
 		$count  = intval($count);
 		$count  = $this->limit($count);
@@ -167,7 +186,9 @@ class KostulQuery{
 		
 
 		$this->last_query_args = array(
-			'cats'          => $args,
+			'cats'          => $args['cats'],
+			'wnew'          => $args['wnew'],
+			's'             => $args['s'],
 			'offset'        => $offset,
 			'count'         => $count,
 			'order_by_col'  => $order_by_col,
@@ -175,6 +196,82 @@ class KostulQuery{
 		);
 		$this->last_query = $query;
 		return $wpdb->get_results($query);
+	}
+
+	/**
+	 * Init where 
+	 * @param  array $args --- query arguments
+	 * @return array --- initialized where
+	 */
+	public function initWhere($args)
+	{
+		$where = array();
+		if(isset($args['tag']))
+		{
+			$tag_where = $this->initTagWhere($args['tag']);
+			if(strlen($tag_where))
+			{
+				$where[] = 	$tag_where;
+			}
+			unset($args['tag']);
+		}
+		if($args['wnew'] == 'true')
+		{
+			$where[] = "wp_posts.post_date >= '" . date('Y-m-d', strtotime('-7 days')) . "'";
+			unset($args['wnew']);
+		}
+		if(strlen(trim($args['s'])))
+		{
+			$svals = explode(' ', trim($args['s']));
+			foreach($svals as $sval) {
+				$sval = str_replace("'", "\'", $sval);
+				$where[] = sprintf("(wp_posts.post_title LIKE '%s' OR wp_posts.post_content LIKE '%s')", '%'.$sval.'%', '%'.$sval.'%');
+			}
+			unset($args['s']);
+		}
+		foreach ($args as $key => $values) 
+		{
+			if(!empty($values))
+			{
+				if(is_array($values))
+				{
+					$value = implode(',', $values);
+				}
+				else
+				{
+					$value = $values;
+				}	
+				$value   = esc_sql($value);
+				if ($key == 'tax_cat_3' || $key == 'tax_cat_4' || $key == 'tax_cat_5') {
+					$where[] = sprintf('(tax_cat_3 IN (%s) OR tax_cat_4 IN (%s) OR tax_cat_5 IN (%s))', $value, $value, $value);
+				} else {
+					$where[] = sprintf('`%s` IN (%s)', $key, $value);
+				}
+			}
+		}
+		return $where;
+	}
+
+	/**
+	 * Init tag Where
+	 * @param  array $value --- items
+	 * @return string --- where tag
+	 */
+	private function initTagWhere($value)
+	{
+		$items = '';
+		$tags  = explode(',', $value);
+
+		foreach ($tags as $t) 
+		{
+			if($t != '')
+			{
+				$items[] = '`tag` LIKE \'%"'.$t.'"%\'';	
+			}
+		}
+		$items_str = implode(' OR ', $items);
+		if($items_str == '') return '';
+		return sprintf('(%s)', $items_str);
 	}
 
 	/**
@@ -330,64 +427,6 @@ class KostulQuery{
 		);
 		return intval($wpdb->get_var($query));
 
-	}
-
-	/**
-	 * Init tag Where
-	 * @param  array $value --- items
-	 * @return string --- where tag
-	 */
-	private function initTagWhere($value)
-	{
-		$items = '';
-		$tags  = explode(',', $value);
-
-		foreach ($tags as $t) 
-		{
-			if($t != '')
-			{
-				$items[] = '`tag` LIKE \'%"'.$t.'"%\'';	
-			}
-		}
-		$items_str = implode(' OR ', $items);
-		if($items_str == '') return '';
-		return sprintf('(%s)', $items_str);
-	}
-
-	/**
-	 * Init where 
-	 * @param  array $args --- query arguments
-	 * @return array --- initialized where
-	 */
-	public function initWhere($args)
-	{
-		$where = array();
-		if(isset($args['tag']))
-		{
-			$tag_where = $this->initTagWhere($args['tag']);
-			if(strlen($tag_where))
-			{
-				$where[] = 	$tag_where;
-			}
-			unset($args['tag']);
-		}
-		foreach ($args as $key => $values) 
-		{
-			if(!empty($values))
-			{
-				if(is_array($values))
-				{
-					$value = implode(',', $values);
-				}
-				else
-				{
-					$value = $values;
-				}	
-				$value   = esc_sql($value);
-				$where[] = sprintf('`%s` IN (%s)', $key, $value);
-			}
-		}
-		return $where;
 	}
 
 	/**

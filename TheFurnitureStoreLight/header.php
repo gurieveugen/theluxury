@@ -12,9 +12,6 @@
 
 global $OPTION;
 
-//if ( is_404() ) { wp_redirect( get_option('siteurl') . '/404error/'); exit(); }
-include (STYLESHEETPATH . '/lib/pages/header_head.php');
-
 // if a blog is used
 $blog_Name 	= $OPTION['wps_blogCat'];
 $blog_ID 	= get_cat_ID( $blog_Name );
@@ -182,11 +179,11 @@ $lostPass	= get_page_by_title($OPTION['wps_passLostPg']);
 		<script type="text/javascript" src="<?php bloginfo('template_url'); ?>/js/drop-down.js"></script>
 		<script type="text/javascript" src="<?php bloginfo('stylesheet_directory'); ?>/js/doubletaptogo.js"></script>
 		<script src="<?php bloginfo('stylesheet_directory'); ?>/js/jquery.mCustomScrollbar.concat.min.js"></script>
-		<script src="<?php bloginfo('stylesheet_directory'); ?>/js/custom.js"></script>
+		<script src="<?php bloginfo('stylesheet_directory'); ?>/js/custom.js?ver=<?php echo time(); ?>"></script>
 		<script src="<?php bloginfo('template_url') ?>/js/jquery.jqtransform.js"></script>
-		<script src="<?php bloginfo('template_url'); ?>/js/main.theme.js"></script>
-		<script src="<?php bloginfo('template_url'); ?>/js/sellers-process.js"></script>
-		<script src="<?php bloginfo('template_url'); ?>/js/alerts.js"></script>		
+		<script src="<?php bloginfo('template_url'); ?>/js/main.theme.js?ver=<?php echo time(); ?>"></script>
+		<script src="<?php bloginfo('template_url'); ?>/js/sellers-process.js?ver=<?php echo time(); ?>"></script>
+		<script src="<?php bloginfo('template_url'); ?>/js/alerts.js?ver=<?php echo time(); ?>"></script>		
 		<?php if (wp_is_mobile()) { ?>
 		<script type="text/javascript">
 		(function() {
@@ -219,7 +216,7 @@ $lostPass	= get_page_by_title($OPTION['wps_passLostPg']);
 		})('https:' == document.location.protocol ? 'https://recommender' : 'http://cdn', 'scarab-js-api');
 		</script>
 		<?php emarsys_script(); ?>
-		<?php if (is_front_page()) { ?><!--<a href="https://plus.google.com/114474869893468804277" rel="publisher">Google+</a>--><?php } ?>
+		<?php google_analytics(); ?>
 	</head>	
 	<?php  
 	// am I viewing the shopping cart? || going through checkout? || on confirmation page? || reading the terms and conditions? etc...
@@ -244,22 +241,23 @@ $lostPass	= get_page_by_title($OPTION['wps_passLostPg']);
 	else if(strripos(get_option('siteurl'),"ancorps",0)) $apikey ="251447664896335";
 	else $apikey ="250313664982898";
 	if(!is_page("invite-friends")) { ?>
-	<script>
-	(function(d, s, id) {
-	    var js, fjs = d.getElementsByTagName(s)[0];
-	    if (d.getElementById(id)) {return;}
-	    js = d.createElement(s); js.id = id;
-	    js.src = "//connect.facebook.net/en_US/all.js#xfbml=1&appId=<?=$apikey?>";
-	    fjs.parentNode.insertBefore(js, fjs);
-	}(document, 'script', 'facebook-jssdk'));
-	</script>
+		<script>
+			(function(d, s, id) {
+				var js, fjs = d.getElementsByTagName(s)[0];
+				if (d.getElementById(id)) {return;}
+				js = d.createElement(s); js.id = id;
+				js.src = "//connect.facebook.net/en_US/all.js#xfbml=1&appId=<?=$apikey?>";
+				fjs.parentNode.insertBefore(js, fjs);
+			}(document, 'script', 'facebook-jssdk'));
+		</script>
 	<?php } ?>
+	<?php if (!is_checkout_page()) { ?>
 	<div id="wrapper">
 		<div id="header" class="container clearfix noprint">
 			<?php if (is_front_page()) { ?>
-				<h1 id="branding"><a href="<?php bloginfo( 'url' );?>/" title="<?php bloginfo( 'name' ); ?>" rel="home"><?php bloginfo('name'); bloginfo( 'description' ); ?></a></h1>
+				<h1 id="branding"><a href="<?php bloginfo('url');?>/" title="<?php bloginfo( 'name' ); ?>" rel="home"><?php bloginfo('name'); bloginfo( 'description' ); ?></a></h1>
 			<?php } else { ?>
-				<h2 id="branding"><a href="<?php bloginfo( 'url' );?>/" title="<?php bloginfo( 'name' ); ?>" rel="home"><?php bloginfo('name'); bloginfo( 'description' ); ?></a></h2>
+				<h2 id="branding"><a href="<?php bloginfo('url');?>/" title="<?php bloginfo( 'name' ); ?>" rel="home"><?php bloginfo('name'); bloginfo( 'description' ); ?></a></h2>
 			<?php } ?>
 			<div class="header-center">
 				<?php if (is_sidebar_active('header_widget_area')) : dynamic_sidebar('header_widget_area'); endif; ?>
@@ -296,10 +294,21 @@ $lostPass	= get_page_by_title($OPTION['wps_passLostPg']);
 					<?php
 					break;
 				} ?>
-				<?php if (strlen($_SESSION['follow_brand_unsubscribe_msg'])) { ?>
-					<div class="follow-message"><?php echo $_SESSION['follow_brand_unsubscribe_msg']; ?></div>
-				<?php unset($_SESSION['follow_brand_unsubscribe_msg']); } ?>
-				<!--<div class="container clearfix">-->
-					<?php if( !is_page_template('page-sell-us.php') && !is_page_template('page-sell-item.php') && !is_page_template('page-what-happens-next.php') && !is_page_template('page-shop-1.php') && !is_page_template('page-shop-2.php') && !is_page_template('page-shop-3.php') && !is_page_template('page-shop-4.php') && !is_page_template('page-shop-5.php')): ?>
-					<?php include( STYLESHEETPATH . "/includes/headers/page-titles.php" ); ?>
-					<?php endif; ?>
+				<?php include( STYLESHEETPATH . "/includes/headers/page-titles.php" ); ?>
+	<?php } else { // is checkout ?>
+	<div id="wrapper" class="payment-wrap">
+		<div id="header">
+			<div class="container">
+				<h1 id="branding"><a href="<?php bloginfo('url');?>/" title="<?php bloginfo( 'name' ); ?>" rel="home"<?php bloginfo('name'); bloginfo( 'description' ); ?></a></h1>
+				<ul class="payment-info-row">
+					<li><a href="#lightbox-guarantee" class="colorbox-popup">100% Authenticity Guarantee</a></li>
+					<li><a href="#lightbox-3-day" class="link-returns colorbox-popup">Days Returns</a></li>
+					<li>NEED HELP?</li>
+					<li class="ico-phone">Call 800 LUX (+971 800 589)</li>
+					<li><a href="#lightbox-contact" class="link-email colorbox-popup">Email Us</a></li>
+				</ul>
+			</div>
+		</div>
+		<div id="pg_wrap">
+			<div class="container payment-container cf">
+	<?php } // is checkout ?>

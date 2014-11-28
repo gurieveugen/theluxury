@@ -83,7 +83,7 @@ function wps_retrieve_password() {
 		// Now insert the new md5 key into the db
 		$wpdb->update($wpdb->users, array('user_activation_key' => $key), array('user_login' => $user_login));
 	}
-	$rp_link = get_permalink($OPTION['wps_account_login_page'])."?action=resetpass&key=$key&login=" . rawurlencode($user_login);
+	$rp_link = get_permalink($OPTION['wps_account_reset_pass_page'])."?key=$key&login=" . rawurlencode($user_login);
 
 	$message = 'To reset your password please click <a href="'.$rp_link.'">here</a>, else please copy and paste the following link into your browser:' . "\r\n<br />";
 	$message .= $rp_link . "\r\n<br />";
@@ -125,8 +125,8 @@ function wps_reset_password($key, $login) {
 
 	wp_set_password($new_pass, $user->ID);
 	update_user_option($user->ID, 'default_password_nag', true, true); //Set up the Password change nag.
-	$message = __('Your new password for the following site and username.') . "\r\n\r\n<br />";
-	$message .= sprintf(__('Username: %s'), $user->user_login) . "\r\n <br />";
+	$message = __('Your new password for the following site:') . "\r\n\r\n<br />";
+	$message .= sprintf(__('Email: %s'), $user->user_email) . "\r\n <br />";
 	$message .= sprintf(__('Password: %s'), $new_pass) . "\r\n <br />";
 	$message .= rtrim(get_my_theme_login_link(),'?') . "\r\n <br />";
 
@@ -299,7 +299,7 @@ function wps_register_new_user() {
 	update_utm_params('users', $user_id);
 
 	// subscribe user
-	nws_subscribe_action('register', array('user_id' => $user_id, 'email' => $user->user_email, 'gender' => $gender));
+	nws_subscribe_action('register', array('user_id' => $user_id, 'email' => $user->user_email, 'gender' => $gender, 'frompage' => $_POST['callpg']));
 
 	wp_register_notification( $user_id, isset($_POST['send_password']) ? $pass1 : '' );
 	return $user_id;
@@ -358,7 +358,8 @@ function wp_register_notification($user_id, $plaintext_pass = '')
 	$headers = "From: The Luxury Closet <".$OPTION['wps_shop_email'].">\r\n";
 	//mail($user_email, $subject, $message, $headers);
 	add_filter( 'wp_mail_content_type', 'nws_set_html_content_type' );
-	wp_mail($user_email, $subject, $message, $headers);
+	NWS_send_email($user_email, $subject, $message, $OPTION['wps_shop_email'], 'The Luxury Closet');
+	//wp_mail($user_email, $subject, $message, $headers);
 }
 
 function wps_get_wp_errors($wperrors) {
@@ -399,6 +400,8 @@ function ajax_login_init() {
 						$user = get_user_by('email', $log);
 						if ($user) {
 							$log = $user->data->user_login;
+						} else {
+							$user = get_user_by('login', $log);
 						}
 					} else {
 						$user = get_user_by('login', $log);
@@ -406,8 +409,8 @@ function ajax_login_init() {
 					if ($user) {
 						$check_pass = wp_check_password($pwd, $user->data->user_pass, $user->ID);
 						if ($check_pass) {
-							if (!in_array('subscriber', $user->roles)) {
-								$error .= 'Login error.'.chr(10);
+							if (in_array('administrator', $user->roles) || in_array('staff', $user->roles) || in_array('editor', $user->roles)) {
+								$error .= 'You are not allowed to login via this form.'.chr(10);
 							}
 						} else {
 							$error .= 'The password you entered for the "'.$log.'" is incorrect.'.chr(10);

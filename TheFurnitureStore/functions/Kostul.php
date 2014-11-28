@@ -27,7 +27,8 @@ class Kostul{
 	//   / /_/ / /  / /_/ / /_/ /  __/ /  / /_/ /  __(__  ) 
 	//  / .___/_/   \____/ .___/\___/_/   \__/_/\___/____/  
 	// /_/              /_/                                 
-	private $allowed_parent_ids;
+	private $mens_category_ids;
+	private $womens_category_ids;
 	private $thumbnail_size_w;
 	private $thumbnail_size_h;
 	private $option;
@@ -44,6 +45,9 @@ class Kostul{
 		$this->allowed_parent_ids = array(156, 418);
 		$this->thumbnail_size_w = get_option('thumbnail_size_w');
 		$this->thumbnail_size_h = get_option('thumbnail_size_h');
+		$this->mens_category_ids = array(156);
+		$this->womens_category_ids = array(418);
+
 		add_action('save_post', array($this, 'savePost'));
 		add_action('wp_ajax_getProducts', array($this, 'getProductsAJAX'));
 		add_action('wp_ajax_nopriv_getProducts', array($this, 'getProductsAJAX'));
@@ -61,7 +65,6 @@ class Kostul{
 		$pagination   = new Pagination($request['count'], $request['last_args']['count'], $request['last_args']['offset']);
 		$html         = '';
 
-		
 		if(is_array($request['posts']) AND count($request['posts']))
 		{
 			foreach ($request['posts'] as $p) 
@@ -95,6 +98,18 @@ class Kostul{
 	 */
 	public function savePost($post_id)
 	{
+		$mcats = get_categories('child_of=156&hide_empty=0');
+		if ($mcats) {
+			foreach($mcats as $mcat) {
+				$this->mens_category_ids[] = $mcat->term_id;
+			}
+		}
+		$wcats = get_categories('child_of=418&hide_empty=0');
+		if ($wcats) {
+			foreach($wcats as $wcat) {
+				$this->womens_category_ids[] = $wcat->term_id;
+			}
+		}
 		$row = $this->getRow($post_id);
 		$this->updateRow($post_id, $row);
 	}
@@ -310,8 +325,16 @@ class Kostul{
 				} 
 				else
 				{
-					$depth          = count($this->getParents($cat));
-					$result[$depth] = $cat->term_id;
+					if (in_array($cat->term_id, $this->womens_category_ids) || in_array($cat->term_id, $this->mens_category_ids)) {
+						$depth = count($this->getParents($cat));
+						if ($result[$depth] > 0) {
+							$depth++;
+							if ($result[$depth] > 0) {
+								$depth++;
+							}
+						}
+						$result[$depth] = $cat->term_id;
+					}
 				}
 			}
 		}

@@ -30,6 +30,20 @@ class Emarsys{
 			}
 			$data['5'] = $gender;
 		}
+		if (isset($params['frompage']) && strlen($params['frompage'])) {
+			$data['45968'] = $this->get_reg_source($params['frompage']);
+		}
+		if ($utm_params = get_utm_params()) {
+			if ($utm_params['utm_source']) {
+				$data['45971'] = $utm_params['utm_source'];
+			}
+			if ($utm_params['utm_medium']) {
+				$data['45972'] = $utm_params['utm_medium'];
+			}
+			if ($utm_params['utm_campaign']) {
+				$data['45973'] = $utm_params['utm_campaign'];
+			}
+		}
 		if($this->is_exist_user($params["email"])) {
 			$result = $this->request('contact', 'PUT', $data);
 		} else {
@@ -44,6 +58,24 @@ class Emarsys{
 	function request($rtype, $method, $data = '') {
 		$gateway = new AjaxGateway($rtype);
 		return json_decode($gateway->getResponse(json_encode($data), $method));
+	}
+
+	function get_reg_source($frompage) {
+		$reg_source = 'Actual Register';
+		if (strpos($frompage, '/sale') !== false) {
+			$reg_source = 'Sale';
+		} else if (strpos($frompage, '/whats-new') !== false) {
+			$reg_source = 'Whats New';
+		} else if (strpos($frompage, '/my-items') !== false) {
+			$reg_source = 'My Items';
+		} else if (strpos($frompage, '/sell-us') !== false) {
+			$reg_source = 'Item Submission Form';
+		} else if (strpos($frompage, 'alertslogin=true') !== false) {
+			$reg_source = 'My Selection';
+		} else if (strpos($frompage, 'wishlist=add') !== false) {
+			$reg_source = 'Wishlist';
+		}
+		return $reg_source;
 	}
 }
 

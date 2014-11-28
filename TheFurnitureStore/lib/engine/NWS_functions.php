@@ -1892,36 +1892,37 @@ function ga_ecommerce_tracking_code($who) {
 		$sctable = is_dbtable_there('shopping_cart');
 		$order_data = $wpdb->get_row(sprintf("SELECT * FROM %s WHERE who = '%s'", $otable, $who));
 		if ($order_data) {
+			$coupon = $order_data->voucher;
+			if ($coupon == 'non') { $coupon = ''; }
 			$order_items = $wpdb->get_results(sprintf("SELECT * FROM %s WHERE who = '%s' ORDER BY cid", $sctable, $who));
 			if (in_array($order_data->level, $olevels)) {
 ?>
 		<script type="text/javascript">
-			(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
-			(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
-			m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
-			})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
-			ga('ecommerce:addTransaction', {
-			  'id': '<?php echo $order_data->txn_id; ?>',
-			  'affiliation': 'The Luxury Closet',
-			  'revenue': '<?php echo $order_data->amount; ?>',
-			  'shipping': '<?php echo $order_data->shipping_fee; ?>',
-			  'tax': '<?php echo $order_data->tax; ?>'
-			});
+			ga('require', 'ec');
 			<?php if ($order_items) {
 			foreach ($order_items as $order_item) {
 				$post_categories = wp_get_post_categories($order_item->postID, array('fields' => 'all'));
 				$cats = array();
 				if ($post_categories) { foreach($post_categories as $post_category) { $cats[] = $post_category->name; } } ?>
-				ga('ecommerce:addItem', {
-				  'id': '<?php echo $order_data->txn_id; ?>',
-				  'name': '<?php echo $order_item->item_name; ?>',
-				  'sku': '<?php echo $order_item->item_id; ?>',
-				  'category': '<?php echo implode(", ", $cats); ?>',
+				ga('ec:addProduct', {
+				  'id': '<?php echo $order_item->item_id; ?>',
+				  'name': '<?php echo str_replace("'", "\'", $order_item->item_name); ?>',
+				  'category': '<?php echo str_replace("'", "\'", implode(", ", $cats)); ?>',
+				  'brand': '<?php echo nws_get_tax_name($order_item->postID, 'brand'); ?>',
+				  'variant': '<?php echo nws_get_tax_name($order_item->postID, 'colour'); ?>',
 				  'price': '<?php echo $order_item->item_price; ?>',
-				  'quantity': '<?php echo $order_item->item_amount; ?>'
+				  'quantity': <?php echo $order_item->item_amount; ?>
 				});
 			<?php }} ?>
-			ga('ecommerce:send');
+			ga('ec:setAction', 'purchase', {
+			  'id': '<?php echo $order_data->txn_id; ?>',
+			  'affiliation': 'The Luxury Closet',
+			  'revenue': '<?php echo $order_data->amount; ?>',
+			  'tax': '<?php echo $order_data->tax; ?>',
+			  'shipping': '<?php echo $order_data->shipping_fee; ?>',
+			  'coupon': '<?php echo $coupon; ?>'
+			});
+			ga('send', 'pageview');
 		</script>
 
 		<!-- Google Code for Sale Conversion Page -->
@@ -2393,6 +2394,10 @@ function sellers_actions_init() {
 
 					update_utm_params('posts', $new_post_id);
 
+					// update post params in wp_posts
+					$kostul = new Kostul();
+					$request = $kostul->savePost($new_post_id);
+
 					header("Location: ".get_permalink($OPTION['wps_profreseller_my_items_page']));
 					exit;
 				}
@@ -2615,6 +2620,10 @@ function sellers_actions_init() {
 							sellers_upload_post_picture($post_id, $apfields);
 						}
 
+						// update post params in wp_posts
+						$kostul = new Kostul();
+						$request = $kostul->savePost($post_id);
+
 						header("Location: ".get_permalink($OPTION['wps_profreseller_my_items_page']));
 						exit;
 					}
@@ -2661,6 +2670,10 @@ function sellers_actions_init() {
 						update_post_meta($post_id, 'new_price', $item_sell_price);
 						nws_update_post_prices_tax($post_id);
 
+						// update post params in wp_posts
+						$kostul = new Kostul();
+						$request = $kostul->savePost($post_id);
+
 						echo format_price(sellers_currency_price($item_your_price)).';'.format_price(sellers_currency_price($item_sell_price));
 					}
 				}
@@ -2702,6 +2715,9 @@ function sellers_actions_init() {
 							update_post_meta($post_id, '_thumbnail_id', $fattach_id);
 						}
 					}
+					// update post params in wp_posts
+					$kostul = new Kostul();
+					$request = $kostul->savePost($post_id);
 				}
 				exit;
 			break;
@@ -2780,6 +2796,7 @@ function sellers_actions_init() {
 							$user_id = wp_insert_user(get_object_vars($user));
 							$user_data = get_userdata($user_id);
 							update_utm_params('users', $user_id);
+							nws_subscribe_action('register', array('user_id' => $user_id, 'email' => $user_email, 'frompage' => '/sell-us'));
 						}
 					}
 				}
@@ -2800,6 +2817,10 @@ function sellers_actions_init() {
 							$item_includes = $_POST['item_includes'][$i];
 							$item_pictures = $_POST['item_pictures'][$i];
 
+							if (isset($_FILES['item_pictures'])) {
+								$item_pictures = indivsellers_upload_pictures($_FILES, $i);
+							}
+							
 							if (!is_array($item_includes)) { $item_includes = array(); }
 
 							if (strlen($item_pictures)) {
@@ -2833,6 +2854,10 @@ function sellers_actions_init() {
 								sellers_insert_post_pictures($new_post_id, $item_pictures);
 
 								update_utm_params('posts', $new_post_id);
+
+								// update post params in wp_posts
+								$kostul = new Kostul();
+								$request = $kostul->savePost($new_post_id);
 							}
 						}
 					}
@@ -2840,11 +2865,7 @@ function sellers_actions_init() {
 						update_user_meta($user_id, 'phone', $user_phone);
 					}
 
-					// subscribe user
-					/*$udata = get_userdata($user_id);
-					nws_subscribe_action('submissionform', array('email' => $udata->data->user_email));*/
-
-					$redirect = get_permalink($OPTION['wps_what_happens_next_page']);
+					$redirect = get_permalink($OPTION['wps_indvseller_my_items_page']).'/?success';
 					if (strlen($item_user) && $uid > 0) {
 						$redirect = get_permalink($OPTION['wps_tlc_admin_files_page']);
 					}
@@ -2916,6 +2937,10 @@ function sellers_actions_init() {
 							sellers_update_post_pictures($post_id, $item_pictures);
 						}
 
+						// update post params in wp_posts
+						$kostul = new Kostul();
+						$request = $kostul->savePost($post_id);
+
 						header("Location: ".get_permalink($OPTION['wps_indvseller_my_items_page']));
 						exit;
 					}
@@ -2962,6 +2987,10 @@ function sellers_actions_init() {
 						update_post_meta($post_id, '_item_quotation_currency_code', $_SESSION["currency-code"]);
 						update_post_meta($post_id, '_item_quotation_currency_rate', $_SESSION["currency-rate"]);
 						nws_update_post_prices_tax($post_id);
+
+						// update post params in wp_posts
+						$kostul = new Kostul();
+						$request = $kostul->savePost($post_id);
 					}
 				}
 				exit;
@@ -3003,6 +3032,7 @@ function sellers_actions_init() {
 							$update = array();
 							$update['post_modified'] = current_time('mysql');
 							$update['post_modified_gmt'] = current_time('mysql', 1);
+							$update['tax_sale'] = $OPTION['wps_sale_category'];
 							$wpdb->update($wpdb->prefix."posts", $update, array("ID" => $post_id));
 							// add to sale category
 							$sale_ttid = $wpdb->get_var(sprintf("SELECT term_taxonomy_id FROM %sterm_taxonomy WHERE term_id = %s", $wpdb->prefix, $OPTION['wps_sale_category']));
@@ -3016,6 +3046,10 @@ function sellers_actions_init() {
 									$wpdb->query(sprintf("UPDATE %sterm_taxonomy SET count = count + 1 WHERE term_taxonomy_id = %s", $wpdb->prefix, $sale_ttid));
 								}
 							}
+							// update post params in wp_posts
+							$kostul = new Kostul();
+							$request = $kostul->savePost($post_id);
+
 							// return values to js
 							$item_your_price = sellers_currency_price($item_your_price);
 							$item_new_price = sellers_currency_price($item_new_price);
@@ -3063,6 +3097,7 @@ function sellers_actions_init() {
 							$update = array();
 							$update['post_modified'] = current_time('mysql');
 							$update['post_modified_gmt'] = current_time('mysql', 1);
+							$update['tax_sale'] = $OPTION['wps_sale_category'];
 							$wpdb->update($wpdb->prefix."posts", $update, array("ID" => $post_id));
 							// add to sale category
 							$sale_ttid = $wpdb->get_var(sprintf("SELECT term_taxonomy_id FROM %sterm_taxonomy WHERE term_id = %s", $wpdb->prefix, $OPTION['wps_sale_category']));
@@ -3076,6 +3111,10 @@ function sellers_actions_init() {
 									$wpdb->query(sprintf("UPDATE %sterm_taxonomy SET count = count + 1 WHERE term_taxonomy_id = %s", $wpdb->prefix, $sale_ttid));
 								}
 							}
+
+							// update post params in wp_posts
+							$kostul = new Kostul();
+							$request = $kostul->savePost($post_id);
 
 							// send notification
 							$subject = "Change Price Request (Individual Sellers)";
@@ -3134,6 +3173,9 @@ function sellers_actions_init() {
 							update_post_meta($post_id, '_thumbnail_id', $fattach_id);
 						}
 					}
+					// update post params in wp_posts
+					$kostul = new Kostul();
+					$request = $kostul->savePost($post_id);
 				}
 				exit;
 			break;
@@ -3564,6 +3606,25 @@ function sellers_upload_post_picture($post_id, $fnames) {
 	}
 }
 
+function indivsellers_upload_pictures($files, $n) {
+	require_once('./wp-admin/includes/image.php');
+	require_once('./wp-admin/includes/file.php');
+	require_once('./wp-admin/includes/media.php');
+
+	$item_pictures = array();
+	foreach ($files['item_pictures']['name'][$n] as $k => $ipname) {
+		$_FILES['item_picture_'.$n] = array(
+			'name' => $ipname,
+			'type' => $files['item_pictures']['type'][$n][$k],
+			'tmp_name' => $files['item_pictures']['tmp_name'][$n][$k],
+			'size' => $files['item_pictures']['size'][$n][$k]
+		);
+		$file = wp_handle_upload($_FILES['item_picture_'.$n], array('test_form' => false), current_time('mysql'));
+		$item_pictures[] = $file['url'];
+	}
+	return implode(';', $item_pictures);
+}
+
 function sellers_insert_post_pictures($post_id, $ipictures, $upd_thumb_id = true) {
 	$attachs = array();
 	$wp_upload_dir = wp_upload_dir();
@@ -3721,6 +3782,8 @@ function sellers_send_change_price_email() {
 						}
 					}
 					$message = str_replace('{SELLER_NAME}', $seller_name, $message);
+					$message = str_replace('{MY_ITEMS_PAGE}', get_permalink($OPTION['wps_indvseller_my_items_page']), $message);
+					
 					NWS_send_email($user_email, $subject, $message, '', '', $OPTION['wps_sellers_cc_email']);
 					echo 'Sent '.count($cpnposts).' item(s) to '.$user_email.'<br>';
 				}
@@ -4792,6 +4855,43 @@ function email_order_items_table($who) {
 	return $email_order_items_table;
 }
 
+function get_utm_params() {
+	$utm_params = false;
+	if (strlen($_COOKIE['__utmz'])) {
+		$utm_params = array();
+		$utmzcook = substr($_COOKIE['__utmz'], strrpos($_COOKIE['__utmz'], '.') + 1);
+		$utmzparams = explode('|', $utmzcook);
+		foreach($utmzparams as $utmzparam) {
+			$utmz = explode('=', $utmzparam);
+			switch ($utmz[0]) {
+				case 'utmcsr':
+					$utm_params['utm_source'] = $utmz[1];
+				break;
+				case 'utmcmd':
+					$utm_params['utm_medium'] = $utmz[1];
+				break;
+				case 'utmccn':
+					$utm_params['utm_campaign'] = $utmz[1];
+				break;
+				case 'utmcct':
+					$utm_params['utm_content'] = $utmz[1];
+				break;
+				case 'utmctr':
+					$utm_params['utm_term'] = $utmz[1];
+				break;
+				case 'utmgclid':
+					$utm_params['gclid'] = $utmz[1];
+				break;
+			}
+			if (isset($utm_params['gclid']) && $utm_params['gclid'] != '-') {
+				$utm_params['utm_source'] = 'google';
+				$utm_params['utm_medium'] = 'cpc';
+			}
+		}
+	}
+	return $utm_params;
+}
+
 function update_utm_params($type, $key) {
 	global $wpdb;
 
@@ -5268,6 +5368,15 @@ function get_custom_alt_title($type, $attach_id, $def_attr) {
 	return $custom_alt_title;
 }
 
+function wishlist_success($style = '') {
+	global $OPTION;
+	if($_GET['wishlist'] == 'success') { ?>
+		<div<?php if (strlen($style)) { echo ' style="'.$style.'"'; } ?>>
+			<div class="success-message">Item has been added to <a href="<?php echo get_permalink($OPTION['wps_account_my_wishlist_page']); ?>">Your Wishlist</a>, where you can save all of your favourite items. <a href="<?php echo get_permalink($OPTION['wps_account_my_wishlist_page']); ?>">View Your Wishlist</a></div>
+		</div>
+	<?php }
+}
+
 function shorturl($url) {
 	global $OPTION;
 	$bitly = 'http://api.bit.ly/shorten?version='.$OPTION['wps_bitly_version'].'&longUrl='.urlencode($url).'&login='.$OPTION['wps_bitly_username'].'&apiKey='.$OPTION['wps_bitly_apikey'].'&format=json';
@@ -5406,7 +5515,7 @@ function post_created_save_post($post_id) {
 function copy_follow_brands_to_alerts() {
 	global $wpdb;
 	$nmb = 1;
-	$fbrands = $wpdb->get_results(sprintf("SELECT * FROM %sfollow_brands WHERE copied = 0 ORDER BY id LIMIT 0, 1000", $wpdb->prefix));
+	$fbrands = $wpdb->get_results(sprintf("SELECT * FROM %sfollow_brands WHERE copied = 0 ORDER BY id LIMIT 0, 10000", $wpdb->prefix));
 	if ($fbrands) {
 		foreach($fbrands as $fbrand) {
 			$id = $fbrand->id;

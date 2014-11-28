@@ -25,6 +25,7 @@ jQuery(document).ready(function(){
 		return false;
 	});
 	jQuery("#installments-continue").click(function(){
+		//jQuery.colorbox({inline:true, href:'#lightbox-buy-in-installment'});
 		jQuery("#installments-buy").val('1');
 		jQuery("#addC").trigger('click');
 		return false;
@@ -51,10 +52,6 @@ jQuery(document).ready(function(){
 		jQuery("#layaway-amount").val(jQuery(".cl-amount").val());
 		if (cloptch && !cltermch) {
 			alert('Please check Accept Terms');
-			return false;
-		}
-		if (lprocess == 1 && !isloggedin) {
-			show_login_popup('layaway', '?orderNow=1');
 			return false;
 		}
 	});

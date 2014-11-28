@@ -1,226 +1,149 @@
 <?php
-global $OPTION;
-$LANG['choose_delivery_option'] 	= __('Select Delivery Option:','wpShop');
-$LANG['choose_payment_option'] 		= __('Select Payment Option:','wpShop');
-$LANG['enter_voucher'] 				= __('Enter Voucher Code','wpShop');
-$LANG['choose_delivery_country'] 	= __('Select Delivery Country:','wpShop');
-$LANG['next_step'] 					= __('Next Step','wpShop');
-$LANG['cod_available']				= __('Cash on delivery is not available outside UAE','wpShop');
-$siteurl = get_option('siteurl');
+$chstep = 2;
+$CART = show_cart();
+$order = get_current_order();
 
-$go	= '2';
-$dpch = 'none';
-$order_level = what_order_level();
-if($order_level == 2){
-	$dpch = delivery_payment_chosen();
-	$go	= '3&dpchange=1';
-}
+$d_option = $order['d_option'];
 
-$show_pickup = true; // show pickup delivery for UAE visitors
+$dpch = array('d_option' => $order['d_option'], 'p_option' => $order['p_option']);
+
 $show_transfer = true;
 $geoplugin = new geoPlugin();
-$ip = $_SERVER['REMOTE_ADDR'];
-$geoplugin->locate($ip);
+$geoplugin->locate($_SERVER['REMOTE_ADDR']);
 if (strlen($geoplugin->countryName)) {
 	$ip_country = strtoupper(trim($geoplugin->countryName));
 	if (strlen($ip_country)) {
 		if ($ip_country == 'UNITED STATES') {
 			$show_transfer = false;
 		}
-		if ($ip_country != 'UNITED ARAB EMIRATES') {
-			$show_pickup = false;
-		}
 	}
 }
 
-$CART = show_cart();
-$cart_items = $CART["content"];
-/*foreach($cart_items as $cart_item) {
-	$cidata = explode("|", $cart_item);
-	$pid = $cidata[8];
-	if (in_category($OPTION['wps_women_watches_category'], $pid) || in_category($OPTION['wps_men_watches_category'], $pid)) {
-		$show_pickup = false;
-	}
-}*/
+$cod_available = true;
+if ($_POST['order_step'] == 2) {
+	$cod_available = check_cod_available();
+}
 
 if ($_SESSION['layaway_order'] > 0) { $dstyle = ' style="display:none;"'; }
+?>
+	<?php wishlist_success(); ?>
 
-wps_shop_process_steps(2); ?>
-<div class="payment-section">
-	<h1 class="title">Payment & Delivery Options</h1>
-	<div class="holder">
-		<?php
-		if($OPTION['wps_shop_mode'] == 'Inquiry email mode')
-		{
-			echo "<p class='info'>";
-			_e('This Website will send your Order first as an <strong>Email Enquiry</strong> to us. However, for an exact calculation of all necessary costs, please select your preferred Delivery and Payment Option below.','wpShop');
-			echo "</p>";
-		} ?>
-		<form class="step1 checkoutSteps" action="<?php echo get_checkout_url(); ?>?orderNow=<?php echo $go; ?>" method="POST">
-			<input type="hidden" name="utm_source" id="utm_source">
-			<input type="hidden" name="utm_medium" id="utm_medium">
-			<input type="hidden" name="utm_campaign" id="utm_campaign">
-			<input type="hidden" name="utm_content" id="utm_content">
-			<input type="hidden" name="utm_term" id="utm_term">
-			<div class="column left">
-				<!-- Delivery Options -->
-				<div id="editDelivery"<?php echo $dstyle; ?>>
-					<h4><?php echo $LANG['choose_delivery_option']; ?></h4>
-					<?php if ($show_pickup) { ?>
-					<label class="delivery-row">
-						<span class="icon"><img src="<?php bloginfo('template_url'); ?>/images/icon-pick-up.png" alt=""></span>
-						<input id="dOptpickup" type="radio" name="d_option" onchange="changePaymentAvailability('pickup')" value="pickup" />
-						<span><?php echo $OPTION['wps_pickUp_label']; ?></span>
-					</label>
-					<?php } ?>
-					<label class="delivery-row">
-						<span class="icon"><img src="<?php bloginfo('template_url'); ?>/images/icon-delivery.png" alt=""></span>
-						<input id="dOptpost" type="radio" name="d_option" onchange="changePaymentAvailability('post')" value="post" checked="checked" />
-						<?php if (is_flat_limit_shipping_free($CART['total_price'])) { ?>
-							<span class="fl-free"><?php echo $OPTION['wps_delivery_free_label']; ?></span>
-						<?php } else { ?>
-							<span><?php echo $OPTION['wps_delivery_label']; ?></span>
-						<?php } ?>
-					</label>
+	<div class="payment-content">
+		<div class="payment_steps">
+			<div class="payment-step">
+				<div class="payment-step-title cf">
+					<h3>Delivery</h3>
 				</div>
-				<!-- Payments Options -->
-				<div id="editPayment">
-					<h4><?php echo $LANG['choose_payment_option']; ?></h4>
-					<div class="payment-methods">
-						<?php if(isset($_SESSION['cod_not_available'])) {
-							echo "<p id='cod_error e_message'><span class='error' style='padding-left:20px;'><b>".$LANG['cod_available']."</b></span></p>";		
-							unset($_SESSION['cod_not_available']);
-						}
-						$payment_options = get_payment_options($dpch); 
-						foreach($payment_options as $poval => $podata) {
-							if ($poval == 'transfer' && !$show_transfer) { continue; }
-						?>
-							<label title="<?php echo $podata['label']; ?>" class="payment-method payment-method-<?php echo $poval; ?>" id="<?php echo $poval; ?>">
-								<input id="pOpt<?php echo $poval; ?>" type="radio" name="p_option" value="<?php echo $poval; ?>" <?php echo $podata['checked']; ?> />
-								<img src="<?php echo $podata['src']; ?>" alt="<?php echo $podata['label']; ?>">
-								<span><?php echo $podata['label']; ?></span>
-							</label>
-						<?php } ?>
-					</div>
+			</div>
+			<div class="payment-step open">
+				<div class="payment-step-title cf">
+					<h3>Payment</h3>
 				</div>
-				<?php
-				// are we using vouchers? display voucher field
-				if ($OPTION['wps_voucherCodes_enable']) {
-					$custid = str_rot13($_SESSION['cust_id']); ?>
-					<div class="voucher_wrap"<?php echo $dstyle; ?>>
-						<h4><?php echo $LANG['enter_voucher']; ?></h4>
-						<label for="vid"><?php echo __('Voucher / Discount Code: ','wpShop'); ?></label>
-						<input type="text" name="voucher_code" id="voucher-code" maxlength="100" onkeyup="check_voucher_code();" 
-						onblur="check_voucher_code();" />
-						<div id="voucher-code-result" style="margin-top:12px;"></div>
-					</div>
-				<?php
-				}
-				?>
+				<div class="payment-step-content">
+					<form class="form-default cf" method="POST">
+						<div class="ch-payment-methods cf">
+							<div class="check-row-lines v1">
+								<?php
+								$payment_options = get_payment_options($dpch);
+								$checked = '';
+								foreach($payment_options as $poval => $podata) {
+									if ($poval == 'transfer' && !$show_transfer) { continue; }
+									if ($poval == 'cash' && $d_option == 'post') { continue; }
+									if (strlen($podata['checked'])) { $checked = $poval; }
+								}
+								if (strlen($order['p_option'])) { $checked = $order['p_option']; }
+								if (!strlen($checked)) { $checked = 'cod'; }
+
+								foreach($payment_options as $poval => $podata) {
+									if ($poval == 'transfer' && !$show_transfer) { continue; }
+									if ($poval == 'cash' && $d_option == 'post') { continue; } ?>
+									<div class="check-row-line ch-pay-method-<?php echo $poval; ?><?php if ($poval == $checked) { echo ' checked'; } ?> cf">
+										<input type="radio" name="p_option" value="<?php echo $poval; ?>" <?php if ($poval == $checked) { echo 'checked="checked"'; } ?> onclick="checkout_change_paymemt('<?php echo $poval; ?>');" />
+										<label for="pick-up">
+											<strong><?php echo $podata['label']; ?></strong>
+										</label>
+									</div>
+								<?php } ?>
+							</div>
+							<?php foreach($payment_options as $poval => $podata) {
+								if ($poval == 'transfer' && !$show_transfer) { continue; }
+								if ($poval == 'cash' && $d_option == 'post') { continue; } ?>
+								<div class="check-row-content v1 ch-pm-content-<?php echo $poval; ?><?php if ($poval == $checked) { echo ' open'; } ?>">
+									<div class="check-row-box cf">
+										<?php echo wpautop($OPTION['wps_checkout_'.$poval.'_text']); ?>
+									</div>
+								</div>
+							<?php } ?>
+						</div>
+						<div class="buttons-bottom voucher-block cf" style="position:relative;">
+							<?php if (!$cod_available) { ?>
+								<p class="error" style="text-align:right;">Cash on delivery is not available outside UAE</p>
+							<?php } ?>
+							<?php if ($OPTION['wps_voucherCodes_enable']) { ?>
+								<div class="btn-text-field">
+									<input type="text" name="voucher_code" id="voucher-code" placeholder="Enter voucher code">
+									<input type="button" class="btn-orange" value="Use" onclick="check_voucher_code();">
+								</div>
+								<div class="pay-status" style="display:none;"></div>
+								<div class="action-loading"><img src="<?php echo TEMPLURL; ?>/images/loading-ajax.gif"></div>
+							<?php } ?>
+							<input type="submit" value="Next" class="btn-orange right" onclick="ga_send_event('checkout_process');">
+						</div>
+						<input type="hidden" name="order_step" value="2">
+					</form>
+				</div>
 			</div>
-			<div class="column right width-452">
-				<div class="o-table-holder">
-					<table class='o-table'>
-						<tr>
-							<th colspan="2">Your Order</th>
-						</tr>
-						<?php
-						foreach($cart_items as $cart_item) {
-							$cart_item_data = explode("|", $cart_item);
-							$item_img = '';
-							if (strlen($cart_item_data[6])) {
-								$img_src 	= $cart_item_data[6];
-								$img_size 	= $OPTION['wps_ProdRelated_img_size'];
-								$des_src 	= $OPTION['upload_path'].'/cache';
-								$img_file 	= mkthumb($img_src,$des_src,$img_size,'width');    
-								$item_img 	= $siteurl.'/'.$des_src.'/'.$img_file;	
-							}
-						?>
-						<tr>
-							<td><?php if (strlen($item_img)) { ?><img src="<?php echo $item_img; ?>" alt="<?php echo $cart_item_data[2]; ?>" /><?php } ?></td>
-							<td class="second">
-								<h5><?php echo $cart_item_data[2]; ?></h5>
-								<strong class="mark">Price:</strong> <?php echo format_price($cart_item_data[3] * $_SESSION['currency-rate'], true); ?>
-							</td>
-						</tr>
-						<?php } ?>
-						<?php $TOTAL_AM = $CART['total_price']; ?>
-						<tr>
-							<td colspan="2">
-								<table class="yorder">
-									<tr>
-										<td align="right"><?php echo __('Subtotal','wpShop'); ?>:</td>
-										<td><?php echo format_price($TOTAL_AM * $_SESSION['currency-rate'], true); ?></td>
-									</tr>
-									<?php if ($_SESSION['layaway_order'] > 0) {
-										$oamounts = layaway_get_process_amounts($_SESSION['layaway_order']);
-										$paid = $oamounts['paid'];
-										$balance = $oamounts['balance'];
-										$TOTAL_AM = $balance; ?>
-										<tr>
-											<td align="right"><?php echo __('Paid Amount','wpShop'); ?>:</td>
-											<td><?php echo format_price($paid * $_SESSION['currency-rate'], true); ?></td>
-										</tr>
-										<tr>
-											<td align="right"><?php echo __('Balance Amount','wpShop'); ?>:</td>
-											<td><?php echo format_price($balance * $_SESSION['currency-rate'], true); ?></td>
-										</tr>
-									<?php } else { ?>
-										<?php // TOTAL amount ?>
-										<tr>
-											<td align="right"><?php echo __('Total','wpShop'); ?>:</td>
-											<td><?php echo format_price($TOTAL_AM * $_SESSION['currency-rate'], true); ?></td>
-										</tr>
-									<?php } ?>
-									<?php // LAYAWAY amount ?>
-									<?php if (layaway_is_enabled() && $CART['total_item_num'] == 1 && $_SESSION['layaway_process'] == 1) { ?>
-										<?php
-										$layaway_amount = $_SESSION['layaway_amount'];
-										$TOTAL_AM = $layaway_amount; ?>
-										<tr>
-											<td align="right"><?php echo __('Installment Payment','wpShop'); ?>:</td>
-											<td><?php echo format_price($layaway_amount * $_SESSION['currency-rate'], true); ?></td>
-										</tr>
-										<tr>
-											<td align="right"><?php echo __('Order Total','wpShop'); ?>:</td>
-											<td><?php echo format_price($TOTAL_AM * $_SESSION['currency-rate'], true); ?></td>
-										</tr>
-									<?php } ?>
-								</table>
-							</td>
-						</tr>
-					</table>
-				</div><br />
+			<div class="payment-step">
+				<div class="payment-step-title cf">
+					<h3>Order Review</h3>
+				</div>
 			</div>
-			<div class="button-right">
-				<input class="btn-orange" type="submit" name="step1" value="NEXT" />
+			<div class="payment-step">
+				<div class="payment-step-title cf">
+					<h3>Confirmation</h3>
+				</div>
 			</div>
-			<input type="hidden" name="order_step" value="1">
-		</form>
+		</div>
 	</div>
-</div>
-<script language="JavaScript"> 
-	function changePaymentAvailability(deliveryMethod) {  
-		if (deliveryMethod == 'pickup') {
-			if (jQuery('#pOptcod').is(':checked')) {
-				jQuery('#pOptcod').removeAttr('checked');
-				jQuery('#pOptcash').attr('checked', 'checked');
-			}
-			jQuery('#cod').hide();
-			jQuery('#cash').show();
-		 } else {
-			if (jQuery('#pOptcash').is(':checked')) {
-				jQuery('#pOptcash').removeAttr('checked');
-				jQuery('#pOptcod').attr('checked', 'checked');
-			}
-			jQuery('#cash').hide();
-			jQuery('#cod').show();
-		 }
+	<div class="payment-aside">
+		<?php include('shop_your_order.php'); ?>
+		<ul class="payment-logos">
+			<li><img src="<?php echo bloginfo('stylesheet_directory'); ?>/images/logo-secure-p.png" height="33" width="65" alt="ahlan"/></li>
+			<li><img src="<?php echo bloginfo('stylesheet_directory'); ?>/images/logo-visa-p.png" alt="cosmopolitan"/></li>
+			<li><img src="<?php echo bloginfo('stylesheet_directory'); ?>/images/logo-mastercard-p.png" alt="hello"/></li>
+		</ul>
+	</div>
+<script language="javascript">
+var lpm = '';
+if (!jQuery('.delivery-line-pickup').size()) { ldtype = 'post'; }
+function checkout_change_paymemt(pm) {
+	if (pm != lpm) {
+		jQuery('.ch-payment-methods .check-row-line').removeClass('checked');
+		jQuery('.ch-payment-methods .check-row-content').removeClass('open');
+		jQuery('.ch-payment-methods .ch-pay-method-'+pm).addClass('checked');
+		jQuery('.ch-payment-methods .ch-pm-content-'+pm).addClass('open');
 	}
-	//initial defining COD or COL when page loaded
-	if (document.getElementById('dOptpost').checked) {
-		changePaymentAvailability('post');
-	} else {
-		changePaymentAvailability('pickup');
+	lpm = pm;
+}
+function check_voucher_code() {
+	var vcode = jQuery('#voucher-code').val();
+	jQuery('.voucher-block .pay-status').hide().removeClass('false');
+	if (vcode != '') {
+		jQuery('.voucher-block .action-loading').show();
+		jQuery.post(siteurl, 
+			{
+				FormAction: 'check_voucher',
+				vcode: vcode
+			},
+			function(data){
+				jQuery('.voucher-block .action-loading').hide();
+				if (data == 'success') {
+					jQuery('.voucher-block .pay-status').show();
+				} else {
+					jQuery('.voucher-block .pay-status').addClass('false').show();
+				}
+			}
+		);
 	}
-</script> 
+}
+</script>

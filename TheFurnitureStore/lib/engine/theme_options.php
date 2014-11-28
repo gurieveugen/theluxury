@@ -346,6 +346,12 @@ array ( 	"name" 	=> __('Design','wpShop'),
 								"vals" 	=> $wp_full_pages,
 								"std" 	=> "Select a Page"),
 
+					array(    	"name" 	=> __('Reset Password page','wpShop'),
+								"id" 	=> $CONFIG_WPS['shortname']."_account_reset_pass_page",
+								"type" 	=> "pages",
+								"vals" 	=> $wp_full_pages,
+								"std" 	=> "Select a Page"),
+
 					array(    	"name" 	=> __('My Profile page','wpShop'),
 								"id" 	=> $CONFIG_WPS['shortname']."_account_my_profile_page",
 								"type" 	=> "pages",
@@ -4055,6 +4061,12 @@ array ( 	"name" 	=> __('Shop','wpShop'),
 								"type" 	=> "textarea",
 								"std" 	=> ""),
 
+					array(  	"name" 	=> __('Full Refunds','wpShop'),
+								"desc" 	=> __('Checkout Full Refunds popup text.','wpShop'),
+								"id" 	=> $CONFIG_WPS['shortname']."_checkout_full_refunds_popup_text",
+								"type" 	=> "textarea",
+								"std" 	=> ""),
+
 					array(  	"name" 	=> __('Pick up text','wpShop'),
 								"desc" 	=> __('Text is shown for Pick up.','wpShop'),
 								"id" 	=> $CONFIG_WPS['shortname']."_checkout_pickup_text",
@@ -4075,7 +4087,7 @@ array ( 	"name" 	=> __('Shop','wpShop'),
 
 					array(  	"name" 	=> __('Credit Card text','wpShop'),
 								"desc" 	=> __('Text is shown for Credit Card payment.','wpShop'),
-								"id" 	=> $CONFIG_WPS['shortname']."_checkout_credit_card_text",
+								"id" 	=> $CONFIG_WPS['shortname']."_checkout_audi_text",
 								"type" 	=> "textarea",
 								"std" 	=> ""),
 
@@ -4085,21 +4097,21 @@ array ( 	"name" 	=> __('Shop','wpShop'),
 								"type" 	=> "textarea",
 								"std" 	=> ""),
 
-					array(  	"name" 	=> __('Pay On Location text','wpShop'),
+					array(  	"name" 	=> __('Cash On Location text','wpShop'),
 								"desc" 	=> __('Text is shown for Pay On Location payment.','wpShop'),
-								"id" 	=> $CONFIG_WPS['shortname']."_checkout_pay_on_location_text",
+								"id" 	=> $CONFIG_WPS['shortname']."_checkout_cash_text",
 								"type" 	=> "textarea",
 								"std" 	=> ""),
 
 					array(  	"name" 	=> __('Bank Transfer text','wpShop'),
 								"desc" 	=> __('Text is shown for Bank Transfer payment.','wpShop'),
-								"id" 	=> $CONFIG_WPS['shortname']."_checkout_bank_transfer_text",
+								"id" 	=> $CONFIG_WPS['shortname']."_checkout_transfer_text",
 								"type" 	=> "textarea",
 								"std" 	=> ""),
 
 					array(  	"name" 	=> __('Cash On Delivery text','wpShop'),
 								"desc" 	=> __('Text is shown for Bank Transfer payment.','wpShop'),
-								"id" 	=> $CONFIG_WPS['shortname']."_checkout_cash_on_delivery_text",
+								"id" 	=> $CONFIG_WPS['shortname']."_checkout_cod_text",
 								"type" 	=> "textarea",
 								"std" 	=> ""),
 
@@ -4463,7 +4475,7 @@ function NWS_theme_admin()
 							<option value="<?php echo $creason; ?>"><?php echo $creason; ?></option>
 							<?php } ?>
 						</select>
-						<input type='submit' name='status_change' value='<?php _e('Apply','wpShop'); ?>' />
+						<input type="submit" name="status_change" value="<?php _e('Apply','wpShop'); ?>" onclick="admin_change_orders_status();" />
 					</div>
 					<?php if ($current_user->ID == 1 || $current_user->ID == 6871) { ?><div class="export-csv" style="padding:10px 0px 0px;"><a href="admin.php?page=functions.php&section=orders&csvexport=orders">Export CSV</a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="admin.php?page=functions.php&section=orders&csvexport=orders&otype=cancelled">Cancelled Export CSV</a></div><?php } ?>
 				</div><!-- hasadmintabs -->
@@ -4480,6 +4492,7 @@ function NWS_theme_admin()
 				<div class="popup_forms">  
 				<form name="return_orders" action="themes.php?page=functions.php&section=orders" method="post">
 				<input type="hidden" name="pop_rt_order_id" id="pop_rt_order_id" value="" />
+				<input type="hidden" name="pop_rt_txn_id" id="pop_rt_txn_id" value="" />
 				<table id="popup_rt_data" class="widefat" width="100%" border="0">
 					<thead>
 						<tr>
@@ -4508,7 +4521,7 @@ function NWS_theme_admin()
 								<?php } ?>
 							</select>
 							</td>
-							<td><input type="submit" class="button" name="returned_order" value="Save" /></td>
+							<td><input type="submit" class="button" name="returned_order" value="Save" onclick="admin_ga_refund_event(document.return_orders.pop_rt_txn_id.value);" /></td>
 							<td><input type="button" class="button" id="cancel" name="returned_order" value="Cancel"  /></td>
 						</tr>
 					</tfoot>
@@ -6216,7 +6229,7 @@ function NWS_theme_staff()
 							<option value="<?php echo $creason; ?>"><?php echo $creason; ?></option>
 							<?php } ?>
 						</select>
-						<input type='submit' name='status_change' value='<?php _e('Apply','wpShop'); ?>' />
+						<input type="submit" name="status_change" value="<?php _e('Apply','wpShop'); ?>" onclick="admin_change_orders_status();" />
 					</div>
 				</div><!-- hasadmintabs -->
 			</form>
@@ -6420,6 +6433,7 @@ function NWS_theme_staff()
 			$s_brand = $_GET['s_brand'];
 			$s_selection = $_GET['s_selection'];
 			$s_colour = $_GET['s_colour'];
+			$s_style = trim($_GET['s_style']);
 			$pg = $_GET['pg'];
 			?>
 			<h2 style="padding:0px;"><?php _e('Pricing Database','wpShop'); ?> <a class="add-new-h2 pricing-add-icon thickbox" href="#TB_inline?height=500&width=900&inlineId=pricing-form" title="Add New Pricing">Add New</a></h2>
@@ -6447,6 +6461,7 @@ function NWS_theme_staff()
 							<option value="<?php echo $p_colour->term_id; ?>"<?php echo $s; ?>><?php echo $p_colour->name; ?></option>
 							<?php } ?>
 						</select>
+						<input type="text" name="s_style" value="<?php echo $s_style; ?>" placeholder="Style Name">
 						<input class="button-secondary action" type="submit" value="Search" />
 					</form>
 				</div>
@@ -6472,10 +6487,11 @@ function NWS_theme_staff()
 				</tr>
 				<?php
 				$pwhere = "";
-				if (strlen($s_category)) { if (strlen($pwhere)) { $pwhere .= " AND "; } $pwhere .= " p.category = ".$s_category; }
+				if ($s_category > 0) { if (strlen($pwhere)) { $pwhere .= " AND "; } $pwhere .= " p.category = ".$s_category; }
 				if (strlen($s_brand)) { if (strlen($pwhere)) { $pwhere .= " AND "; } $pwhere .= " p.brand = ".$s_brand; }
 				if (strlen($s_selection)) { if (strlen($pwhere)) { $pwhere .= " AND "; } $pwhere .= " p.selection = ".$s_selection; }
 				if (strlen($s_colour)) { if (strlen($pwhere)) { $pwhere .= " AND "; } $pwhere .= " p.colour = ".$s_colour; }
+				if (strlen($s_style)) { if (strlen($pwhere)) { $pwhere .= " AND "; } $pwhere .= " p.style_name LIKE '%".$s_style."%'"; }
 				if (strlen($pwhere)) { $pwhere = " WHERE ".$pwhere; }
 
 				$pper_page = 100;

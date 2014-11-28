@@ -43,9 +43,7 @@ jQuery(document).ready(function() {
 </script>
 
 <div class="main-product">
-	<?php if($_GET['added'] == 'OK' && $_GET['l'] == 'wl') { ?>
-		<div class="success-message">This item has been added to <a href="<?php echo get_permalink($OPTION['wps_account_my_wishlist_page']); ?>">Your Wishlist</a>, where you can save all of your favourite items. <a href="<?php echo get_permalink($OPTION['wps_account_my_wishlist_page']); ?>">View Your Wishlist</a></div>
-	<?php } ?>
+	<?php wishlist_success(); ?>
 	<h1><?php the_title(); ?></h1>
 	<div class="product-holder">
 		<div class="product-content">
@@ -434,7 +432,7 @@ jQuery(document).ready(function() {
 							</div>
 						</div>
 						<?php } else if (in_category($OPTION['wps_men_jewelry_category'], $post->ID) || in_category($OPTION['wps_women_jewelry_category'], $post->ID)) { ?>
-							<?php if (in_category('rings', $post->ID)) { ?>
+							<?php if (in_category('rings', $post->ID) || in_category('rings-fine-jewelry', $post->ID)) { ?>
 							<div class="heading" rel="prod-sizing-tab">
 								<span class="icon"></span>
 								<h3>Ring Sizing</h3>

@@ -330,8 +330,8 @@
 						$dl_sent_info 	= ($order[dlinks_sent] != 0 ? ' - last sent on: '.date("F j, Y, G:i",$order[dlinks_sent]) : NULL);			
 						
 						echo "
-						<tr>
-							<td $style><input type='checkbox' name='$order[oid]' value='move' /></td>
+						<tr class='order-".$order['oid']."' rel='".$order['txn_id']."'>
+							<td $style><input type='checkbox' name='$order[oid]' value='move' class='move-ch' /></td>
 							<td $style id='torder_id'>".$OPTION['wps_order_no_prefix'].$order['oid']."</td> 
 							<td $style>$date
 							<input type='hidden' name='order_id' id='order_id' value='$order[oid]' />
@@ -2464,11 +2464,26 @@ function post_created_modified_date_metabox() {
     }
 }
 
+function nws_wp_terms_checklist_args($args) {
+    $args['checked_ontop'] = false;
+    return $args;
+}
+add_filter('wp_terms_checklist_args', 'nws_wp_terms_checklist_args');
+
 add_action('init', 'backend_actions_init');
 function backend_actions_init() {
 	global $wpdb, $current_user, $voucher_errors;
-	$vuploaded = 0;
+	// regenerate order invoice
+	$oid = $_GET['oid'];
+	if ($_GET['invoice'] == 'regenerate' && $oid > 0) {
+		$table = is_dbtable_there('orders');
+		$res   = mysql_query("SELECT * FROM $table WHERE oid = '$oid' LIMIT 1");
+		$order = mysql_fetch_assoc($res);
+		$INVOICE = load_what_is_needed('invoice');
+		$INVOICE->make_pdf($order);
+	}
 	// VOUCHER ACTIONS
+	$vuploaded = 0;
 	if (isset($_GET['voucher_action'])) {
 		if ($_GET['voucher_action'] == 'create') {
 			if (strlen(trim($_POST['voucher_code']))) {
@@ -2562,4 +2577,76 @@ function backend_actions_init() {
 		}
 	}
 }
+
+/* Fix wp-admin posts filter */
+add_filter( 'posts_where_request' , 'posts_where', 100, 2 );
+function posts_where( $where, $obj ) {
+	
+	if(is_admin())
+	{
+		global $wpdb;
+		if(isset($_GET['cat']) AND intval($_GET['cat']) > 0)
+		{
+			$a = new WP_Tax_Query( 
+				array(
+					array(
+						'taxonomy' => 'category',
+						'terms' => array($_GET['cat']),
+						'field' => 'term_id',
+						'include_children' => true
+					)
+				) 
+			);
+			$clauses = $a->get_sql( $wpdb->posts, 'ID' );
+			if(strpos($where, $clauses['where']) === FALSE)
+			{
+				$where = $clauses['where'].' '.$where;	
+			}
+		}
+	}
+	return $where;
+}
+
+add_filter( 'posts_join_request', 'posts_join', 10, 2);
+function posts_join($join, $obj)
+{
+	if(is_admin())
+	{
+		global $wpdb;
+		if(isset($_GET['cat']) AND intval($_GET['cat']) > 0)
+		{
+			$a = new WP_Tax_Query( 
+				array(
+					array(
+						'taxonomy' => 'category',
+						'terms' => array($_GET['cat']),
+						'field' => 'term_id',
+						'include_children' => true
+					)
+				) 
+			);
+			$clauses = $a->get_sql( $wpdb->posts, 'ID' );
+			if(strpos($join, $clauses['join']) === FALSE)
+			{
+				$join = $clauses['join'].' '.$join;	
+			}
+		}
+	}
+	return $join;
+}
+
+add_filter( 'posts_groupby_request', 'posts_groupby', 10, 2);
+function posts_groupby($groupby, $obj)
+{
+	if(is_admin())
+	{
+		global $wpdb;
+		if(isset($_GET['cat']) AND intval($_GET['cat']) > 0 AND !strlen($groupby))
+		{
+			$groupby = "wp_posts.ID";
+		}
+	}
+	return $groupby;
+}
+
 ?>

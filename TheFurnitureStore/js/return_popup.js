@@ -9,8 +9,12 @@ jQuery(document).ready(function(){
 		if(e.keyCode==27 && popupStatus==1){  disablePopup();  }  
 	}); 
 	jQuery(".return").click(function(event){ 
-		oid = jQuery(this).parent().parent().find('#order_id').val();
+		var oid = jQuery(this).parent().parent().find('#order_id').val();
+		var txnid = jQuery('.order-'+oid).attr('rel');
+
 		jQuery('#popup_form #pop_rt_order_id').val(oid);
+		jQuery('#popup_form #pop_rt_txn_id').val(txnid);
+
 		toid = jQuery(this).parent().parent().find('#torder_id').html();
 		jQuery('#popup_form #TB_ajaxWindowTitle').html('Returned this Order #'+toid+'?');
 		num_of_prod = 1;

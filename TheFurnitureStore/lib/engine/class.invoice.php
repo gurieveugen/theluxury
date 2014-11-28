@@ -533,6 +533,9 @@
 				flush();
 				readfile($file);
 				exit();
+			} else {
+				echo 'File does not exist.';
+				exit;
 			}
 		}	
 	}

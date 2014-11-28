@@ -414,78 +414,213 @@
 <?php } ?>
 
 <?php if (is_single()) { // REQUEST THIS PRODUCT POPUP ?>
-	<div class="popup-box popup-notify<?php if (!is_user_logged_in()) { echo '-login'; } ?>" id="request-this-product-popup" style="display:none">
-		<div class="t-center">
-			<h3 class="popup-message">Sorry, this item is out of stock!</h3>
-			<p class="rtp-text">Receive an e-mail when another <?php the_title(); ?> is available.</p>
-			<p class="mark rtp-success" style="display:none;">Your notification has been created.</p>
-			<?php if (is_user_logged_in()) { ?>
-				<a href="#notify-me" class="btn-orange logged-notify">Notify Me</a>
-			<?php } ?>
-		</div>
-		<?php if (!is_user_logged_in()) { ?>
-		<div class="popup-forms">
-			<form class="p-login-form" id="rtp-register-form">
-				<label class="title">Create an Account</label>
-				<input type="email" name="rtp_email" class="rtp-email" placeholder="Email">
-				<input type="password" name="rtp_pass" class="rtp-pass" placeholder="Password">
-				<div class="check-row rtp-gender">
-					<label>Gender:</label> 
-					<label>
-						<input type="radio" name="rtp_gender" value="Male">
-						<span class="label">Male</span>
-					</label>
-					<label>
-						<input type="radio" name="rtp_gender" value="Female">
-						<span class="label">Female</span>
-					</label>
-				</div>
-				<div style="position:relative;">
-					<button class="btn-orange register-notify">Notify Me</button>
-					<div class="action-loading"><img src="<?php echo TEMPLURL; ?>/images/loading-ajax.gif"></div>
-				</div>
-				<input type="hidden" name="rtp_value" class="rtp-value" value="<?php the_title(); ?>">
-			</form>
-			<form class="p-login-form" id="rtp-login-form">
-				<label class="title">Log In</label>
-				<input type="email" name="rtp_email" class="rtp-email" placeholder="Email">
-				<input type="password" name="rtp_pass" class="rtp-pass" placeholder="Password">
-				<div class="space">&nbsp;</div>
-				<div style="position:relative;">
-					<button class="btn-orange login-notify">Notify Me</button>
-					<div class="action-loading"><img src="<?php echo TEMPLURL; ?>/images/loading-ajax.gif"></div>
-				</div>
-				<input type="hidden" name="rtp_value" class="rtp-value" value="<?php the_title(); ?>">
-			</form>
-		</div>
-		<?php } ?>
-		<?php
-		$taxTerm = 'post_tag';
-		$taglist = NWS_create_taglist($post->ID,$taxTerm);
-		$q = NWS_prepare_tag_related_DB_query($taxTerm,$taglist,$post->ID,$OPTION['wps_tag_relatedProds_num']);
-		$related_tags_posts = $wpdb->get_results($q);
-		if(!empty($related_tags_posts)) { ?>
-		<div class="products-section">
-			<h3>You May Also Like</h3>
-			<div class="products-items">
-				<?php foreach ($related_tags_posts as $related_tags_post) {
-					$pimage = get_product_thumb($related_tags_post->ID);
-					$price = get_post_meta($related_tags_post->ID, 'price', true);
-					$new_price = get_post_meta($related_tags_post->ID, 'new_price', true);
-					if($new_price) { $price = $new_price; }
-				?>
-				<div class="item">
-					<?php if($pimage) { ?><a href="<?php echo get_permalink($related_tags_post->ID); ?>" class="image" title="<?php echo $related_tags_post->post_title; ?>"><img src="<?php echo $pimage; ?>" alt=""></a><?php } ?>
-					<h5><a href="<?php echo get_permalink($related_tags_post->ID); ?>"><?php echo get_limit_content($related_tags_post->post_title, 40, true); ?></a></h5>
-					<strong class="price"><?php product_prices_list($price); ?></strong>
-				</div>
+	<?php global $current_user; ?>
+	<?php if (!is_user_logged_in() || (is_user_logged_in() && in_array('subscriber', $current_user->roles))) { ?>
+		<div class="popup-box popup-notify<?php if (!is_user_logged_in()) { echo '-login'; } ?>" id="request-this-product-popup" style="display:none">
+			<div class="t-center">
+				<h3 class="popup-message">Sorry, this item is out of stock!</h3>
+				<p class="rtp-text">Receive an e-mail when another <?php the_title(); ?> is available.</p>
+				<p class="mark rtp-success" style="display:none;">Your notification has been created.</p>
+				<?php if (is_user_logged_in()) { ?>
+					<a href="#notify-me" class="btn-orange logged-notify">Notify Me</a>
 				<?php } ?>
 			</div>
+			<?php if (!is_user_logged_in()) { ?>
+			<div class="popup-forms">
+				<form class="p-login-form" id="rtp-register-form">
+					<label class="title">Create an Account</label>
+					<input type="email" name="rtp_email" class="rtp-email" placeholder="Email">
+					<input type="password" name="rtp_pass" class="rtp-pass" placeholder="Password">
+					<div class="check-row rtp-gender">
+						<label>Gender:</label> 
+						<label>
+							<input type="radio" name="rtp_gender" value="Male">
+							<span class="label">Male</span>
+						</label>
+						<label>
+							<input type="radio" name="rtp_gender" value="Female">
+							<span class="label">Female</span>
+						</label>
+					</div>
+					<div style="position:relative;">
+						<button class="btn-orange register-notify">Notify Me</button>
+						<div class="action-loading"><img src="<?php echo TEMPLURL; ?>/images/loading-ajax.gif"></div>
+					</div>
+					<input type="hidden" name="rtp_value" class="rtp-value" value="<?php the_title(); ?>">
+				</form>
+				<form class="p-login-form" id="rtp-login-form">
+					<label class="title">Log In</label>
+					<input type="email" name="rtp_email" class="rtp-email" placeholder="Email">
+					<input type="password" name="rtp_pass" class="rtp-pass" placeholder="Password">
+					<div class="space">&nbsp;</div>
+					<div style="position:relative;">
+						<button class="btn-orange login-notify">Notify Me</button>
+						<div class="action-loading"><img src="<?php echo TEMPLURL; ?>/images/loading-ajax.gif"></div>
+					</div>
+					<input type="hidden" name="rtp_value" class="rtp-value" value="<?php the_title(); ?>">
+				</form>
+			</div>
+			<?php } ?>
+			<?php
+			$taxTerm = 'post_tag';
+			$taglist = NWS_create_taglist($post->ID,$taxTerm);
+			$q = NWS_prepare_tag_related_DB_query($taxTerm,$taglist,$post->ID,$OPTION['wps_tag_relatedProds_num']);
+			$related_tags_posts = $wpdb->get_results($q);
+			if(!empty($related_tags_posts)) { ?>
+			<div class="products-section">
+				<h3>You May Also Like</h3>
+				<div class="products-items">
+					<?php foreach ($related_tags_posts as $related_tags_post) {
+						$pimage = get_product_thumb($related_tags_post->ID);
+						$price = get_post_meta($related_tags_post->ID, 'price', true);
+						$new_price = get_post_meta($related_tags_post->ID, 'new_price', true);
+						if($new_price) { $price = $new_price; }
+					?>
+					<div class="item">
+						<?php if($pimage) { ?><a href="<?php echo get_permalink($related_tags_post->ID); ?>" class="image" title="<?php echo $related_tags_post->post_title; ?>"><img src="<?php echo $pimage; ?>" alt=""></a><?php } ?>
+						<h5><a href="<?php echo get_permalink($related_tags_post->ID); ?>"><?php echo get_limit_content($related_tags_post->post_title, 40, true); ?></a></h5>
+						<strong class="price"><?php product_prices_list($price); ?></strong>
+					</div>
+					<?php } ?>
+				</div>
+			</div>
+			<?php } ?>
+			<div class="p-footer t-right rtp-notifications-link">
+				<a href="<?php echo get_permalink($OPTION['wps_account_my_alerts_page']); ?>"<?php if (!is_user_logged_in()) { echo ' style="display:none;"'; } ?>>+ Create a custom notification</a>
+			</div>
+			<a href="#close" class="close">close</a>
 		</div>
-		<?php } ?>
-		<div class="p-footer t-right rtp-notifications-link">
-			<a href="<?php echo get_permalink($OPTION['wps_account_my_alerts_page']); ?>"<?php if (!is_user_logged_in()) { echo ' style="display:none;"'; } ?>>+ Create a custom notification</a>
+	<?php } ?>
+	<div style="display:none;">
+		<div id="lightbox-buy-in-installment" class="lightbox-default lightbox-buy-in-installment">
+			<div class="lightbox-holder">
+				<h3 class="title no-border">Buy in Installments</h3>
+				<table class="table-products-l">
+					<tr>
+						<th class="cell-image">Item</th>
+						<th>&nbsp;</th>
+						<th class="cell-price">Item Price</th>
+					</tr>
+					<tr>
+						<td class="cell-image">
+							<a href="#"><img src="<?php echo bloginfo('stylesheet_directory'); ?>/images/temp-product.jpg" height="91" width="91" alt="" /></a>
+						</td>
+						<td class="cell-description">
+							<h5><a href="#">Louis Vuitton Monogram</a></h5>
+							<p>Speedy 35</p>
+						</td>
+						<td class="cell-price">
+							$382
+						</td>
+					</tr>
+				</table>
+				<table class="table-total-l">
+					<tr>
+						<th><strong>Subtotal:</strong></th>
+						<td class="cell-2 text-right"><strong>$382</strong></td>
+						<td class="cell-3"></td>
+					</tr>
+					<tr>
+						<th>excl. <a href="#">Shipping &amp; Returns</a></th>
+						<td class="cell-2"></td>
+						<td class="cell-3"></td>
+					</tr>
+					<tr>
+						<th>Purchase on installments:</th>
+						<td class="cell-2 form-default wsnw">
+							<input type="radio" name="purchase-inst-l" id="purchase-inst-l-yes">
+							<label for="purchase-inst-l-yes">Yes</label>
+							<input type="radio" name="purchase-inst-l" id="purchase-inst-l-no">
+							<label for="purchase-inst-l-no">No</label>
+							<a href="#" class="btn-help">?</a>
+						</td>
+						<td class="cell-3"></td>
+					</tr>
+					<tr>
+						<th>Accept Terms:</th>
+						<td class="cell-2 form-default wsnw">
+							<input type="radio" name="accept-l" id="accept-l-yes">
+							<label for="accept-l-yes">Yes</label>
+							<input type="radio" name="accept-l" id="accept-l-no">
+							<label for="accept-l-no">No</label>
+							<a href="#" class="link-read-terms">READ TERMS</a>
+						</td>
+						<td class="cell-3"></td>
+					</tr>
+					<tr>
+						<th>Installment amount, USD:</th>
+						<td class="cell-2 form-default"><input type="text" value="$96" class="width-170"></td>
+						<td class="cell-3">
+							<a href="#" class="btn-help">?</a>
+						</td>
+					</tr>
+					<tr>
+						<td colspan="3">
+							<button href="#" class="btn-orange right">Continue</button>
+						</td>
+					</tr>
+				</table>
+			</div>
 		</div>
-		<a href="#close" class="close">close</a>
 	</div>
 <?php } ?>
+
+<div style="display:none;">
+	<div id="lightbox-3-day" class="lightbox-default">
+		<div class="lightbox-holder">
+			<h3 class="title">3 Day Returns</h3>
+			<?php echo wpautop($OPTION['wps_checkout_3_day_returns_popup_text']); ?>
+		</div>
+	</div>
+	<div id="lightbox-guarantee" class="lightbox-default">
+		<div class="lightbox-holder">
+			<img src="<?php echo bloginfo('stylesheet_directory'); ?>/images/img-guarantee.png" height="243" width="144" alt="" class="alignright" />
+			<div class="ovh">
+				<h3 class="title">100% Authenticity Guarantee</h3>
+				<?php echo wpautop($OPTION['wps_checkout_authenticity_guarantee_popup_text']); ?>
+			</div>
+		</div>
+	</div>
+	<div id="lightbox-full-refunds" class="lightbox-default">
+		<div class="lightbox-holder">
+			<h3 class="title">Full Refunds</h3>
+			<?php echo wpautop($OPTION['wps_checkout_full_refunds_popup_text']); ?>
+		</div>
+	</div>
+	<div id="lightbox-contact" class="lightbox-default lightbox-contact">
+		<div class="lightbox-holder">
+			<div class="short-text">
+				<h3 class="title">Contact Us</h3>
+				<p>Having a technical problem, or just need help finding the right item for you? Let us know, we’d love to hear from you!</p>
+			</div>
+			<div class="contact-info cf">
+				<div class="column contact-form-l">
+					<div class="contact-form-l">
+						<?php echo do_shortcode('[contact-form-7 id="165062" title="Contact form 1"]'); ?>
+					</div>
+				</div>
+				<div class="column right">
+					<address>
+						<strong>Tradelux LLC803</strong><br />
+						Sidra Tower (Fraser Suites Hotel Building) <br />
+						Sheikh Zayed Road <br />
+						Al Sufou 1, Dubai, UAE <br />
+						PO Box 502626
+					</address>
+					<div class="contact-info-row">
+						<img src="<?php echo bloginfo('stylesheet_directory'); ?>/images/ico-phone-l.png" height="29" width="28" alt="" />
+						+ 971 800 589, + 971 44214281
+					</div>
+					<div class="contact-info-row">
+						<img src="<?php echo bloginfo('stylesheet_directory'); ?>/images/ico-facebook-l.png" height="29" width="28" alt="" />
+						<a href="#">Connect on Facebook</a>
+					</div>
+					<div class="contact-info-row">
+						<img src="<?php echo bloginfo('stylesheet_directory'); ?>/images/ico-twitter-l.png" height="29" width="28" alt="" />
+						<a href="#">Tweet us</a>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>

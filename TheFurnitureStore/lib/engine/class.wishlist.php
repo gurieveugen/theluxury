@@ -118,21 +118,16 @@ class Wishlist{
 			}
 		}
 
-		$url = get_permalink($post_id).'?added=OK&l=wl';
+		$url = get_permalink($post_id).'?';
 
 		if ($_GET['fpg'] == 'cart') {
-			$url = get_cart_url().'/?wltransfer=OK';
-			$cid = $_GET['cid'];
-			if ($cid > 0) {
-				$table 	= is_dbtable_there('shopping_cart');
-				$wpdb->query(sprintf("DELETE FROM %s WHERE cid = '%s'", $table, $cid));
-			}
-			if ($_GET['oreview'] == 'true') {
-				$url = site_url('/?orderNow=3');
-			}
+			$url = get_cart_url().'?';
+		} else if ($_GET['fpg'] == 'checkout') {
+			$url = get_checkout_url().'?orderNow='.$_GET['ostep'].'&';
 		}
 
-		// to avoid unitentional reposts
+		$url .= 'wishlist=success';
+
 		wp_redirect($url);
 		wp_exit();
 	}

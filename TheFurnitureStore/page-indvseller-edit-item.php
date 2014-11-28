@@ -10,7 +10,7 @@ get_header();
 $post_id = $_POST['post_id'];
 $post_data = get_post($post_id);
 
-if (is_user_logged_in() && !in_array('profseller', $current_user->roles) && $post_data && $post_data->post_author == $current_user->ID && ($post_data->post_status == 'iseller_draft' || $post_data->post_status == 'iseller_pending' || $post_data->post_status == 'iseller_approved')) {
+if (is_user_logged_in() && !in_array('profseller', $current_user->roles) && $post_data && $post_data->post_author == $current_user->ID && ($post_data->post_status == 'iseller_draft' || $post_data->post_status == 'iseller_noquote' || $post_data->post_status == 'iseller_pending' || $post_data->post_status == 'iseller_approved')) {
 
 $item_name = $post_data->post_title;
 
@@ -118,20 +118,21 @@ jQuery(function(){ swf_upload_init(1); });
 					if ($catbrands) { ?>
 					<select name="item_brand" class="item-brand-0">
 						<option value="">-- Select Brand --</option>
-						<?php foreach($catbrands as $cid => $tbrands) {
-							foreach($tbrands as $brand_id => $brand_name) {
-								$s = '';
-								$dnstyle = ' style="display:none;"';
-								if ($cid == $item_category) {
-									 $dnstyle = '';
-									if ($brand_id == $item_brand) { $s = ' SELECTED'; }
-								}
-								?>
-								<option value="<?php echo $brand_id; ?>" class="catop cid-<?php echo $cid; ?>"<?php echo $dnstyle.$s; ?>><?php echo $brand_name; ?></option>
-							<?php } ?>
-						<?php } ?>
-						<option value="other" style="margin-top:7px;">Other</option>
 					</select>
+					<div style="display:none;">
+						<?php foreach($catbrands as $cid => $tbrands) { ?>
+							<div class="cat-brands-0-<?php echo $cid; ?>">
+							<?php foreach($tbrands as $brand_id => $brand_name) {
+								$s = '';
+								if ($cid == $item_category && $brand_id == $item_brand) { $s = ' SELECTED'; } ?>
+								<option value="<?php echo $brand_id; ?>"<?php echo $s; ?>><?php echo $brand_name; ?></option>
+							<?php } ?>
+							</div>
+						<?php } ?>
+					</div>
+					<?php if ($item_category) { ?>
+						<script>indivseller_change_cat(0, <?php echo $item_category; ?>);</script>
+					<?php } ?>
 					<?php } ?>
 				</div>
 			</div>
