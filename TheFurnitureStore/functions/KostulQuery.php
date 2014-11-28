@@ -23,6 +23,7 @@ class KostulQuery{
 	{
 		$this->last_query_args = null;
 		$this->last_query      = null;
+		$this->last_where      = null;
 		$this->allow_order_by_col = array(
 			'post_date',
 			'post_modified',
@@ -100,16 +101,16 @@ class KostulQuery{
 			'order_by_col'  => '',
 			'order_by_type' => ''
 		);
-		$args      = array_merge($defaults, $args);
-		$posts     = $this->getProducts($args);
-		$posts_all = $this->getProducts($args, true);
+		$args  = array_merge($defaults, $args);
+		$posts = $this->getProducts($args);
+		$count = $this->getCount();
 		
 		return array(
 			'posts'         => $posts,
 			'visible_terms' => $this->getVisibleTerms($args['cats']),
 			'last_args'     => $this->getLastArgs(),
 			'last_query'    => $this->getLastQuery(),
-			'count'         => count($posts_all),
+			'count'         => $count,
 			'spend_time'    => sprintf('%.4F', microtime(true) - $start)
 		);
 	}
@@ -161,10 +162,13 @@ class KostulQuery{
 			$where = '';
 		}
 
+		$where = 'WHERE `post_status` = "publish" AND `post_type` = "post"'.$where;
+		$this->last_where = $where;
+
 		if(!$unlimited)
 		{
 			$query = sprintf(
-				'SELECT *, IF(inventory > 0, 1, 0) as invsort, IF(new_price > 0, new_price, price) as sort_price FROM %sposts WHERE `post_status` = "publish" AND `post_type` = "post"%s ORDER BY invsort DESC, `%s` %s LIMIT %d,%d', 
+				'SELECT *, IF(inventory > 0, 1, 0) as invsort, IF(new_price > 0, new_price, price) as sort_price FROM %sposts %s ORDER BY invsort DESC, `%s` %s LIMIT %d,%d', 
 				$wpdb->prefix, 
 				$where, 
 				$order_by_col,
@@ -176,7 +180,7 @@ class KostulQuery{
 		else
 		{
 			$query = sprintf(
-				'SELECT *, IF(inventory > 0, 1, 0) as invsort, IF(new_price > 0, new_price, price) as sort_price FROM %sposts WHERE `post_status` = "publish" AND `post_type` = "post"%s ORDER BY invsort DESC, `%s` %s', 
+				'SELECT *, IF(inventory > 0, 1, 0) as invsort, IF(new_price > 0, new_price, price) as sort_price FROM %sposts %s ORDER BY invsort DESC, `%s` %s', 
 				$wpdb->prefix, 
 				$where, 
 				$order_by_col,
@@ -408,22 +412,13 @@ class KostulQuery{
 	 */
 	public function getCount($args)
 	{
+		if(!$this->last_where) return 0;
 		global $wpdb;
 
-		$args  = array_merge($this->getDefaultTaxValues(), (array) $args);
-		$where = $this->initWhere($args);
-		if(is_array($where) AND count($where))
-		{
-			$where = ' AND '.implode(' AND ', $where);
-		}
-		else
-		{
-			$where = '';
-		}
 		$query = sprintf(
-			'SELECT count(*) FROM %sposts WHERE `post_status` = "publish" AND `post_type` = "post"%s', 
+			'SELECT COUNT(*) FROM %sposts %s', 
 			$wpdb->prefix, 
-			$where
+			$this->last_where
 		);
 		return intval($wpdb->get_var($query));
 
