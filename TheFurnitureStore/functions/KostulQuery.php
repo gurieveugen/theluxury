@@ -111,7 +111,7 @@ class KostulQuery{
 			'last_args'     => $this->getLastArgs(),
 			'last_query'    => $this->getLastQuery(),
 			'count'         => $count,
-			'spend_time'    => sprintf('%.4F', microtime(true) - $start)
+			'spend_time'    => sprintf('%.4F', microtime(true) - $start),
 		);
 	}
 
@@ -303,32 +303,6 @@ class KostulQuery{
 		if(in_array($value, $haystack)) return $value;
 		return $haystack[0];
 	}
-
-	/**
-	 * Get visible categories
-	 * @param  array $args --- query arguments
-	 * @return array --- visible categories
-	 */
-	// public function getVisibleTerms($posts)
-	// {
-	// 	$visible    = array();
-	// 	$taxonomies = $this->getAllowedTaxonomies();
-
-	// 	if(is_array($posts) AND count($posts))
-	// 	{
-	// 		foreach ($taxonomies as $tax) 
-	// 		{
-	// 			foreach ($posts as $p) 
-	// 			{
-	// 				if(!in_array($p->{$tax}, $visible))
-	// 				{
-	// 					array_push($visible, $p->{$tax});
-	// 				}		
-	// 			}
-	// 		}	
-	// 	}
-	// 	return $visible;
-	// }
 
 	/**
 	 * Get visible categories
