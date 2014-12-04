@@ -4045,6 +4045,68 @@ array ( 	"name" 	=> __('Shop','wpShop'),
 				array(   	"type" => "close"),
 			array(   	"type" => "close"),
 
+			array ( 	"name" 	=> __('My Items Page','wpShop'),
+						"type" 	=> "title"),
+				array(    	"type" 	=> "open"),
+
+					array(  	"name" 	=> __('Submitted Items Short Desc','wpShop'),
+								"id" 	=> $CONFIG_WPS['shortname']."_sellers_submitted_items_short_desc",
+								"type" 	=> "text",
+								"std" 	=> ""),
+
+					array(  	"name" 	=> __('Submitted Items Description','wpShop'),
+								"desc" 	=> __('Submitted Items question mark description.','wpShop'),
+								"id" 	=> $CONFIG_WPS['shortname']."_sellers_submitted_items_description",
+								"type" 	=> "textarea",
+								"std" 	=> ""),
+
+					array(  	"name" 	=> __('Select your Payout Short Desc','wpShop'),
+								"id" 	=> $CONFIG_WPS['shortname']."_sellers_select_your_payout_short_desc",
+								"type" 	=> "text",
+								"std" 	=> ""),
+
+					array(  	"name" 	=> __('Select your Payout Description','wpShop'),
+								"desc" 	=> __('Select your Payout question mark description.','wpShop'),
+								"id" 	=> $CONFIG_WPS['shortname']."_sellers_select_your_payout_description",
+								"type" 	=> "textarea",
+								"std" 	=> ""),
+
+					array(  	"name" 	=> __('Awaiting Pickup Short Desc','wpShop'),
+								"id" 	=> $CONFIG_WPS['shortname']."_sellers_awaiting_pickup_items_short_desc",
+								"type" 	=> "text",
+								"std" 	=> ""),
+
+					array(  	"name" 	=> __('Awaiting Pickup Description','wpShop'),
+								"desc" 	=> __('Awaiting Pickup Items question mark description.','wpShop'),
+								"id" 	=> $CONFIG_WPS['shortname']."_sellers_awaiting_pickup_items_description",
+								"type" 	=> "textarea",
+								"std" 	=> ""),
+
+					array(  	"name" 	=> __('Your Items on sale Short Desc','wpShop'),
+								"id" 	=> $CONFIG_WPS['shortname']."_sellers_your_items_on_sale_short_desc",
+								"type" 	=> "text",
+								"std" 	=> ""),
+
+					array(  	"name" 	=> __('Your Items on sale Description','wpShop'),
+								"desc" 	=> __('Your Items on sale question mark description.','wpShop'),
+								"id" 	=> $CONFIG_WPS['shortname']."_sellers_your_items_on_sale_description",
+								"type" 	=> "textarea",
+								"std" 	=> ""),
+
+					array(  	"name" 	=> __('Sold Items Short Desc','wpShop'),
+								"id" 	=> $CONFIG_WPS['shortname']."_sellers_sold_items_short_desc",
+								"type" 	=> "text",
+								"std" 	=> ""),
+
+					array(  	"name" 	=> __('Sold Items Description','wpShop'),
+								"desc" 	=> __('Sold Items question mark description.','wpShop'),
+								"id" 	=> $CONFIG_WPS['shortname']."_sellers_sold_items_description",
+								"type" 	=> "textarea",
+								"std" 	=> ""),
+
+				array(   	"type" => "close"),
+			array(   	"type" => "close"),
+
 			array ( 	"name" 	=> __('Checkout Pages','wpShop'),
 						"type" 	=> "title"),
 				array(    	"type" 	=> "open"),

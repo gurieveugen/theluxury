@@ -57,7 +57,7 @@ class Pagination{
 		if($prev > 1)
 		{
 			return sprintf(
-				'<a href="#%1$d" onclick="filter.getPage(event)" class="first" title="&laquo; Prev">&laquo; Prev</a>', 
+				'<a href="#%1$s" data-page="#%1$d" onclick="filter.getPage(event)" class="first" title="&laquo; Prev">&laquo; Prev</a>', 
 				$prev
 			);
 		}
@@ -74,11 +74,20 @@ class Pagination{
 		if($next < $this->getPages())
 		{
 			return sprintf(
-				'<a href="#%1$d" onclick="filter.getPage(event)" class="last" title="Next &raquo;">Next &raquo;</a>', 
+				'<a href="#%1$s" data-page="#%1$d" onclick="filter.getPage(event)" class="last" title="Next &raquo;">Next &raquo;</a>', 
 				$next
 			);
 		}
 		return '';
+	}
+
+	/**
+	 * Get current URL
+	 * @return string --- current URL
+	 */
+	private function getCurrentURL()
+	{
+		return "http" . (($_SERVER['SERVER_PORT']==443) ? "s://" : "://") . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'];
 	}
 
 	/**
@@ -134,7 +143,10 @@ class Pagination{
 	{
 		if($i != $this->getCurrent())
 		{	
-			return sprintf('<a href="#%1$d" onclick="filter.getPage(event)" class="page" title="%1$s">%1$s</a>', $i);
+			return sprintf(
+				'<a href="#%1$s" data-page="#%1$d" onclick="filter.getPage(event)" class="page" title="%1$s">%1$s</a>', 
+				$i
+			);
 		}
 		return sprintf('<span class="current">%d</span>', $i);
 	}

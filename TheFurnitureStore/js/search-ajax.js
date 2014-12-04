@@ -102,7 +102,6 @@ filter.sort = function(key){
 };
 
 filter.filter = function(event, obj){
-	console.log(event);
 	if(jQuery(obj).hasClass('frozen')) return false;
 	if(jQuery(obj).is(':disabled')) return false;
 	last_args.offset = 0;
@@ -122,7 +121,7 @@ filter.updateScrollBars = function(){
 
 filter.getPage = function(event){
 	jQuery("html, body").animate({ scrollTop: 0 }, "slow");
-	var page = parseInt(jQuery(event.target).attr('href').replace('#', ''));
+	var page = parseInt(jQuery(event.target).data('page').replace('#', ''));
 	last_args.offset = page*last_args.count-last_args.count;
 	last_args.cats = filter.getCheckedData();
 	filter.filterAJAX(event, null);
@@ -156,6 +155,7 @@ filter.filterAJAX = function(event, obj){
 			filter.visibleNeeded(response.visible_terms, jQuery(obj).data('block'));
 			filter.setLocation(last_args);
 			filter.imageLoad();
+			filter.paginationInit();
 		},
 		complete: function()
 		{
@@ -342,9 +342,12 @@ filter.restoreSortBy = function(){
 		}
 	};
 
-	var key = sort[last_args.order_by_col][last_args.order_by_type];
-	var title = filter.sortByLabels[key];
-	jQuery('.sort-row .sort-by-current').text(title);
+	if(typeof(sort[last_args.order_by_col][last_args.order_by_type]) != 'undefined')
+	{
+		var key = sort[last_args.order_by_col][last_args.order_by_type];
+		var title = filter.sortByLabels[key];
+		jQuery('.sort-row .sort-by-current').text(title);	
+	}
 };
 
 filter.restoreView = function(){
@@ -395,6 +398,27 @@ filter.inView = function(a) {
 
 	return ot < (st + wh);
 }
+
+filter.paginationInit = function(){
+	var re_hash = /#.*/,
+		url = location.href.replace(re_hash, ''),
+		page, link, args;
+
+	if(location.hash == '')
+	{
+		last_args.wnew = jQuery('.whats-new-pg').html();
+		last_args.s = jQuery('.search-form #s').val();
+		last_args.cats = filter.getCheckedData();
+	}
+	args = last_args;
+
+	jQuery('.wp-pagenavi a').each(function(){
+		page = jQuery(this).data('page').replace('#', '');
+		args.offset = (parseInt(page)-1) * parseInt(last_args.count);
+		link = url + '#!' + filter.param(args);
+		jQuery(this).attr('href', link);
+	});	
+};
 
 filter.sortByLabels = {
 	newest: 'Newest',
@@ -496,7 +520,7 @@ jQuery(document).ready(function(){
 	}
 	filter.loadFromHash();
 	filter.updateItemsEffects();
-
+	filter.paginationInit();
 	// =========================================================
 	// Drop down controls
 	// =========================================================

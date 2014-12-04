@@ -63,7 +63,7 @@ if (strlen($scat)) {
 			</div>
 			<div class="a-content">
 				<div class="seller-products-list">
-					<p class="myitems-sec-desc">Items appear here once submitted by you.</p>
+					<p class="myitems-sec-desc"><?php echo $OPTION['wps_sellers_submitted_items_short_desc']; ?></p>
 					<?php if (count($seller_posts['iseller_draft']) > 0) { ?>
 						<?php foreach($seller_posts['iseller_draft'] as $spost) { $spost_picture = nws_get_item_thumb($spost->ID); ?>
 						<div class="product-item">
@@ -94,7 +94,7 @@ if (strlen($scat)) {
 			</div>
 			<div class="a-content">
 				<div class="seller-products-list">
-					<p class="myitems-sec-desc">Items appear here once your quotation is completed.</p>
+					<p class="myitems-sec-desc"><?php echo $OPTION['wps_sellers_select_your_payout_short_desc']; ?></p>
 					<?php if (count($seller_posts['iseller_pending']) > 0) { ?>
 						<?php foreach($seller_posts['iseller_pending'] as $spost) {
 						$spost_picture = nws_get_item_thumb($spost->ID);
@@ -178,7 +178,7 @@ if (strlen($scat)) {
 			</div>
 			<div class="a-content">
 				<div class="seller-products-list">
-					<p class="myitems-sec-desc">Items appear here before going on sale.</p>
+					<p class="myitems-sec-desc"><?php echo $OPTION['wps_sellers_awaiting_pickup_items_short_desc']; ?></p>
 					<?php if (count($seller_posts['approved']) > 0) { ?>
 						<?php foreach($seller_posts['approved'] as $spost) {
 						$spost_picture = nws_get_item_thumb($spost->ID);
@@ -220,7 +220,7 @@ if (strlen($scat)) {
 			</div>
 			<div class="a-content">
 				<div class="seller-products-list">
-					<p class="myitems-sec-desc">Items appear here once they go on sale.</p>
+					<p class="myitems-sec-desc"><?php echo $OPTION['wps_sellers_your_items_on_sale_short_desc']; ?></p>
 					<?php if (count($seller_posts['publish']) > 0) { ?>
 						<?php foreach($seller_posts['publish'] as $spost) {
 						$spost_picture = nws_get_item_thumb($spost->ID);
@@ -286,7 +286,7 @@ if (strlen($scat)) {
 			</div>
 			<div class="a-content">
 				<div class="seller-products-list">
-					<p class="myitems-sec-desc">Items appear here once sold.</p>
+					<p class="myitems-sec-desc"><?php echo $OPTION['wps_sellers_sold_items_short_desc']; ?></p>
 					<?php if (count($seller_posts['sold']) > 0) { ?>
 						<?php foreach($seller_posts['sold'] as $spost) {
 						$spost_picture = nws_get_item_thumb($spost->ID);

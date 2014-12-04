@@ -312,37 +312,32 @@
 	</div>
 <?php } ?>
 
-<?php if (is_page($OPTION['wps_indvseller_my_items_page'])) { // INDIVIDUAL SELLERS POPUPS
-	$submitted_items_description = apply_filters('the_content', stripcslashes($OPTION['wps_sellers_submitted_items_description']));
-	$select_your_payout_description = apply_filters('the_content', stripcslashes($OPTION['wps_sellers_select_your_payout_description']));
-	$awaiting_pickup_items_description = apply_filters('the_content', stripcslashes($OPTION['wps_sellers_awaiting_pickup_items_description']));
-	$your_items_on_sale_description = apply_filters('the_content', stripcslashes($OPTION['wps_sellers_your_items_on_sale_description']));
-	$sold_items_description = apply_filters('the_content', stripcslashes($OPTION['wps_sellers_sold_items_description'])); ?>
+<?php if (is_page($OPTION['wps_indvseller_my_items_page'])) { // INDIVIDUAL SELLERS POPUPS ?>
 	<div class="popup-box select-payout-popup" id="help-submitted-items" style="display:none;">
 		<div class="block">
 			<h3>Submitted Items</h3>
-			<?php echo $submitted_items_description; ?>
+			<?php echo apply_filters('the_content', stripcslashes($OPTION['wps_sellers_submitted_items_description'])); ?>
 		</div>
 		<a href="#close" class="close">close</a>
 	</div>
 	<div class="popup-box select-payout-popup" id="help-awaiting-pickup" style="display:none;">
 		<div class="block">
 			<h3>Awaiting Pickup</h3>
-			<?php echo $awaiting_pickup_items_description; ?>
+			<?php echo apply_filters('the_content', stripcslashes($OPTION['wps_sellers_awaiting_pickup_items_description'])); ?>
 		</div>
 		<a href="#close" class="close">close</a>
 	</div>
 	<div class="popup-box select-payout-popup" id="help-your-items-on-sale" style="display:none;">
 		<div class="block">
 			<h3>Your Items on sale</h3>
-			<?php echo $your_items_on_sale_description; ?>
+			<?php echo apply_filters('the_content', stripcslashes($OPTION['wps_sellers_your_items_on_sale_description'])); ?>
 		</div>
 		<a href="#close" class="close">close</a>
 	</div>
 	<div class="popup-box select-payout-popup" id="help-sold-items" style="display:none;">
 		<div class="block">
 			<h3>Sold Items</h3>
-			<?php echo $sold_items_description; ?>
+			<?php echo apply_filters('the_content', stripcslashes($OPTION['wps_sellers_sold_items_description'])); ?>
 		</div>
 		<a href="#close" class="close">close</a>
 	</div>

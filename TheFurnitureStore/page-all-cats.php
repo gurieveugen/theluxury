@@ -1,10 +1,35 @@
-<?php
-/*
-Template Name: All Cats
-*/
-
-$show_widget = true;
+<?php 
+/**
+ * Template name: All Cats
+ */
+$all_cats 		= array(
+	'all-handbags' => array(
+		'cats' => array('tax_cat_2' => '1,421')
+	),	
+	'all-clothes'  => array(
+		'cats' => array('tax_cat_2' => '828,880'),
+	),
+	'all-jewelry'  => array(
+		'cats' => array('tax_cat_2' => '605,559'),
+	),
+	'all-shoes'    => array(
+		'cats' => array('tax_cat_2' => '228,248'),
+	),
+	'all-watches'  => array(
+		'cats' => array('tax_cat_2' => '262,419'),
+	),
+	'all-accessories' => array(
+		'cats' => array('tax_cat_2' => '411,420'),
+	)
+);
+if(isset($all_cats[$post->post_name]))
+{
+	$_GET = array_merge($_GET, $all_cats[$post->post_name]);
+}
 get_header();
+$DEFAULT = show_default_view();
+
+ if($DEFAULT){
 	$WPS_sidebar		= $OPTION['wps_sidebar_option'];
 	switch($WPS_sidebar){
 		case 'alignRight':
@@ -15,75 +40,43 @@ get_header();
 		break;
 	}
 
-	$WPS_tagCol			= $OPTION['wps_tagCol_option'];
-	$WPS_sidebar		= $OPTION['wps_sidebar_option'];
-
-	switch($WPS_sidebar){
-		case 'alignRight':
-			$the_float_class 	= 'alignleft';
-		break;
-		case 'alignLeft':
-			$the_float_class 	= 'alignright';
-		break;
-	}
-
-	if($OPTION['wps_teaser_enable_option']) {$the_eqcol_class = 'eqcol'; }
-	//which column option?
-	switch($WPS_tagCol){
-		case 'tagCol1':
-			$the_div_class 	= 'theTags clearfix tagCol1 '.$the_float_class.' '.$the_eqcol_class;
-			$counter = 1;      
-		break;
-		
-		case 'tagCol2':
-			$the_div_class 	= 'theTags clearfix tagCol2 '.$the_float_class.' '.$the_eqcol_class;
-			$counter = 2;      
-		break;
-		
-		case 'tagCol3':
-			$the_div_class 	= 'theTags clearfix tagCol3 '.$the_float_class.' '.$the_eqcol_class;
-			$counter = 3;      
-		break;
-			
-		case 'tagCol4':
-			$the_div_class 	= 'theTags clearfix tagCol4 '.$the_float_class.' '.$the_eqcol_class;
-			$counter = 4;      
-		break;
-	}
-	
+	$the_div_class 	= 'sidebar tag_sidebar category_sidebar noprint alignleft ';
+	if (is_sidebar_active('category_widget_area')) 
+	{
+		printf('<div class="%s">', $the_div_class );
+		dynamic_sidebar('category_widget_area');	
+		printf('</div><!-- category_sidebar -->');
+	} 
 	?>
-	
-	<div id="main_col" class="<?php echo $the_float_class;?>">
-	
-		<?php product_sort_select(); ?>
-		<div class="<?php echo $the_div_class;?>" id="products-container">
+	<div class="alignright" id="main_col">
+		<?php
+		product_sort_select();
 		
-			<?php //set the counter according to the column selection from the theme options
-			$a = 1;
+		global $OPTION;
+		$kostul_query  = new KostulQuery();
+		$request       = $kostul_query->makeRequestFromArgs($_GET);
+		$columns       = intval(str_replace('tagCol', '', $OPTION['wps_tagCol_option']));
+		$html          = '';
+		$pagination    = new Pagination($request['count'], $request['last_args']['count'], $request['last_args']['offset']);
+		
 
-			// allow user to order their Products as the want to
-			$orderBy = $OPTION['wps_prods_orderbyOption'];
-			$order 	 = $OPTION['wps_prods_orderOption'];
-			$paged   = (get_query_var('paged')) ? get_query_var('paged') : 1;
-			
-			$cats = ($custom_cats != '') ? $_SESSION['custom_cats'] : 'womens-handbags';
-
-			$args = array(
-				'post_type'     => 'post',
-				'orderby'       => $orderBy,
-				'order'         => $order,				
-				'paged'         => $paged,
-				'category_name' => $cats
-			);
-			$_SESSION['show_latest_products'] = TRUE;
-			$args                             = product_sort_process($args);	
-			
-			get_template_part('loop', 'products');
-			?>
-			
-		</div><!-- theTags -->
-	</div><!-- main_col -->		
-<?php	
-	include (TEMPLATEPATH . '/widget_ready_areas.php');		
+		if(is_array($request['posts']) AND count($request['posts']))
+		{
+			foreach ($request['posts'] as $p) 
+			{
+				$post = new KostulHTML($p, $columns, $OPTION);
+				$html.= $post->getHTML();
+			}
+		}
+		?>
+		<div id="products-container" class="theProds clearfix  alignright eqcol">
+			<script>
+				var last_args = <?php echo json_encode($kostul_query->getLastArgs()); ?>;
+				var visible_terms = <?php echo json_encode($request['visible_terms']); ?>;
+			</script>
+			<?php echo $html.$pagination->getHTML(); ?>
+		</div>
+	</div>
+	<?php
+} 
 get_footer(); ?>
-		
