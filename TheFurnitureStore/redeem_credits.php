@@ -13,8 +13,6 @@ global $current_user;
 //print_r($current_user);  
 get_currentuserinfo(); // grabs the user info and puts into vars
 $user_ID = $current_user->ID;
-include (TEMPLATEPATH . '/lib/pages/index_body.php'); 
-include (TEMPLATEPATH . '/lib/engine/backend_actions.php'); 
 // this is a "fake cronjob" = whenever default index page is called - the age of dlinks is checked - and removed if necessary
 $DIGITALGOODS = load_what_is_needed('digitalgoods');	//change.9.10
 $DIGITALGOODS->delete_dlink();							//change.9.10

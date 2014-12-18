@@ -136,7 +136,7 @@ class KostulHTML{
 			<div class="teaser">
 				<div class="prod-title-box">
 					<h5 class="prod-title">
-						<a href="<?php echo $this->permalink; ?>" title="<?php echo sprintf( __('Permalink to %s', 'wpShop'), $this->title_attribute ) ?>" rel="bookmark"><?php echo $this->post->post_title; ?></a>
+						<a href="<?php echo $this->permalink; ?>" title="<?php echo $this->title_attribute; ?>" rel="bookmark"><?php echo $this->getListTitle($this->post->post_title); ?></a>
 					</h5>
 				</div><!-- prod-title-box end -->
 				<?php
@@ -189,7 +189,7 @@ class KostulHTML{
 		if(!strlen($src)) return '';
 		ob_start();
 		?>
-			<a class="<?php echo $css; ?>" href="<?php echo $this->permalink; ?>" rel="bookmark" title="<?php echo sprintf( __('Permalink to %s', 'wpShop'), $this->title_attribute ) ?>">
+			<a class="<?php echo $css; ?>" href="<?php echo $this->permalink; ?>" rel="bookmark" title="<?php echo sprintf( __('More details about %s', 'wpShop'), $this->title_attribute ) ?>">
 				<img src="<?php bloginfo('template_url'); ?>/images/image-loader-224x224.gif" class="image-reload" data-original="<?php echo $src ?>" alt="<?php echo $this->title_attribute; ?>"/>
 			</a>
 		<?php
@@ -226,5 +226,18 @@ class KostulHTML{
 	public function isSoldOut()
 	{
 		return !(int)$this->post->invsort;
+	}
+
+	public function getListTitle($post_title)
+	{
+		$limit_chars = 65;
+		if (strlen($post_title) > $limit_chars) {
+			if ($espacio = strpos($post_title, " ", $limit_chars - 5)) {
+				$post_title = substr($post_title, 0, $espacio).'...';
+			} else {
+				$post_title = substr($post_title, 0, $limit_chars).'...';
+			}
+		}
+		return $post_title;
 	}
 }

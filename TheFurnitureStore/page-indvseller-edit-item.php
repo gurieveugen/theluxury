@@ -8,7 +8,7 @@ global $OPTION, $current_user, $sellers_error;
 get_header();
 
 $post_id = $_POST['post_id'];
-$post_data = get_post($post_id);
+$post_data = $wpdb->get_row(sprintf("SELECT * FROM %sposts WHERE ID = %s", $wpdb->prefix, $post_id));
 
 if (is_user_logged_in() && !in_array('profseller', $current_user->roles) && $post_data && $post_data->post_author == $current_user->ID && ($post_data->post_status == 'iseller_draft' || $post_data->post_status == 'iseller_noquote' || $post_data->post_status == 'iseller_pending' || $post_data->post_status == 'iseller_approved')) {
 

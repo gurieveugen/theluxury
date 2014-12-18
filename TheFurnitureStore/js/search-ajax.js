@@ -264,6 +264,11 @@ filter.getCheckedData = function(){
 				tax_cat['tag'].push(parseInt(last_args.cats.tag));
 			}
 		}
+
+		if(typeof(last_args.cats.tax_cat_1) != 'undefined')
+		{
+			tax_cat['tax_cat_1'].push(last_args.cats.tax_cat_1);
+		}
 	}
 	// ==============================================================
 	// Categories

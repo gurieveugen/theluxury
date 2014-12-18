@@ -1,12 +1,4 @@
 <?php
-/*if(isset($_GET['showCart']) || (isset($_GET['non_cache']) && $_GET['non_cache'] == 'lang')){
-	setcookie("wordpress_logged_in_eec_no_cache", "guest_no_cache", time()+10800, "/");
-	if($_GET['non_cache'] == 'lang'){  
-		$redirect_url .= get_bloginfo('template_url') . "/select-currency.php?return=".$_GET['return']."&code=".$_GET['code'];
-		header("Location: " . $redirect_url);
-	}
-}*/
-
 @Header('Cache-Control: no-cache');
 @Header('Pragma: no-cache');
 
@@ -81,10 +73,11 @@ switch($WPS_sidebar){
 		$the_float_class 	= 'alignright';
 	break;
 }
-if ($OPTION['wps_customerAreaPg']!='Select a Page') {
-$customerArea	= get_page_by_title(get_option('wps_customerAreaPg'));
-}
 $lostPass	= get_page_by_title($OPTION['wps_passLostPg']);
+
+global $currency_options, $currency_locations;
+$pageurl = $_SERVER['REQUEST_URI'];
+if ($pageurl == '/') { $pageurl = site_url(); }
 ?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" <?php language_attributes(); ?>>
@@ -162,6 +155,7 @@ $lostPass	= get_page_by_title($OPTION['wps_passLostPg']);
 		var siteurl = "<?php bloginfo('url'); ?>";
 		var templurl = "<?php echo TEMPLURL; ?>";
 		var isloggedin = <?php if (is_user_logged_in()) { echo 'true'; } else { echo 'false'; } ?>;
+		var is_mobile = <?php if (wp_is_mobile()) { echo 'true'; } else { echo 'false'; } ?>;
 		var currency_reload = <?php echo js_get_currency_reload(); ?>;
 		var scat_type = "";
 		var bags_cats = ["<?php echo implode('","', $split_categories['bags']); ?>"];
@@ -174,14 +168,16 @@ $lostPass	= get_page_by_title($OPTION['wps_passLostPg']);
 		var mcevilpopupclick = <?php echo (int)$_COOKIE['MCEvilPopupClick']; ?>;
 		var utmz = '<?php if (strlen($_COOKIE['__utmz'])) { echo substr($_COOKIE['__utmz'], strrpos($_COOKIE['__utmz'], '.') + 1); } ?>';
 		</script>
-		<script type="text/javascript" src="<?php bloginfo('template_url') ?>/js/jquery-ui.min.js"></script>
+		<script src="<?php bloginfo('template_url'); ?>/js/jquery-ui.min.js"></script>
 		<script src="<?php bloginfo('stylesheet_directory'); ?>/js/jquery.colorbox-min.js"></script>
-		<script type="text/javascript" src="<?php bloginfo('template_url'); ?>/js/drop-down.js"></script>
-		<script type="text/javascript" src="<?php bloginfo('stylesheet_directory'); ?>/js/doubletaptogo.js"></script>
+		<script src="<?php bloginfo('stylesheet_directory'); ?>/js/doubletaptogo.js"></script>
 		<script src="<?php bloginfo('stylesheet_directory'); ?>/js/jquery.mCustomScrollbar.concat.min.js"></script>
 		<script src="<?php bloginfo('stylesheet_directory'); ?>/js/custom.js?ver=<?php echo time(); ?>"></script>
-		<script src="<?php bloginfo('template_url') ?>/js/jquery.jqtransform.js"></script>
+		<script src="<?php bloginfo('template_url'); ?>/js/drop-down.js"></script>
+		<script src="<?php bloginfo('template_url'); ?>/js/jquery.jqtransform.js"></script>
+		<script src="<?php bloginfo('template_url'); ?>/js/jquery.jcarousel.min.js"></script>
 		<script src="<?php bloginfo('template_url'); ?>/js/main.theme.js?ver=<?php echo time(); ?>"></script>
+		<script src="<?php bloginfo('template_url'); ?>/js/checkout.js?ver=<?php echo time(); ?>"></script>		
 		<script src="<?php bloginfo('template_url'); ?>/js/sellers-process.js?ver=<?php echo time(); ?>"></script>
 		<script src="<?php bloginfo('template_url'); ?>/js/alerts.js?ver=<?php echo time(); ?>"></script>		
 		<?php if (wp_is_mobile()) { ?>
@@ -218,23 +214,7 @@ $lostPass	= get_page_by_title($OPTION['wps_passLostPg']);
 		<?php emarsys_script(); ?>
 		<?php google_analytics(); ?>
 	</head>	
-	<?php  
-	// am I viewing the shopping cart? || going through checkout? || on confirmation page? || reading the terms and conditions? etc...
-	if(is_cart_page()) { ?>
-		<body class="shopping_cart">
-	<?php } elseif (is_checkout_page()){ ?>
-		<body class="shopping_cart order_checkout">
-	<?php } elseif(($_GET['confirm'] == '1') || ($_GET['confirm'] == '2') || ($_GET['confirm'] == '3')) { ?>
-		<body class="shopping_cart order_confirmation">
-	<?php } elseif($_GET['showTerms'] == '1') { ?>
-		<body class="shopping_cart terms_and_conditions">
-	<?php } elseif($_GET['showMap'] == '1') { ?>
-		<body class="shopping_cart map">
-	<?php } elseif($_GET['checkOrderStatus'] == '1'){ ?>
-		<body class="shopping_cart order_status">
-	<?php } else { ?>
-		<body <?php body_class(); if (is_single()) { echo " ".$script; } ?>>
-	<?php } ?>
+<body <?php body_class(); if (is_single()) { echo " ".$script; } ?>>
 	<div id="fb-root"></div>
 	<?php
 	if(strripos(get_option('siteurl'),"localhost",0)) $apikey = "276284119066763"; 
@@ -252,63 +232,135 @@ $lostPass	= get_page_by_title($OPTION['wps_passLostPg']);
 		</script>
 	<?php } ?>
 	<?php if (!is_checkout_page()) { ?>
-	<div id="wrapper">
-		<div id="header" class="container clearfix noprint">
-			<?php if (is_front_page()) { ?>
-				<h1 id="branding"><a href="<?php bloginfo('url');?>/" title="<?php bloginfo( 'name' ); ?>" rel="home"><?php bloginfo('name'); bloginfo( 'description' ); ?></a></h1>
-			<?php } else { ?>
-				<h2 id="branding"><a href="<?php bloginfo('url');?>/" title="<?php bloginfo( 'name' ); ?>" rel="home"><?php bloginfo('name'); bloginfo( 'description' ); ?></a></h2>
-			<?php } ?>
-			<div class="header-center">
-				<?php if (is_sidebar_active('header_widget_area')) : dynamic_sidebar('header_widget_area'); endif; ?>
-				<?php if($OPTION['wps_search_input']) { ?>
-				<form action="<?php bloginfo('url'); ?>/" class="search-form">
-					<input type="text" name="s" id="s" value="<?php the_search_query(); ?>" placeholder="Search" />
-					<input type="submit" value="Search" />
-				</form>
-				<?php } ?>
+		<div id="wrapper">
+			<div id="header" class="clearfix noprint header-main bdbox">
+				<div class="header-topbar">
+					<div class="center-wrap cf">
+						<div class="currency-block left">
+							<strong class="label">Location: </strong> 
+							<span class="country">
+								<font class="curr-location curr-loc-usd">International</font>
+								<?php foreach($currency_options as $cc) { ?>
+									<font class="curr-location curr-loc-<?php echo $cc; ?>" style="display:none;"><?php echo $currency_locations[$cc]; ?></font>
+								<?php } ?>
+							 |</span>
+							<div class="switch switcher-currency">
+								<div id="currencySelect" class="switch-wrapper">
+									<span class="currency-container">
+										<strong class="current currency-USD">
+											<span class="opacity-fader">USD</span>
+										</strong>
+										<span class="switcher opacity-fader"></span>
+										<span class="opacity-fader">
+											<ul class="currency-list faded" id="popId-currencySelect" style="display: none;">
+												<li class="current currency-USD">
+													<a href="#USD" class="currency-val" rel="USD" name="US Dollar"><span class="flag"></span>US Dollar</a>
+												</li>
+												<?php
+												$sccodes = shop_get_currency_codes();
+												foreach($sccodes as $cc => $cn) { $cc = strtoupper($cc); ?>
+												<li class="currency-<?php echo $cc; ?>">
+													<a href="#<?php echo $cc; ?>" class="currency-val" rel="<?php echo $cc; ?>" name="<?php echo $cn; ?>"><span class="flag"></span><?php echo $cn; ?></a>
+												</li>
+												<?php } ?>
+											</ul>
+										</span>
+									</span>
+								</div>
+							</div>
+						</div>
+						<div class="register-block right">
+							<div class="holder">
+								<?php if (is_user_logged_in()) { global $current_user;
+									$my_items_page = get_permalink($OPTION['wps_indvseller_my_items_page']);
+									if (in_array('profseller', $current_user->roles)) {
+										$my_items_page = get_permalink($OPTION['wps_profreseller_my_items_page']);
+									} ?>
+									<ul class="logged-menu">
+										<li class="my-account-link"><a href="#my-account" id="my-account">My Account</a>
+											<ul class="head_drop">
+												<li><a href="<?php echo get_permalink($OPTION['wps_account_my_profile_page']); ?>" title="<?php _e('Edit your profile','wpShop'); ?>"><?php _e('My Profile','wpShop'); ?></a></li>
+												<li><a href="<?php echo $my_items_page; ?>"><?php _e('My Items','wpShop'); ?></a></li>
+												<li><a href="<?php echo get_permalink($OPTION['wps_account_my_purchases_page']); ?>"><?php _e('My Purchases','wpShop'); ?></a></li>
+												<li><a href="<?php echo get_permalink($OPTION['wps_account_my_wishlist_page']); ?>"><?php _e('My Wishlist','wpShop'); ?></a></li>
+												<?php if ($OPTION['wps_alerts_enable']) { ?><li><a href="<?php echo get_permalink($OPTION['wps_account_my_alerts_page']); ?>"><?php _e('My Notifications','wpShop'); ?></a></li><?php } ?>
+												<li><a href="<?php echo site_url(); ?>/?logout=true" title="<?php _e('Exit your account','wpShop'); ?>"><?php _e('Logout','wpShop'); ?></a></li>
+											</ul>
+										</li>
+									</ul>
+								<?php } else { ?>
+									<div class="log-buttons">
+										<a href="<?php echo $pageurl; ?>" class="login-lnk" title="Login to your account">Log In</a>&nbsp;&nbsp;|&nbsp;&nbsp;<a href="<?php echo $pageurl; ?>" class="register-lnk" title="Create an account">Register</a>
+									</div>
+								<?php } ?>
+								<div class="cart" id="header-bag-info">
+									<a href="<?php echo get_cart_url(); ?>" class="btn-cart">Cart</a>
+									<div class="header-cart-items-holder">
+										<div class="center-wrap">
+											<div class="header-cart-items">
+												<div class="hci-block">
+													<a href="#close" class="hci-close">close</a>
+													<div class="hci-title">YOUR SHOPPING CART</div>
+													<ul class="hci-list"></ul>
+													<div class="hci-button"><input type="button" value="CHECKOUT" class="btn-orange" onclick="window.location.href='<?php echo get_checkout_url(); ?>';"></div>
+												</div>
+											</div>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+						<nav>
+							<?php dynamic_sidebar('header_top_menu_area'); ?>
+						</nav>
+					</div>
+				</div>
+				<div class="header-container center-wrap cf">
+					<div class="header-block header-block_left">
+						<?php dynamic_sidebar('header_widget_area'); ?>
+					</div>
+					<div class="header-block header-block_center">
+						<h1 id="logo"><a href="<?php bloginfo('url');?>/" title="<?php bloginfo( 'name' ); ?>" rel="home"><?php bloginfo('name'); bloginfo( 'description' ); ?></a></h1>
+					</div>
+					<div class="header-block header-block_right">
+						<?php if($OPTION['wps_search_input']) { ?>
+							<form action="<?php bloginfo('url'); ?>/" class="search-form">
+								<input type="text" name="s" id="s" value="<?php the_search_query(); ?>" placeholder="Search" />
+								<input type="submit" value="Search" />
+							</form>
+						<?php } ?>
+					</div>
+				</div>
+				<div class="h-banner"><?php dynamic_sidebar('banner-area'); ?></div>
 			</div>
-			<?php include (STYLESHEETPATH . '/includes/headers/header_contents.php');?>
-		</div><!-- header-->
-		<div class="nav-holder">
-			<?php 
-			wp_nav_menu(array(
-				'theme_location'  => 'primary_nav',
-				'container'       => 'div',
-				'container_class' => 'frame',
-				'menu_id'         => 'nav',
-				'walker'          => new Custom_Walker_Nav_Menu
-			));
-			?>
-		</div>
-		<div id="pg_wrap">
-			<div class="center-content">
-				<div class="header-banner"><?php dynamic_sidebar('banner-area'); ?></div>
-				<?php switch($OPTION['wps_footer_option']) {
-					case 'small_footer': ?>
-						<div id="floatswrap" class="smallftfl clearfix">
-					<?php
-					break;
-					case 'large_footer': ?>
-						<div id="floatswrap" class="bigftfl clearfix">
-					<?php
-					break;
-				} ?>
-				<?php include( STYLESHEETPATH . "/includes/headers/page-titles.php" ); ?>
+			<!-- header -->
+			<div class="nav-holder center-wrap bdbox">
+				<?php 
+				wp_nav_menu(array(
+					'theme_location'  => 'primary_nav',
+					'container'       => 'div',
+					'container_class' => 'frame',
+					'menu_id'         => 'nav',
+					'walker'          => new Custom_Walker_Nav_Menu
+				)); ?>
+			</div>
+			<div id="pg_wrap">
+				<div class="center-wrap">
+					<?php include( STYLESHEETPATH . "/includes/headers/page-titles.php" ); ?>
 	<?php } else { // is checkout ?>
-	<div id="wrapper" class="payment-wrap">
-		<div id="header">
-			<div class="container">
-				<h1 id="branding"><a href="<?php bloginfo('url');?>/" title="<?php bloginfo( 'name' ); ?>" rel="home"<?php bloginfo('name'); bloginfo( 'description' ); ?></a></h1>
-				<ul class="payment-info-row">
-					<li><a href="#lightbox-guarantee" class="colorbox-popup">100% Authenticity Guarantee</a></li>
-					<li><a href="#lightbox-3-day" class="link-returns colorbox-popup">Days Returns</a></li>
-					<li>NEED HELP?</li>
-					<li class="ico-phone">Call 800 LUX (+971 800 589)</li>
-					<li><a href="#lightbox-contact" class="link-email colorbox-popup">Email Us</a></li>
-				</ul>
+		<div id="wrapper" class="payment-wrap">
+			<div id="header">
+				<div class="container">
+					<h1 id="branding"><a href="<?php bloginfo('url');?>/" title="<?php bloginfo( 'name' ); ?>" rel="home"<?php bloginfo('name'); bloginfo( 'description' ); ?></a></h1>
+					<ul class="payment-info-row">
+						<li><a href="#lightbox-guarantee" class="colorbox-popup">100% Authenticity Guarantee</a></li>
+						<li><a href="#lightbox-3-day" class="link-returns colorbox-popup">Days Returns</a></li>
+						<li>NEED HELP?</li>
+						<li class="ico-phone">Call 800 LUX (+971 800 589)</li>
+						<li><a href="#lightbox-contact" class="link-email colorbox-popup">Email Us</a></li>
+					</ul>
+				</div>
 			</div>
-		</div>
-		<div id="pg_wrap">
-			<div class="container payment-container cf">
+			<div id="pg_wrap">
+				<div class="container payment-container cf">
 	<?php } // is checkout ?>

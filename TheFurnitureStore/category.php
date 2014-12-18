@@ -1,14 +1,10 @@
 <?php 
-get_header();
 $qo = get_queried_object();
 
-if($qo->taxonomy == 'category')
-{
+if($qo->taxonomy == 'category') {
 	$cat_parents = KostulQuery::countParents($qo)+1; 
 	$tax = 'tax_cat_'.$cat_parents;
-}
-else
-{
+} else {
 	$taxonomies = array(
 		'colour'          => 'tax_colours',
 		'size'            => 'tax_sizes',
@@ -23,28 +19,19 @@ else
 	$tax = $taxonomies[$qo->taxonomy];
 }
 
+$WPS_sidebar		= $OPTION['wps_sidebar_option'];
+switch($WPS_sidebar){
+	case 'alignRight':
+		$the_float_class 	= 'alignleft';
+	break;
+	case 'alignLeft':
+		$the_float_class 	= 'alignright';
+	break;
+}
 
-$DEFAULT = show_default_view();
+$the_div_class 	= 'sidebar tag_sidebar category_sidebar noprint alignleft ';
 
- if($DEFAULT){
-	$WPS_sidebar		= $OPTION['wps_sidebar_option'];
-	switch($WPS_sidebar){
-		case 'alignRight':
-			$the_float_class 	= 'alignleft';
-		break;
-		case 'alignLeft':
-			$the_float_class 	= 'alignright';
-		break;
-	}
-
-	$the_div_class 	= 'sidebar tag_sidebar category_sidebar noprint alignleft ';
-	if (is_sidebar_active('category_widget_area')) 
-	{
-		printf('<div class="%s" data-ttttt="">', $the_div_class );
-		dynamic_sidebar('category_widget_area');	
-		printf('</div><!-- category_sidebar -->');
-	} 
-	?>
+get_header(); ?>
 	<div class="alignright" id="main_col">
 		<?php
 		product_sort_select();
@@ -74,6 +61,7 @@ $DEFAULT = show_default_view();
 			<?php echo $html.$pagination->getHTML(); ?>
 		</div>
 	</div>
-	<?php
-} 
-get_footer(); ?>
+	<div class="sidebar page_sidebar noprint alignleft" data-ttttt="">
+		<?php dynamic_sidebar('category_widget_area'); ?>
+	</div>
+<?php get_footer(); ?>

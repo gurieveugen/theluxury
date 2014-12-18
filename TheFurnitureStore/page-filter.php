@@ -2,28 +2,25 @@
 /**
  * Template name: Filter
  */
-get_header();
-$DEFAULT = show_default_view();
 
- if($DEFAULT){
-	$WPS_sidebar		= $OPTION['wps_sidebar_option'];
-	switch($WPS_sidebar){
-		case 'alignRight':
-			$the_float_class 	= 'alignleft';
-		break;
-		case 'alignLeft':
-			$the_float_class 	= 'alignright';
-		break;
-	}
+$WPS_sidebar		= $OPTION['wps_sidebar_option'];
+switch($WPS_sidebar){
+	case 'alignRight':
+		$the_float_class 	= 'alignleft';
+	break;
+	case 'alignLeft':
+		$the_float_class 	= 'alignright';
+	break;
+}
 
-	$the_div_class 	= 'sidebar tag_sidebar category_sidebar noprint alignleft ';
-	if (is_sidebar_active('category_widget_area')) 
-	{
-		printf('<div class="%s">', $the_div_class );
-		dynamic_sidebar('category_widget_area');	
-		printf('</div><!-- category_sidebar -->');
-	} 
-	?>
+$the_div_class 	= 'sidebar tag_sidebar category_sidebar noprint alignleft ';
+if (is_sidebar_active('category_widget_area')) 
+{
+	printf('<div class="%s">', $the_div_class );
+	dynamic_sidebar('category_widget_area');	
+	printf('</div><!-- category_sidebar -->');
+} 
+get_header(); ?>
 	<div class="alignright" id="main_col">
 		<?php
 		product_sort_select();
@@ -53,6 +50,4 @@ $DEFAULT = show_default_view();
 			<?php echo $html.$pagination->getHTML(); ?>
 		</div>
 	</div>
-	<?php
-} 
-get_footer(); ?>
+<?php get_footer(); ?>

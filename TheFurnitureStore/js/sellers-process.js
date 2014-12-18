@@ -675,7 +675,7 @@ jQuery(document).ready(function(){
 		jQuery(this).addClass('active');
 		return false;
 	});
-	jQuery('.window-mask, .popup-box .close').click(function(){
+	jQuery('.popup-box .close').click(function(){
 		jQuery('.window-mask').fadeOut();
 		jQuery('.popup-box').fadeOut();
 		return false;
@@ -710,6 +710,7 @@ function sell_us_remove_item(n) {
 }
 
 function seller_select_category_action(ld) {
+	seller_category_change();
 	seller_change_dimensions_meterial();
 	seller_check_colour_select();
 	seller_check_metal_select();
@@ -779,6 +780,14 @@ function seller_get_selected_cat_type(c) {
 		}
 	}
 	return '';
+}
+
+function seller_category_change() {
+	var cat = jQuery('#item-category select').val();
+	jQuery('#item-style select option.sc').hide();
+	if (cat) {
+		jQuery('#item-style select option.sc-'+cat).show();
+	}
 }
 
 function seller_subcategory_change() {

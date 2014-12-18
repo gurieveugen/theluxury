@@ -101,8 +101,8 @@
 				<form class="popup-login-login">
 					<input type="hidden" name="callpage" class="call-page">
 					<div class="form-box">
-						<input type="email" name="uemail" class="user-email" value="<?php echo $_COOKIE['theluxury_log']; ?>" autocomplete="off" placeholder="Email">
-						<input type="password" name="upwd" class="user-pwd" placeholder="Password">
+						<input type="email" name="uemail" class="user-email" autocomplete="off" placeholder="Email">
+						<input type="password" name="upwd" class="user-pwd" autocomplete="off" placeholder="Password">
 						<div class="remember-me">
 							<input name="uremember" class="user-remember" autocomplete="off" type="checkbox">
 							<span class="label">Remember Me</span>
@@ -198,7 +198,7 @@
 			<input type="hidden" name="callpage" class="call-page" value="<?php bloginfo('home'); ?>">
 			<div class="form-box">
 				<input name="uemail" class="user-email" autocomplete="off" placeholder="Email" type="email">
-				<input name="upwd" class="user-pwd" placeholder="Password" type="password">
+				<input name="upwd" class="user-pwd" autocomplete="off" placeholder="Password" type="password">
 				<div class="remember-me">
 					<input name="uremember" class="user-remember" autocomplete="off" type="checkbox">
 					<span class="label">Remember Me</span>
@@ -486,81 +486,15 @@
 			<a href="#close" class="close">close</a>
 		</div>
 	<?php } ?>
-	<div style="display:none;">
-		<div id="lightbox-buy-in-installment" class="lightbox-default lightbox-buy-in-installment">
-			<div class="lightbox-holder">
-				<h3 class="title no-border">Buy in Installments</h3>
-				<table class="table-products-l">
-					<tr>
-						<th class="cell-image">Item</th>
-						<th>&nbsp;</th>
-						<th class="cell-price">Item Price</th>
-					</tr>
-					<tr>
-						<td class="cell-image">
-							<a href="#"><img src="<?php echo bloginfo('stylesheet_directory'); ?>/images/temp-product.jpg" height="91" width="91" alt="" /></a>
-						</td>
-						<td class="cell-description">
-							<h5><a href="#">Louis Vuitton Monogram</a></h5>
-							<p>Speedy 35</p>
-						</td>
-						<td class="cell-price">
-							$382
-						</td>
-					</tr>
-				</table>
-				<table class="table-total-l">
-					<tr>
-						<th><strong>Subtotal:</strong></th>
-						<td class="cell-2 text-right"><strong>$382</strong></td>
-						<td class="cell-3"></td>
-					</tr>
-					<tr>
-						<th>excl. <a href="#">Shipping &amp; Returns</a></th>
-						<td class="cell-2"></td>
-						<td class="cell-3"></td>
-					</tr>
-					<tr>
-						<th>Purchase on installments:</th>
-						<td class="cell-2 form-default wsnw">
-							<input type="radio" name="purchase-inst-l" id="purchase-inst-l-yes">
-							<label for="purchase-inst-l-yes">Yes</label>
-							<input type="radio" name="purchase-inst-l" id="purchase-inst-l-no">
-							<label for="purchase-inst-l-no">No</label>
-							<a href="#" class="btn-help">?</a>
-						</td>
-						<td class="cell-3"></td>
-					</tr>
-					<tr>
-						<th>Accept Terms:</th>
-						<td class="cell-2 form-default wsnw">
-							<input type="radio" name="accept-l" id="accept-l-yes">
-							<label for="accept-l-yes">Yes</label>
-							<input type="radio" name="accept-l" id="accept-l-no">
-							<label for="accept-l-no">No</label>
-							<a href="#" class="link-read-terms">READ TERMS</a>
-						</td>
-						<td class="cell-3"></td>
-					</tr>
-					<tr>
-						<th>Installment amount, USD:</th>
-						<td class="cell-2 form-default"><input type="text" value="$96" class="width-170"></td>
-						<td class="cell-3">
-							<a href="#" class="btn-help">?</a>
-						</td>
-					</tr>
-					<tr>
-						<td colspan="3">
-							<button href="#" class="btn-orange right">Continue</button>
-						</td>
-					</tr>
-				</table>
-			</div>
-		</div>
-	</div>
 <?php } ?>
 
 <div style="display:none;">
+	<div id="installments-popup" class="installments-popup">
+		<div class="i-head"><?php echo stripcslashes($OPTION['wps_layaway_popup_heading']); ?></div>
+		<div class="i-text"><?php echo wpautop(stripcslashes($OPTION['wps_layaway_popup_text'])); ?></div>
+	</div>
+	<div id="cart-layaway-terms" class="cl-popup"><?php echo wpautop(stripcslashes($OPTION['wps_layaway_terms_text'])); ?></div>
+	<div id="cart-layaway-payment-question" class="cl-payment-popup"><?php echo wpautop(stripcslashes($OPTION['wps_layaway_payment_popup_text'])); ?></div>
 	<div id="lightbox-3-day" class="lightbox-default">
 		<div class="lightbox-holder">
 			<h3 class="title">3 Day Returns</h3>

@@ -1,8 +1,20 @@
-var prod_tab;
+var prod_tab, curr_flag = false;
 jQuery(document).ready(function(){
 	// currency
+	jQuery('.currency-container').click(function(){
+		if (jQuery('.currency-list').is(':visible')) {
+			jQuery('.currency-list').hide();
+			jQuery('.switcher').removeClass('list-opened');
+			curr_flag = false;
+		} else {
+			jQuery('.currency-list').show();
+			jQuery('.switcher').addClass('list-opened');
+			setTimeout(function(){ curr_flag = true; }, 1000);
+		}
+	});
 	jQuery('.currency-val').click(function(){
-		Enterprise.PopUpMenu.hide();
+		jQuery('.currency-container').trigger('click');
+		//Enterprise.PopUpMenu.hide();
 		// set currency cookie
 		var currname = jQuery(this).attr('rel');
 		set_currency_cookie(currname);
@@ -16,11 +28,18 @@ jQuery(document).ready(function(){
 		}
 		return false;
 	});
+	jQuery(document).click(function(){
+		if (curr_flag) {
+			jQuery('.currency-list').hide();
+			jQuery('.switcher').removeClass('list-opened');
+			curr_flag = false;
+		}
+	});
 	change_currency();
 	update_header_cart_info();
 
 	// installments
-	jQuery("#installments-button").click(function(){
+	jQuery(".installments-popup-link").click(function(){
 		jQuery.colorbox({inline:true, href:'#installments-popup'});
 		return false;
 	});

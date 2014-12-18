@@ -52,8 +52,4 @@
 	}	
 	$newHash .= $vpcURL . "&vpc_SecureHash=" . strtoupper(md5($md5HashData));
 ?>	
-<form action="https://gw1.audicards.com/TPGWeb/payment/prepayment.action?<?php echo $newHash; ?>" method="POST">
-	<div class="button-right" style="float:right;">
-		<input type="submit" class="btn-orange" value="Place Order" />
-	</div>
-</form>
+<form class="submit-order-audi" action="https://gw1.audicards.com/TPGWeb/payment/prepayment.action?<?php echo $newHash; ?>" method="POST"></form>

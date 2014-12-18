@@ -255,8 +255,6 @@ function NWS_queue_js(){
 	
 	global $OPTION;
 	
-	$DEFAULT = show_default_view();
-
 	if (!is_admin()){
 		if(($_SERVER['HTTPS'] == 'on')||($_SERVER['HTTPS'] == '1') || ($_SERVER['SSL'] == '1')){
 			$siteurl = NWS_bloginfo('template_directory');		
@@ -271,8 +269,7 @@ function NWS_queue_js(){
 			}
 			
 			//display only on checkout
-			if(!$DEFAULT){ 
-				wp_enqueue_script( 'check-voucher-ajax', $siteurl.'/js/check-voucher-ajax.js', array('jquery'), '1', true );
+			if(is_checkout_page()){ 
 				wp_enqueue_script( 'get_form_bAddress', $siteurl.'/js/get_form_bAddress.js', array('jquery'), '1', true );
 				wp_enqueue_script( 'get_form_dAddress', $siteurl.'/js/get_form_dAddress.js', array('jquery'), '1', true ); 
 			}
@@ -317,8 +314,7 @@ function NWS_queue_js(){
 					}
 				}
 				//display only on checkout
-				if(!$DEFAULT){ 
-					wp_enqueue_script( 'check-voucher-ajax', get_template_directory_uri().'/js/check-voucher-ajax.js', array('jquery'), '1', true );
+				if(is_checkout_page()){ 
 					wp_enqueue_script( 'get_form_bAddress', get_template_directory_uri().'/js/get_form_bAddress.js', array('jquery'), '1', true ); 
 					wp_enqueue_script( 'get_form_dAddress', get_template_directory_uri().'/js/get_form_dAddress.js', array('jquery'), '1', true );
 				}			
@@ -1893,6 +1889,8 @@ function ga_ecommerce_tracking_code($who) {
 		$order_data = $wpdb->get_row(sprintf("SELECT * FROM %s WHERE who = '%s'", $otable, $who));
 		if ($order_data) {
 			$coupon = $order_data->voucher;
+			$order_amount = str_replace(',', '', format_price($order_data->amount));
+			$order_amount_aed = str_replace(',', '', format_price($order_data->amount * $OPTION['wps_exr_aed']));
 			if ($coupon == 'non') { $coupon = ''; }
 			$order_items = $wpdb->get_results(sprintf("SELECT * FROM %s WHERE who = '%s' ORDER BY cid", $sctable, $who));
 			if (in_array($order_data->level, $olevels)) {
@@ -1917,7 +1915,7 @@ function ga_ecommerce_tracking_code($who) {
 			ga('ec:setAction', 'purchase', {
 			  'id': '<?php echo $order_data->txn_id; ?>',
 			  'affiliation': 'The Luxury Closet',
-			  'revenue': '<?php echo $order_data->amount; ?>',
+			  'revenue': '<?php echo $order_amount; ?>',
 			  'tax': '<?php echo $order_data->tax; ?>',
 			  'shipping': '<?php echo $order_data->shipping_fee; ?>',
 			  'coupon': '<?php echo $coupon; ?>'
@@ -1933,17 +1931,18 @@ function ga_ecommerce_tracking_code($who) {
 		var google_conversion_format = "3";
 		var google_conversion_color = "ffffff";
 		var google_conversion_label = "3MiiCK_HjgUQufaOyAM";
-		var google_conversion_value = <?php echo $order_data->amount; ?>;
+		var google_conversion_value = <?php echo $order_amount_aed; ?>;
+		var google_conversion_currency = "AED";
 		var google_remarketing_only = false;
 		/* ]]> */
 		</script>
 		<script type="text/javascript" src="//www.googleadservices.com/pagead/conversion.js"></script>
-		<noscript><div style="display:inline;"><img height="1" width="1" style="border-style:none;" alt="" src="//www.googleadservices.com/pagead/conversion/956545849/?value=0&amp;label=3MiiCK_HjgUQufaOyAM&amp;guid=ON&amp;script=0"/></div></noscript>
+		<noscript><div style="display:inline;"><img height="1" width="1" style="border-style:none;" alt="" src="//www.googleadservices.com/pagead/conversion/956545849/?value=<?php echo $order_amount_aed; ?>&amp;currency_code=AED&amp;label=3MiiCK_HjgUQufaOyAM&amp;guid=ON&amp;script=0"/></div></noscript>
 
 		<script type="text/javascript">
 		var fb_param = {};
 		fb_param.pixel_id = '6009593456418';
-		fb_param.value = '<?php echo sprintf("%01.2f", $order_data->amount); ?>';
+		fb_param.value = '<?php echo $order_amount; ?>';
 		fb_param.currency = 'USD';
 		(function(){
 		  var fpw = document.createElement('script');
@@ -1953,7 +1952,7 @@ function ga_ecommerce_tracking_code($who) {
 		  ref.parentNode.insertBefore(fpw, ref);
 		})();
 		</script>
-		<noscript><img height="1" width="1" alt="" style="display:none" src="https://www.facebook.com/offsite_event.php?id=6009593456418&amp;value=0&amp;currency=USD" /></noscript>
+		<noscript><img height="1" width="1" alt="" style="display:none" src="https://www.facebook.com/offsite_event.php?id=6009593456418&amp;value=<?php echo $order_amount; ?>&amp;currency=USD" /></noscript>
 <?php
 			}
 		}
@@ -2106,24 +2105,17 @@ function sellers_get_categories_dropdown($name, $selected = '', $depth = 0) {
 }
 
 function sellers_get_root_split_categories() {
-	$wps_men_bags_category = get_option("wps_men_bags_category");
-	$wps_men_shoes_category = get_option("wps_men_shoes_category");
-	$wps_men_watches_category = get_option("wps_men_watches_category");
-	$wps_men_sunglasses_category = get_option("wps_men_sunglasses_category");
-	$wps_men_jewelry_category = get_option("wps_men_jewelry_category");
-
-	$wps_women_bags_category = get_option("wps_women_bags_category");
-	$wps_women_shoes_category = get_option("wps_women_shoes_category");
-	$wps_women_watches_category = get_option("wps_women_watches_category");
-	$wps_women_sunglasses_category = get_option("wps_women_sunglasses_category");
-	$wps_women_jewelry_category = get_option("wps_women_jewelry_category");
+	global $OPTION;
 
 	$split_categories = array(
-		'bags' => array($wps_men_bags_category, $wps_women_bags_category),
-		'shoes' => array($wps_men_shoes_category, $wps_women_shoes_category),
-		'watches' => array($wps_men_watches_category, $wps_women_watches_category),
-		'sunglasses' => array($wps_men_sunglasses_category, $wps_women_sunglasses_category),
-		'jewelry' => array($wps_men_jewelry_category, $wps_women_jewelry_category)
+		'bags' => array($OPTION["wps_men_bags_category"], $OPTION["wps_women_bags_category"]),
+		'shoes' => array($OPTION["wps_men_shoes_category"], $OPTION["wps_women_shoes_category"]),
+		'clothing' => array($OPTION["wps_men_clothes_category"], $OPTION["wps_women_clothes_category"]),
+		'watches' => array($OPTION["wps_men_watches_category"], $OPTION["wps_women_watches_category"]),
+		'sunglasses' => array($OPTION["wps_men_sunglasses_category"], $OPTION["wps_women_sunglasses_category"]),
+		'jewelry' => array($OPTION["wps_men_jewelry_category"], $OPTION["wps_women_jewelry_category"]),
+		'fsjewelry' => array($OPTION["wps_women_fashion_silver_jewelry_category"]),
+		'accessories' => array($OPTION["wps_men_accessories_category"], $OPTION["wps_women_accessories_category"])
 	);
 	return $split_categories;
 }
@@ -2337,7 +2329,7 @@ function sellers_actions_init() {
 					$new_post['post_content'] = $item_desc;
 					$new_post['post_status'] = $item_status;
 					$new_post['post_author'] = $current_user->ID;
-					$new_post['post_category'] = array($item_category);
+					$new_post['post_category'] = sellers_get_full_categories($item_category);
 					$new_post['post_created'] = current_time('mysql');
 					$new_post_id = wp_insert_post($new_post);
 
@@ -2521,7 +2513,7 @@ function sellers_actions_init() {
 						$update['post_name'] = sanitize_title($item_name);
 						$update['post_content'] = $item_desc;
 						$update['post_status'] = $item_status;
-						$update['post_category'] = array($item_category);
+						$update['post_category'] = sellers_get_full_categories($item_category);
 						wp_update_post($update);
 
 						$item_retail_price = sellers_to_usd_price($item_retail_price);
@@ -2742,7 +2734,6 @@ function sellers_actions_init() {
 			break;
 			// individual sellers
 			case "indivseller_add_item":
-				$logining = false;
 				$item_number = trim($_POST['item_number']);
 				$item_user = trim($_POST['item_user']);
 				$user_email = trim($_POST['user_email']);
@@ -2750,63 +2741,31 @@ function sellers_actions_init() {
 				$user_phone = trim($_POST['user_phone']);
 				$user_id = $current_user->ID;
 
-				$item_seller = 'i';
-				$item_status = 'iseller_draft';
-
+				$prof_seller_flag = false;
+				if (is_user_logged_in() && in_array('profseller', $current_user->roles)) {
+					$prof_seller_flag = true;
+				}
 				if (strlen($item_user)) {
 					$uid = $wpdb->get_var(sprintf("SELECT ID FROM %susers WHERE user_login = '%s'", $wpdb->prefix, $item_user));
 					if ($uid) {
 						$user_id = $uid;
 						$ucapabilities = get_user_meta($uid, 'wp_capabilities', true);
 						if ($ucapabilities['profseller']) {
-							$item_seller = 'p';
-							$item_status = 'pseller_pending';
+							$prof_seller_flag = true;
 						}
 					} else {
 						$sellers_error .= 'Seller username is incorrect.<br>';
 					}
 				}
 
-				if (!is_user_logged_in()) {
-					$logining = true;
-					if (!strlen($user_email)) {
-						$sellers_error .= 'Your Email field is required.<br>';
-					} else if (!is_email($user_email)) {
-						$sellers_error .= 'Email address is incorrect.<br>';
-					}
-					if (!strlen($user_pass)) {
-						$sellers_error .= 'Password field is required.<br>';
-					}
-
-					if (!strlen($sellers_error)) {
-						$user_data = get_user_by_email($user_email);
-						if ($user_data) { // user exist
-							$user_id = $user_data->ID;
-							if (!wp_check_password($user_pass, $user_data->data->user_pass, $user_id)) { // password isn't match
-								$sellers_error .= 'Password is incorrect. Please try again.<br>';
-							}
-						} else { // create new user
-							$user = new stdClass;
-							$user->user_login = sanitize_user($user_email, true);
-							$user->user_email = sanitize_text_field($user_email);
-							$user->user_pass = $user_pass;
-							$user->use_ssl = 0;
-							$user->show_admin_bar_front = "false";	
-							$user->show_admin_bar_admin = "false";
-							$user_id = wp_insert_user(get_object_vars($user));
-							$user_data = get_userdata($user_id);
-							update_utm_params('users', $user_id);
-							nws_subscribe_action('register', array('user_id' => $user_id, 'email' => $user_email, 'frompage' => '/sell-us'));
-						}
-					}
+				$item_seller = 'i';
+				$item_status = 'iseller_draft';
+				if ($prof_seller_flag) {
+					$item_seller = 'p';
+					$item_status = 'pseller_draft';
 				}
 
 				if (!strlen($sellers_error)) {
-					if ($logining) {
-						wp_set_current_user($user_id, $user_email);
-						wp_set_auth_cookie($user_id, $remember);
-						do_action('wp_login', $user_email);
-					}
 					for ($i=1; $i<=$item_number; $i++) {
 						if (isset($_POST['item_name'][$i])) {
 							$item_category = $_POST['item_category'][$i];
@@ -2834,7 +2793,7 @@ function sellers_actions_init() {
 
 								$item_your_price = sellers_to_usd_price($item_your_price);
 
-								$item_id = sellers_assign_item_id($new_post_id, $user_id, 'i');
+								$item_id = sellers_assign_item_id($new_post_id, $user_id, $item_seller);
 
 								update_post_meta($new_post_id, 'item_seller', $item_seller);
 								update_post_meta($new_post_id, 'price', $item_your_price);
@@ -2861,13 +2820,16 @@ function sellers_actions_init() {
 							}
 						}
 					}
-					if (strlen($user_phone)) {
+					if (strlen($user_phone) && !strlen(get_user_meta($current_user->ID, 'phone', true))) {
 						update_user_meta($user_id, 'phone', $user_phone);
 					}
 
 					$redirect = get_permalink($OPTION['wps_indvseller_my_items_page']).'/?success';
 					if (strlen($item_user) && $uid > 0) {
 						$redirect = get_permalink($OPTION['wps_tlc_admin_files_page']);
+					}
+					if ($prof_seller_flag) {
+						$redirect = get_permalink($OPTION['wps_profreseller_my_items_page']).'/?success';
 					}
 
 					header("Location: ".$redirect);
@@ -3519,6 +3481,23 @@ function sellers_actions_init() {
 	}
 }
 
+function sellers_get_full_categories($category) {
+	$full_categories = array($category);
+	$catdata = get_category($category);
+	if ($catdata && $catdata->parent) {
+		$full_categories[] = $catdata->parent;
+		$catdata = get_category($catdata->parent);
+		if ($catdata && $catdata->parent) {
+			$full_categories[] = $catdata->parent;
+			$catdata = get_category($catdata->parent);
+			if ($catdata && $catdata->parent) {
+				$full_categories[] = $catdata->parent;
+			}
+		}
+	}
+	return $full_categories;
+}
+
 function sellers_get_selling_price($price) {
 	if ($price < (191.78 * 0.6)) {
 		$selling_price = $price / 0.6;
@@ -3743,8 +3722,8 @@ function sellers_send_change_price_email() {
 	$cpncd = date("Y-m-d H:i:s", mktime(0, 0, 0, date("m"), date("d"), date("Y")));
 	$sellers_send_change_price_cron_date = get_option("sellers_send_change_price_cron_date");
 
-	if ($sellers_send_change_price_cron_date != $ancd || $_GET['cpnotify'] == 'send') {
-		$cp_posts = $wpdb->get_results(sprintf("SELECT p.* FROM %sposts p LEFT JOIN %spostmeta pm ON pm.post_id = p.ID WHERE p.post_type = 'post' AND pm.meta_key = '_change_price_email' AND pm.meta_value = 'true'", $wpdb->prefix, $wpdb->prefix));
+	if ($sellers_send_change_price_cron_date != $cpncd || $_GET['cpnotify'] == 'send') {
+		$cp_posts = $wpdb->get_results(sprintf("SELECT p.* FROM %sposts p LEFT JOIN %spostmeta pm ON pm.post_id = p.ID WHERE p.post_type = 'post' AND p.post_status != 'trash' AND pm.meta_key = '_change_price_email' AND pm.meta_value = 'true'", $wpdb->prefix, $wpdb->prefix));
 		if ($cp_posts) {
 			foreach($cp_posts as $cp_post) {
 				$cpnotifications[$cp_post->post_author][] = $cp_post;
@@ -3783,7 +3762,7 @@ function sellers_send_change_price_email() {
 					}
 					$message = str_replace('{SELLER_NAME}', $seller_name, $message);
 					$message = str_replace('{MY_ITEMS_PAGE}', get_permalink($OPTION['wps_indvseller_my_items_page']), $message);
-					
+
 					NWS_send_email($user_email, $subject, $message, '', '', $OPTION['wps_sellers_cc_email']);
 					echo 'Sent '.count($cpnposts).' item(s) to '.$user_email.'<br>';
 				}
@@ -4296,442 +4275,6 @@ function profreseller_pricing_database() {
 <?php
 }
 
-// alerts functions
-add_action('init', 'alerts_init');
-function alerts_init() {
-	global $wpdb, $OPTION, $current_user;
-	if (strlen($_POST['AlertsAction'])) {
-		$user_email = $_POST['follow_brands_email'];
-		if ($current_user->ID > 0) {
-			$user_email = $current_user->user_email;
-		}
-		switch ($_POST['AlertsAction']) {
-			case "create_alert":
-				$ca_type = $_POST['ca_type'];
-				$ca_value = trim($_POST['ca_value']);
-				$ca_ajax = $_POST['ca_ajax'];
-
-				$act = 'none';
-				if ($ca_type == 1) { // create alert button
-					$ca_category = $_POST['ca_category'];
-					$ca_brand = $_POST['ca_brand'];
-					$ca_colour = $_POST['ca_colour'];
-					if (strlen($ca_category)) {
-						$ca_value = '{ct:'.$ca_category.'}';
-					}
-					if (strlen($ca_brand)) {
-						if (strlen($ca_value)) { $ca_value .= ';'; }
-						$ca_value .= '{br:'.$ca_brand.'}';
-					}
-					if (strlen($ca_colour)) {
-						if (strlen($ca_value)) { $ca_value .= ';'; }
-						$ca_value .= '{cl:'.$ca_colour.'}';
-					}
-					if (strlen($ca_value)) {
-						$alert_id = $wpdb->get_var(sprintf("SELECT alert_id FROM %swps_user_alerts WHERE user_id = %s AND type = %s AND value = '%s'", $wpdb->prefix, $current_user->ID, $ca_type, $ca_value));
-						if (!$alert_id) {
-							$act = 'insert';
-						}
-					}
-				} else if ($ca_type == 2) { // it bags
-					if (strlen($ca_value)) {
-						$cavalues = explode(";", $ca_value);
-						$ca_value = '';
-						foreach($cavalues as $cavalue) {
-							if (strlen($ca_value)) { $ca_value .= ';'; }
-							$ca_value .= '{'.$cavalue.'}';
-						}
-					}
-					$alert_id = $wpdb->get_var(sprintf("SELECT alert_id FROM %swps_user_alerts WHERE user_id = %s AND type = %s", $wpdb->prefix, $current_user->ID, $ca_type));
-					if ($alert_id) {
-						$act = 'update';
-					} else {
-						$act = 'insert';
-					}
-				} else if ($ca_type == 3) { // top brands
-					$alert_id = $wpdb->get_var(sprintf("SELECT alert_id FROM %swps_user_alerts WHERE user_email = '%s' AND type = %s", $wpdb->prefix, $user_email, $ca_type));
-					if (strlen($ca_value)) {
-						$ca_value = '{'.str_replace(',', '};{', $ca_value).'}';
-						if ($alert_id) {
-							if ($_POST['ca_follow'] == 'true') {
-								$alert_value = $wpdb->get_var(sprintf("SELECT value FROM %swps_user_alerts WHERE alert_id = %s", $wpdb->prefix, $alert_id));
-								if (strpos($alert_value, $ca_value) !== false) {
-									$ca_value = $alert_value;
-								} else {
-									$ca_value = $alert_value.';'.$ca_value;
-								}
-							}
-							$act = 'update';
-						} else {
-							$act = 'insert';
-						}
-					} else {
-						$act = 'delete';
-					}
-				} else if ($ca_type == 4) { // search term
-					if (strlen($ca_value)) {
-						$alert_id = $wpdb->get_var(sprintf("SELECT alert_id FROM %swps_user_alerts WHERE user_id = %s AND type = %s AND value = '%s'", $wpdb->prefix, $current_user->ID, $ca_type, $ca_value));
-						if (!$alert_id) {
-							$act = 'insert';
-						}
-					}
-				}
-
-				if ($act == 'insert') {
-					$insert = array();
-					$insert['user_id'] = $current_user->ID;
-					$insert['user_email'] = $user_email;
-					$insert['type'] = $ca_type;
-					$insert['value'] = $ca_value;
-					$wpdb->insert($wpdb->prefix."wps_user_alerts", $insert);
-				} else if ($act == 'update' && $alert_id) {
-					$update = array();
-					$update['value'] = $ca_value;
-					$wpdb->update($wpdb->prefix."wps_user_alerts", $update, array('alert_id' => $alert_id));
-				} else if ($act == 'delete' && $alert_id) {
-					$wpdb->query(sprintf("DELETE FROM %swps_user_alerts WHERE alert_id = %s", $wpdb->prefix, $alert_id));
-				}
-				if ($ca_ajax == 'true') { exit; }
-			break;
-			case "remove_my_searches_alert":
-				$alert_id = $_POST['alert_id'];
-				$wpdb->query(sprintf("DELETE FROM %swps_user_alerts WHERE alert_id = %s", $wpdb->prefix, $alert_id));
-				exit;
-			break;
-			case "get_login_encodedurl":
-				$url = $_POST['url'];
-				echo get_permalink($OPTION['wps_account_login_page']).'?redirect_to='.urlencode($url);
-				exit;
-			break;
-		}
-	}
-}
-
-add_action('wp', 'alerts_notifications_cron_job');
-add_action('alerts_notifications_cron', 'alerts_send_notifications');
-function alerts_notifications_cron_job() {
-	if (!wp_next_scheduled('alerts_notifications_cron')) {
-		wp_schedule_event(mktime(6, 0, 0, date("m"), date("d"), date("Y")), 'daily', 'alerts_notifications_cron');
-	}
-}
-
-function alerts_send_notifications() { // Alerts Notifications
-	global $wpdb, $OPTION;
-
-	$anotifications = array();
-	$ancd = date("Y-m-d H:i:s", mktime(0, 0, 0, date("m"), date("d"), date("Y")));
-	$alerts_notifications_cron_date = get_option("alerts_notifications_cron_date");
-
-	if ($alerts_notifications_cron_date != $ancd || $_GET['notify'] == 'send') {
-		$subject = stripcslashes($OPTION['wps_alerts_notification_subject']);
-
-		$wpdb->query(sprintf("DELETE FROM %swps_user_alerts_temp", $wpdb->prefix)); // clear temp alert posts table
-		$added_posts = $wpdb->get_results(sprintf("SELECT p.* FROM %sposts p LEFT JOIN %spostmeta pm ON pm.post_id = p.ID WHERE p.post_type = 'post' AND p.post_status = 'publish' AND pm.meta_key = 'alert_send' AND pm.meta_value = '1' ORDER BY ID", $wpdb->prefix, $wpdb->prefix));
-		echo '- found '.count($added_posts).' new items<br>';
-		if ($added_posts) {
-			$users_search_keys_alerts = $wpdb->get_results(sprintf("SELECT * FROM %swps_user_alerts WHERE type = 4 ORDER BY alert_id DESC", $wpdb->prefix, $wpdb->prefix));
-			$aposts = array();
-			foreach($added_posts as $added_post) {
-				$post_categories = wp_get_post_terms($added_post->ID, 'category');
-				$post_brands = wp_get_post_terms($added_post->ID, 'brand');
-				$post_colours = wp_get_post_terms($added_post->ID, 'colour');
-				$post_prices = wp_get_post_terms($added_post->ID, 'price');
-				$post_selections = wp_get_post_terms($added_post->ID, 'selection');
-				$post_sizes = wp_get_post_terms($added_post->ID, 'size');
-				$post_ring_sizes = wp_get_post_terms($added_post->ID, 'ring-size');
-				$post_clothes_sizes = wp_get_post_terms($added_post->ID, 'clothes-size');
-				$post_tags = wp_get_post_terms($added_post->ID, 'post_tag');
-
-				// it bags (type = 2)
-				if ($post_brands) {
-					foreach($post_brands as $post_brand) {
-						$users_it_bags_alerts = $wpdb->get_results(sprintf("SELECT * FROM %swps_user_alerts WHERE type = 2 AND value LIKE '%s' ORDER BY alert_id DESC", $wpdb->prefix, "%{".$post_brand->term_id."-".$added_post->post_title."}%"));
-						if ($users_it_bags_alerts) {
-							foreach($users_it_bags_alerts as $users_it_bags_alert) {
-								$user_email = $users_it_bags_alert->user_email;
-								$anotifications[$user_email][$added_post->ID] = $added_post;
-							}
-						}
-					}
-				}
-
-				// top brands (type = 3)
-				if ($post_brands) {
-					foreach($post_brands as $post_brand) {
-						$users_top_brands_alerts = $wpdb->get_results(sprintf("SELECT * FROM %swps_user_alerts WHERE type = 3 AND value LIKE '%s' ORDER BY alert_id DESC", $wpdb->prefix, "%{".$post_brand->term_id."}%"));
-						if ($users_top_brands_alerts) {
-							foreach($users_top_brands_alerts as $users_top_brands_alert) {
-								$user_email = $users_top_brands_alert->user_email;
-								$anotifications[$user_email][$added_post->ID] = $added_post;
-							}
-						}
-					}
-				}
-
-				// search terms (type = 4)
-				if ($users_search_keys_alerts) {
-					foreach($users_search_keys_alerts as $users_search_keys_alert) {
-						$sval = strtolower($users_search_keys_alert->value);
-						$user_email = $users_search_keys_alert->user_email;
-						if (strpos(strtolower($added_post->post_title), $sval) !== false || strpos(strtolower($added_post->post_content), $sval) !== false) {
-							$anotifications[$user_email][$added_post->ID] = $added_post;
-						}
-					}
-				}
-				$insert = array(
-						'br' => $post_brands[0]->term_id,
-						'cl' => $post_colours[0]->term_id,
-						'pr' => $post_prices[0]->term_id,
-						'sl' => $post_selections[0]->term_id,
-						'sz' => $post_sizes[0]->term_id,
-						'rs' => $post_ring_sizes[0]->term_id,
-						'cs' => $post_clothes_sizes[0]->term_id,
-						'tg' => $post_tags[0]->term_id,
-						'post_id' => $added_post->ID,
-						'post' => serialize($added_post)
-					);
-				if ($post_categories) {
-					$cnmb = 1;
-					foreach($post_categories as $pcategory) {
-						if ($cnmb < 6) {
-							$insert['ct'.$cnmb] = $pcategory->term_id;
-						}
-						$cnmb++;
-					}
-				}
-				$wpdb->insert($wpdb->prefix.'wps_user_alerts_temp', $insert);
-				delete_post_meta($added_post->ID, 'alert_send');
-			}
-			// created requests (type = 1)
-			$users_search_filter_alerts = $wpdb->get_results(sprintf("SELECT * FROM %swps_user_alerts WHERE type = 1 ORDER BY alert_id DESC", $wpdb->prefix));
-			if ($users_search_filter_alerts) {
-				foreach ($users_search_filter_alerts as $users_search_filter_alert) {
-					$user_email = $users_search_filter_alert->user_email;
-					$values = explode(';', $users_search_filter_alert->value);
-					$where  = alerts_get_notification_where2($values);
-					if (strlen($where)) {
-						$tdatas = $wpdb->get_results(sprintf("SELECT * FROM %swps_user_alerts_temp WHERE %s", $wpdb->prefix, $where));
-						if ($tdatas) {
-							foreach($tdatas as $tdata) {
-								$anotifications[$user_email][$tdata->post_id] = unserialize($tdata->post);
-							}
-						}
-					}
-				}
-			}
-			$wpdb->query(sprintf("DELETE FROM %swps_user_alerts_temp", $wpdb->prefix)); // clear temp alert posts table
-
-			// send alert emails
-			if (count($anotifications)) {
-				foreach($anotifications as $user_email => $post_items) {
-					echo '- sent '.count($post_items).' new items to user: '.$user_email.'<br>';
-					$body = alerts_notifications_html($user_email, $post_items);
-					NWS_send_email($user_email, $subject, $body);
-				}
-			}
-		}
-		update_option("alerts_notifications_cron_date", $ancd);
-	}
-}
-
-function alerts_get_notification_where2($params) {
-	$where = "";
-	$grouped = array();
-	foreach($params as $param) {
-		$param = str_replace(array('{','}'), '', $param);
-		$flks = explode(':', $param);
-		$grouped[$flks[0]][] = $flks[1];
-	}
-	foreach($grouped as $gk => $gvals) {
-		if (strlen($where)) { $where .= " AND "; }
-		if ($gk == 'ct') {
-			$where .= "(";
-			for($c=1; $c<=5; $c++) {
-				$where .= $or."ct".$c." IN (".implode(',', $gvals).")";
-				$or = " OR ";
-			}
-			$where .= ")";
-		} else {
-			$where .= $gk." IN (".implode(',', $gvals).")";
-		}
-	}
-	return $where;
-}
-
-function alerts_send_notifications2() { // Alerts Notifications
-	global $wpdb, $OPTION;
-
-	$ancd = date("Y-m-d H:i:s", mktime(0, 0, 0, date("m"), date("d"), date("Y")));
-	$alerts_notifications_cron_date = get_option("alerts_notifications_cron_date");
-
-	if ($alerts_notifications_cron_date != $ancd || $_GET['notify'] == 'send') {
-		$subject = stripcslashes($OPTION['wps_alerts_notification_subject']);
-
-		$added_posts = $wpdb->get_results(sprintf("SELECT p.* FROM %sposts p LEFT JOIN %spostmeta pm ON pm.post_id = p.ID WHERE p.post_type = 'post' AND p.post_status = 'publish' AND pm.meta_key = 'alert_send' AND pm.meta_value = '1' ORDER BY ID", $wpdb->prefix, $wpdb->prefix));
-		echo '- found '.count($added_posts).' new items<br>';
-		if ($added_posts) {
-			$users_search_keys_alerts = $wpdb->get_results(sprintf("SELECT * FROM %swps_user_alerts WHERE type = 4 ORDER BY alert_id DESC", $wpdb->prefix, $wpdb->prefix));
-			$users_it_bags_alerts = $wpdb->get_results(sprintf("SELECT * FROM %swps_user_alerts WHERE type = 2 ORDER BY alert_id DESC", $wpdb->prefix, $wpdb->prefix));
-			$anotifications = array();
-			foreach($added_posts as $added_post) {
-				$post_categories = wp_get_post_terms($added_post->ID, 'category');
-				$post_brands = wp_get_post_terms($added_post->ID, 'brand');
-				$post_colours = wp_get_post_terms($added_post->ID, 'colour');
-				$post_prices = wp_get_post_terms($added_post->ID, 'price');
-				$post_selections = wp_get_post_terms($added_post->ID, 'selection');
-				$post_sizes = wp_get_post_terms($added_post->ID, 'size');
-				$post_ring_sizes = wp_get_post_terms($added_post->ID, 'ring-size');
-				$post_clothes_sizes = wp_get_post_terms($added_post->ID, 'clothes-size');
-
-				// created requests (type = 1)
-				$where  = alerts_get_notification_where($post_categories, 'ct');
-				$where .= alerts_get_notification_where($post_brands, 'br');
-				$where .= alerts_get_notification_where($post_colours, 'cl');
-				$where .= alerts_get_notification_where($post_prices, 'pr');
-				$where .= alerts_get_notification_where($post_selections, 'sl');
-				$where .= alerts_get_notification_where($post_sizes, 'sz');
-				$where .= alerts_get_notification_where($post_ring_sizes, 'rs');
-				$where .= alerts_get_notification_where($post_clothes_sizes, 'cs');
-				var_dump($where); exit;
-
-				if (strlen($where)) {
-					$users_search_filter_alerts = $wpdb->get_results(sprintf("SELECT * FROM %swps_user_alerts WHERE type = 1 %s ORDER BY alert_id DESC", $wpdb->prefix, $where));
-					if ($users_search_filter_alerts) {
-						foreach($users_search_filter_alerts as $users_search_filter_alert) {
-							$user_email = $users_search_filter_alert->user_email;
-							$anotifications[$user_email][$added_post->ID] = $added_post;
-						}
-					}
-				}
-
-				// it bags (type = 2)
-				if ($post_brands) {
-					foreach($post_brands as $post_brand) {
-						$users_it_bags_alerts = $wpdb->get_results(sprintf("SELECT * FROM %swps_user_alerts WHERE type = 2 AND value LIKE '%s' ORDER BY alert_id DESC", $wpdb->prefix, "%{".$post_brand->term_id."-".$added_post->post_title."}%"));
-						if ($users_it_bags_alerts) {
-							foreach($users_it_bags_alerts as $users_it_bags_alert) {
-								$user_email = $users_it_bags_alert->user_email;
-								$anotifications[$user_email][$added_post->ID] = $added_post;
-							}
-						}
-					}
-				}
-
-				// top brands (type = 3)
-				if ($post_brands) {
-					foreach($post_brands as $post_brand) {
-						$users_top_brands_alerts = $wpdb->get_results(sprintf("SELECT * FROM %swps_user_alerts WHERE type = 3 AND value LIKE '%s' ORDER BY alert_id DESC", $wpdb->prefix, "%{".$post_brand->term_id."}%"));
-						if ($users_top_brands_alerts) {
-							foreach($users_top_brands_alerts as $users_top_brands_alert) {
-								$user_email = $users_top_brands_alert->user_email;
-								$anotifications[$user_email][$added_post->ID] = $added_post;
-							}
-						}
-					}
-				}
-
-				// search terms (type = 4)
-				if ($users_search_keys_alerts) {
-					foreach($users_search_keys_alerts as $users_search_keys_alert) {
-						$sval = strtolower($users_search_keys_alert->value);
-						$user_email = $users_search_keys_alert->user_email;
-						if (strpos(strtolower($added_post->post_title), $sval) !== false || strpos(strtolower($added_post->post_content), $sval) !== false) {
-							$anotifications[$user_email][$added_post->ID] = $added_post;
-						}
-					}
-				}
-				//delete_post_meta($added_post->ID, 'alert_send');
-			}
-			if (count($anotifications)) {
-				foreach($anotifications as $user_email => $post_items) {
-					echo '- sent '.count($post_items).' new items to user: '.$user_email.'<br>';
-					$body = alerts_notifications_html($user_email, $post_items);
-					NWS_send_email($user_email, $subject, $body);
-				}
-			}
-		}
-		update_option("alerts_notifications_cron_date", $ancd);
-	}
-}
-
-function alerts_get_notification_where($post_terms, $pref) {
-	$notification_where = '';
-	if ($post_terms) {
-		$notification_where .= " AND (";
-		$or = '';
-		foreach($post_terms as $post_term) {
-			$notification_where .= $or . "value LIKE '%{".$pref.":".$post_term->term_id."}%'";
-			$or = ' OR ';
-		}
-		$notification_where .= ") ";
-	}
-	return $notification_where;
-}
-
-function alerts_notifications_html($user_email, $post_items) {
-	global $OPTION, $wpdb;
-	$user_name = $user_email;
-	$userdata = $wpdb->get_row(sprintf("SELECT * FROM %susers WHERE user_email = '%s'", $wpdb->prefix, $user_email));
-	if ($userdata) {
-		$user_name = $userdata->user_login;
-	}
-	$total_items = count($post_items);
-	ob_start();
-?>
-	<table align="center" width="700" style="font-family:Arial,Tahoma,Verdana;font-size:14px;" border="0">
-	  <tr>
-		<td align="center"><a href="<?php bloginfo('url'); ?>/" title="<?php bloginfo('name'); ?>"><img src="<?php bloginfo('stylesheet_directory'); ?>/images/logo.png" border="0"></a></td>
-	  </tr>
-	  <tr>
-		<td align="center"><hr></td>
-	  </tr>
-	  <tr>
-		<td align="center"><strong>Hi <?php echo $user_name; ?>,</strong></td>
-	  </tr>
-	  <tr>
-		<td align="center">New items matching your personalised alerts<br>To manage your alerts go to <a href="<?php echo get_permalink($OPTION['wps_account_my_alerts_page']); ?>">My Notifications</a>.</td>
-	  </tr>
-	  <tr>
-		<td align="center"><hr></td>
-	  </tr>
-	  <tr>
-		<td align="center">
-			<table cellpadding="0" cellspacing="10" style="font-family:Arial,Tahoma,Verdana;font-size:13px;" border="0">
-			  <tr>
-			    <?php $tr_nmb = 1;
-			    foreach($post_items as $pid => $postdata) { $total_items--;
-			      $post_thumb = get_product_thumb($pid, 156);
-			      $price = get_post_meta($pid, 'price', true);
-			      $new_price = get_post_meta($pid, 'new_price', true);
-			      if ($new_price > 0) { $price = $new_price; }
-			    ?>
-			    <td align="center" valign="top">
-				  <?php if ($post_thumb) { ?><div style="width:156px;height:160px;"><a href="<?php echo get_permalink($pid); ?>" title="<?php echo $postdata->post_title; ?>"><img src="<?php echo $post_thumb; ?>" alt="<?php echo $postdata->post_title; ?>" border="0"></a></div><?php } ?>
-				  <a href="<?php echo get_permalink($pid); ?>" style="text-decoration:none;color:#000;"><strong><?php echo $postdata->post_title; ?></strong><br>
-				  $<?php echo format_price($price); ?></a>
-				</td>
-				<?php if ($tr_nmb == 4 && $total_items > 0) { $tr_nmb = 0; ?>
-			  </tr>
-			  <tr>
-			    <?php } ?>
-			    <?php $tr_nmb++; } ?>
-			  </tr>
-			</table>
-		</td>
-	  </tr>
-	  <tr>
-		<td align="center"><hr></td>
-	  </tr>
-	  <tr>
-		<td align="center">&copy; <?php echo date('Y'); ?>. <a href="<?php bloginfo('url'); ?>/" style="text-decoration:none;color:#000;"><?php bloginfo('name'); ?></a> | <?php _e('All Rights Reserved','wpShop'); ?></td>
-	  </tr>
-	</table>
-<?php
-	$notifications_html = ob_get_contents();
-	ob_end_clean();
-	return $notifications_html;
-}
-
 // user additional fields
 add_action('show_user_profile', 'user_profile_additional_fields');
 add_action('edit_user_profile', 'user_profile_additional_fields');
@@ -4895,12 +4438,14 @@ function get_utm_params() {
 function update_utm_params($type, $key) {
 	global $wpdb;
 
+	$utm_params = get_utm_params();
+
 	$params = array();
-	$params['utm_source'] = trim($_REQUEST['utm_source']);
-	$params['utm_medium'] = trim($_REQUEST['utm_medium']);
-	$params['utm_campaign'] = trim($_REQUEST['utm_campaign']);
-	$params['utm_content'] = trim($_REQUEST['utm_content']);
-	$params['utm_term'] = trim($_REQUEST['utm_term']);
+	$params['utm_source'] = $utm_params['utm_source'];
+	$params['utm_medium'] = $utm_params['utm_medium'];
+	$params['utm_campaign'] = $utm_params['utm_campaign'];
+	$params['utm_content'] = $utm_params['utm_content'];
+	$params['utm_term'] = $utm_params['utm_term'];
 
 	switch ($type) {
 		case "users":
@@ -5575,29 +5120,7 @@ function nws_additional_init() {
 		exit;
 	}
 	if ($_GET['hivista'] == 'email') {
-		$user_email = 'gavrilenko.ruslan@gmail.com';
-		$message  = 'Thank you for registering with The Luxury Closet.<br /><br />';
-		$message .= 'You will now receive updates about our latest arrivals, and hear from our Fashion Editor on the latest trends hitting the luxury world!<br /><br />';
-		$message .= 'Watch out for emails featuring our special collections and blog posts put together by our in house experts, specially for you!<br /><br /><br />';
-		$message .= '<a href="'.get_option('siteurl').'/login">Log in</a> to your account with your username: '.$user_email.'<br /><br /><br />';
-
-		$message .= 'Questions? Contact us on:<br />';
-		$message .= '<a href="mailto:info@theluxurycloset.com">info@theluxurycloset.com</a><br />';
-		$message .= '+971 800 589<br /><br />';
-
-		$message .= 'We would be happy to hear from you!<br /><br />';
-
-		$message .= 'Regards, <br />';
-		$message .= 'Customer Support<br />';
-		$message .= 'The Luxury Closet<br />';
-
-		$subject = 'Welcome to The Luxury Closet!';
-
-		//$headers  = "MIME-Version: 1.0\r\n";
-		//$headers .= "Content-type: text/html; charset=iso-8859-1\r\n";
-		$headers .= "From: The Luxury Closet <".$OPTION['wps_shop_email'].">\r\n";
-		wp_mail($user_email, $subject, $message, $headers);
-		//var_dump(mail($user_email, $subject, $message, $headers));
+		sellers_send_change_price_email();
 		exit;
 	}
 }

@@ -20,7 +20,14 @@ $scat = trim($_GET['scat']);
 if (strlen($scat)) {
 	$scat_tt_id = $wpdb->get_var(sprintf("SELECT term_taxonomy_id FROM %sterm_taxonomy WHERE term_id = %s", $wpdb->prefix, $scat));
 	if ($scat_tt_id) {
-		$sWhere .= " AND tr.term_taxonomy_id = ".$scat_tt_id;
+		$scat_tt_ids = array($scat_tt_id);
+		$subcat_tt_ids = $wpdb->get_results(sprintf("SELECT term_taxonomy_id FROM %sterm_taxonomy WHERE taxonomy = 'seller-category' AND parent = %s", $wpdb->prefix, $scat));
+		if ($subcat_tt_ids) {
+			foreach($subcat_tt_ids as $subcat_tt_id) {
+				$scat_tt_ids[] = $subcat_tt_id->term_taxonomy_id;
+			}
+		}
+		$sWhere .= " AND tr.term_taxonomy_id IN (".implode(',', $scat_tt_ids).")";
 	}
 }
 ?>
@@ -40,9 +47,9 @@ if (strlen($scat)) {
 			<ul class="category-items inner">
 				<li<?php if ($scat == '') { echo ' class="active"'; } ?>><a href="<?php the_permalink(); ?>?seller=<?php echo $seller_id; ?>">All Categories</a></li>
 				<?php if ($seller_categories) { ?>
-					<?php foreach($seller_categories as $seller_category) { ?>
+					<?php foreach($seller_categories as $seller_category) { if ($seller_category->parent == 0) { ?>
 					<li<?php if ($scat == $seller_category->term_id) { echo ' class="active"'; } ?>><a href="<?php the_permalink(); ?>?seller=<?php echo $seller_id; ?>&scat=<?php echo $seller_category->term_id; ?>"><?php echo $seller_category->name; ?></a></li>
-					<?php } ?>
+					<?php }} ?>
 				<?php } ?>
 			</ul>
 		</div>

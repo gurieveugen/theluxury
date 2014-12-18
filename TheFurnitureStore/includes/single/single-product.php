@@ -98,8 +98,8 @@ jQuery(document).ready(function() {
 			// product price
 			$currency_rate = $_SESSION['currency-rate'];
 			if (!$currency_rate) { $currency_rate = 1; }
-			$price = get_post_meta($post->ID, 'price', true);
-			$new_price = get_post_meta($post->ID, 'new_price', true);
+			$price = $post->price;
+			$new_price = $post->new_price;
 			if($new_price) { ?>
 				<h2>Price <span class="old-price"><?php product_prices_list($price); ?></span></h2>
 				<h2 class="price"><?php product_prices_list($new_price); ?></h2>
@@ -118,61 +118,26 @@ jQuery(document).ready(function() {
 			<div class="clear"></div>
 			<div class="data-section">
 				<?php if(strlen(get_custom_field('disable_cart', FALSE)) == 0) { ?>
-				<form action="" name="the_product" id="the_product" method="post">
+				<form id="the_product" method="POST" onsubmit="return add_to_cart_action(<?php the_ID(); ?>);">
 					<input type="hidden" name="cmd" value="add" />
-					<input type="hidden" name="add" value="1" />
-					<input type="hidden" name="add_action" value="cart" id="add-action" />
-					<input type="hidden" name="postID" value="<?php the_ID(); ?>" />
-					<input type="hidden" name="item_name" value="<?php the_title(); ?>" />									
-					<input type="hidden" name="item_id" id="item_id" value="<?php get_custom_field('ID_item', TRUE); ?>" />
-					<input type="hidden" name="item_number" value="1"/>									
-					<input type="hidden" name="currency_code" value="<?php echo $OPTION['wps_currency_code']; ?>" />
-					<input type="hidden" name="amount" value="<?php echo $price; ?>" id="amount" />	
-					<input type="hidden" name="image_thumb" value="<?php echo $image_thumb; ?>" />
-					<input type="hidden" name="attr_option" id="attr_option" value="<?php echo $attr_option; ?>" />
-					<?php if(is_it_digital()) { ?>
-						<input type="hidden" name="item_file" value="<?php get_custom_field('item_file', TRUE); ?>" />
-					<?php } else { ?>
-						<input type="hidden" name="item_weight" value="<?php get_custom_field('item_weight', TRUE); ?>" />
-					<?php } ?>
+					<input type="hidden" name="post_id" value="<?php the_ID(); ?>" class="item-post-id" />
 					<div class="buttons">
 						<?php if($OPTION['wps_shoppingCartEngine_yes']) { ?>
 							<?php if ($stock_amount > 0) { ?>
 								<?php if(product_is_available($post->ID)) { ?>
-									<!--<input type="image" src="<?php bloginfo('template_url'); ?>/images/product/btn-buy-now.png" class="btn-buy-now" id="addC">-->
-									<button class="btn-orange" id="addC">Buy Now</button>
+									<div class="single-add-to-cart">
+										<button class="btn-orange" id="addC">ADD TO SHOPPING CART</button>
+										<div class="satc-loading"><img src="<?php echo TEMPLURL; ?>/images/ajax-loader-small.gif"></div>
+									</div>
 									<?php if (layaway_is_enabled()) {
 										$days = layaway_get_product_days($post->ID, get_the_date('F j, Y g:i:s a'));
 										if ($days < 8) { $days_left = 8 - $days; ?>
 										<strong class="btn-grey no-btn btn-1">Available for installments in <?php echo $days_left; ?> day<?php if ($days_left > 1) { echo 's'; } ?></strong>
 										<?php } else { ?>
-											<button class="btn-grey" id="installments-button">Buy In Installments</button>
-											<!--<input type="image" src="<?php bloginfo('template_url'); ?>/images/product/btn-buy-installments.png" class="btn-installments" id="installments-button" />-->
-											<input type="hidden" name="installments_buy" id="installments-buy" value="0">
-											<?php
-											$perc = layaway_get_percent_number();
-											$ihead = get_option('wps_layaway_popup_heading');
-											$itext = get_option('wps_layaway_popup_text');
-
-											$usd_amount = format_price(layaway_get_amount($price));
-											$aed_amount = format_price(layaway_get_amount($price, true));
-
-											$ihead = str_replace('{PRODUCT_NAME}', $post->post_title, $ihead);
-											$ihead = str_replace('{USD_AMOUNT}', $usd_amount, $ihead);
-											$ihead = str_replace('{AED_AMOUNT}', $aed_amount, $ihead);
-
-											$itext = str_replace('{PRODUCT_NAME}', $post->post_title, $itext);
-											$itext = str_replace('{USD_AMOUNT}', $usd_amount, $itext);
-											$itext = str_replace('{AED_AMOUNT}', $aed_amount, $itext);
-											?>
-											<div style="display:none;">
-												<div id="installments-popup" class="installments-popup">
-													<div class="i-head"><?php echo $ihead; ?></div>
-													<div class="i-text"><?php echo wpautop($itext); ?></div>
-													<!--<div class="shopform_btn installments_continue"><input class="input_image" type="image" id="installments-continue" name="addIns" src="<?php bloginfo('stylesheet_directory'); ?>/images/continue_installments.png" /></div>-->
-													<div class="cf"><input class="input_image btn-orange right" type="submit" id="installments-continue" value="Continue" name="addIns" /></div>
-												</div>
+											<div class="single-buy-in-installments">
+												<a href="#buy-in-installments" class="installments-popup-link">BUY IN INSTALLMENTS</a>
 											</div>
+											<input type="hidden" name="installments_buy" id="installments-buy" value="0">
 										<?php } ?>
 									<?php } ?>
 								<?php } else { // if(product_is_available($post->ID)) { ?>

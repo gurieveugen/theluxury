@@ -116,15 +116,7 @@ $remove_charge = get_user_meta($user_ID, 'remove_charge', true);
 				<input type="hidden" name="layaway_payment" value="true" />
 				<input type="hidden" name="loid" value="<?php echo $order_id; ?>" />
 				<input type="hidden" name="cmd" value="add" />
-				<input type="hidden" name="add" value="1" />
-				<input type="hidden" name="postID" value="<?php echo $my_order_product->postID; ?>" />
-				<input type="hidden" name="item_name" value="<?php echo $my_order_product->item_name; ?>" />
-				<input type="hidden" name="item_id" value="<?php echo $my_order_product->item_id; ?>"/>
-				<input type="hidden" name="item_number" value="1"/>									
-				<input type="hidden" name="amount" value="<?php echo $my_order_product->item_price; ?>"/>	
-				<input type="hidden" name="buy_now" value="<?php get_custom_field('buy_now', TRUE); ?>" />		
-				<input type="hidden" name="currency_code" value="<?php echo $OPTION['wps_currency_code']; ?>" />
-				<input type="hidden" name="image_thumb" value="<?php echo $my_order_product->item_thumb; ?>" />
+				<input type="hidden" name="post_id" value="<?php echo $my_order_product->postID; ?>" />
 				</form>
 				</td>
 			</tr>

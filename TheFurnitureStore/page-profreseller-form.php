@@ -46,6 +46,10 @@ global $OPTION;
 		</div>
 		<div class="col">
 			<label class="label">
+				<input type="checkbox" name="psf_category[]" value="Clothing">
+				Clothing
+			</label>
+			<label class="label">
 				<input type="checkbox" name="psf_category[]" value="Jewelry">
 				Jewelry
 			</label>

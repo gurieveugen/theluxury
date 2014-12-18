@@ -1,33 +1,7 @@
 <?php 
+check_logged_in();
 
-if(is_category('member-bags') || is_category('reserved-bags') || is_category('sale'))
-{
-	auth_redirect_theme_login();
-}
-get_header();
-
-
-$DEFAULT = show_default_view();
-
- if($DEFAULT){
-	$WPS_sidebar		= $OPTION['wps_sidebar_option'];
-	switch($WPS_sidebar){
-		case 'alignRight':
-			$the_float_class 	= 'alignleft';
-		break;
-		case 'alignLeft':
-			$the_float_class 	= 'alignright';
-		break;
-	}
-
-	$the_div_class 	= 'sidebar tag_sidebar category_sidebar noprint alignleft ';
-	if (is_sidebar_active('category_widget_area')) 
-	{
-		printf('<div class="%s" data-ttttt="">', $the_div_class );
-		dynamic_sidebar('category_widget_area');	
-		printf('</div><!-- category_sidebar -->');
-	} 
-	?>
+get_header(); ?>
 	<div class="alignright" id="main_col">
 		<?php
 		product_sort_select();
@@ -57,6 +31,7 @@ $DEFAULT = show_default_view();
 			<?php echo $html.$pagination->getHTML(); ?>
 		</div>
 	</div>
-	<?php
-} 
-get_footer(); ?>
+	<div class="sidebar page_sidebar noprint alignleft" data-ttttt="">
+		<?php dynamic_sidebar('category_widget_area'); ?>
+	</div>
+<?php get_footer(); ?>

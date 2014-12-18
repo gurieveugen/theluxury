@@ -17,7 +17,16 @@ function theme_widgets_init() {
 		'before_title' 	=> '<h3 class="widget-title">',
 		'after_title' 	=> '</h3>',
 	));
-	
+
+	register_sidebar( array (
+		'name' 			=> 'Header Top Menu',
+		'id' 			=> 'header_top_menu_area',
+		'before_widget' => '',
+		'after_widget' 	=> '',
+		'before_title' 	=> '',
+		'after_title' 	=> '',
+	));
+
 // index page sidebar
 	register_sidebar( array (
 		'name' 			=> 'Frontpage Aside',
@@ -34,7 +43,7 @@ function theme_widgets_init() {
 		'id' 			=> 'frontpage_bottom_widget_area',
 		'before_widget' => '<div id="%1$s" class="widget %2$s">',
 		'after_widget' 	=> '</div>',
-		'before_title' 	=> '<h3 class="widget-title">',
+		'before_title' 	=> '<h3>',
 		'after_title' 	=> '</h3>',
 	));
 	// Frontpage Middle
@@ -359,6 +368,16 @@ if ($OPTION['wps_footer_option'] =='large_footer') {
 }	
 	// Footer Copyright Text
 	register_sidebar( array (
+		'name' 			=> 'Footer Social Area',
+		'id' 			=> 'footer_social_widget_area',
+		'before_widget' => ' ',
+		'after_widget' 	=> ' ',
+		'before_title' 	=> ' ',
+		'after_title' 	=> ' ',
+	));
+
+	// Footer Copyright Text
+	register_sidebar( array (
 		'name' 			=> 'Footer Copyright Text',
 		'id' 			=> 'footer_copyright_text_widget_area',
 		'before_widget' => ' ',
@@ -618,9 +637,7 @@ class PagesListWidget extends WP_Widget {
 		$orderby 	= $instance['orderby'];
 		$order 		= $instance['order'];
 		$include 	= $instance['include'];
-		
-		
-		
+
 		# Before the widget
 		echo $before_widget;
 
@@ -637,7 +654,7 @@ class PagesListWidget extends WP_Widget {
 			'depth'			=> -1,
 			
 		); ?>
-		<ul class="pagesList">
+		<ul class="nav-footer">
 			<?php wp_list_pages($pagesArg); ?>
 		</ul>
 		<?php
@@ -4229,52 +4246,45 @@ class ShopFeaturedProductsWidget extends WP_Widget {
 		if($recently_added->have_posts()) {
 			# Before the widget
 			echo $before_widget;
-			echo '<div class="recently-added-widget">';
 			# The title
-			if ($title) { echo $before_title . $title . $after_title; }
+			if ($title) { echo '<div class="title-line">'.$before_title . $title . $after_title.'</div>'; }
 		?>
-			<ul class="recently-added-list">
-				<?php while ($recently_added->have_posts()) { $recently_added->the_post();
-					$pimage = get_product_thumb(get_the_ID(), 174);
-				?>
-				<li class="c_box4">
-					<div class="contentWrap">
-						<div class="holder">
-							<a href="<?php the_permalink(); ?>" class="image" title="<?php the_title(); ?>">
+		<div class="b-carousel carousel-products" id="carousel-recommended">
+			<div class="jcarousel">
+				<ul class="recently-added-list slides">
+					<?php while ($recently_added->have_posts()) { $recently_added->the_post();
+						$pimage = get_product_thumb(get_the_ID(), 150);
+						$price = get_custom_field('price', FALSE);
+						$new_price = get_custom_field('new_price', FALSE);
+						?>
+						<li class="b-product-item">
+							<a href="<?php the_permalink(); ?>" class="image">
 								<?php if($pimage) { ?><img src="<?php echo $pimage; ?>" alt="" /><?php } ?>
 							</a>
-							<div class="teaser">
-								<div class="prod-title-box">
-									<h5 class="prod-title"><a href="<?php the_permalink(); ?>" title="<?php printf( __('Permalink to %s', 'wpShop'), the_title_attribute('echo=0') ); ?>" rel="bookmark"><?php echo get_limit_content(get_the_title(), 48, true); ?></a></h5>
-								</div>
-								<p class="price_value">
-									<?php // PRODUCT PRICE
-									$price = get_custom_field('price', FALSE);
-									$new_price = get_custom_field('new_price', FALSE);
-									if ($new_price && $price) { ?>
-										<span class="was price">Was: <?php product_prices_list($price); ?></span>
-									<?php } ?>
-								</p>
-							</div>
-						</div>
-						<?php if ($new_price) { ?>
-							<div class="price-box">
-								<?php if ($price > $new_price) { $perc = round(($price - $new_price) / ($price / 100)); ?>
-									<span class="discounts"><?php echo $perc; ?>% off</span>
+							<h5 class="title"><a href="<?php the_permalink(); ?>"><?php echo get_limit_content(get_the_title(), 48, true); ?></a></h5>
+							<div class="price-row price-row_was">
+								<?php if ($new_price && $price) { ?>
+									Was: <span class="was price"><?php product_prices_list($price); ?></span>
 								<?php } ?>
-								<h3>Now: <strong><?php product_prices_list($new_price); ?></strong></h3>
 							</div>
-						<?php } else { ?>
-							<div class="price-box">
-								<h3><strong><?php product_prices_list($price); ?></strong></h3>
+							<div class="price-row cf">
+								<?php if ($new_price) { ?>
+									Now: <?php product_prices_list($new_price); ?>
+									<?php if ($price > $new_price) { $perc = round(($price - $new_price) / ($price / 100)); ?>
+										<div class="right"><?php echo $perc; ?>% OFF</div>
+									<?php } ?>
+								<?php } else { ?>
+									<?php product_prices_list($price); ?>
+								<?php } ?>
 							</div>
-						<?php } ?>
-					</div>
-				</li>
-				<?php } ?>
-			</ul>
+						</li>
+					<?php } ?>
+				</ul>
+			</div>
+			<a href="#" class="flex-prev">&lsaquo;</a>
+			<a href="#" class="flex-next">&rsaquo;</a>
+		</div>
 		<?php
-			echo '</div>';
 			# After the widget
 			echo $after_widget;
 		}

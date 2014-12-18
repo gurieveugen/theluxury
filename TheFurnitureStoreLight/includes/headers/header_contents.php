@@ -14,7 +14,7 @@ if ($pageurl == '/') { $pageurl = site_url(); }
 			 |</span>
 			<div class="switch switcher-currency">
 				<div id="currencySelect" class="switch-wrapper">
-					<span onclick="popUpMenu(this);">
+					<span class="currency-container"><!-- onclick="popUpMenu(this);" -->
 						<strong class="current currency-USD">
 							<span class="opacity-fader">USD</span>
 						</strong>
@@ -51,12 +51,23 @@ if ($pageurl == '/') { $pageurl = site_url(); }
 					}
 				}
 				?>
-				<span class="bag" id="header-bag-info"><a href="<?php echo get_cart_url(); ?>"><?php echo $basket; ?></a></span>
+				<span class="bag" id="header-bag-info">
+					<a href="<?php echo get_cart_url(); ?>" class="bag-number"><?php echo $basket; ?></a>
+					<div class="header-cart-items">
+						<div class="hci-block">
+							<a href="#close" class="hci-close">close</a>
+							<div class="hci-title">YOUR SHOPPING CART</div>
+							<ul class="hci-list"></ul>
+							<div class="hci-button"><input type="button" value="CHECKOUT" class="btn-orange" onclick="window.location.href='<?php echo get_checkout_url(); ?>';"></div>
+						</div>
+					</div>
+				</span>
+
 				<?php if (is_user_logged_in()) { global $current_user;
 					$my_items_page = get_permalink($OPTION['wps_indvseller_my_items_page']);
 					if (in_array('profseller', $current_user->roles)) {
 						$my_items_page = get_permalink($OPTION['wps_profreseller_my_items_page']);
-					} // Hi, echo $current_user->display_name; ?>
+					} ?>
 					<ul class="logged-menu">
 						<li><a href="#">My Account</a>
 							<ul class="head_drop">

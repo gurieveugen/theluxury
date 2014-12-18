@@ -2,6 +2,7 @@
 session_start();
 
 define('TEMPLURL', get_bloginfo('template_url'));
+define('LIGHTTEMPLURL', str_replace('/style.css', '', get_bloginfo('stylesheet_url')));
 define('HOMEURL', get_option('home'));
 define('WPSHOP_LIB', 'lib/');
 
@@ -21,6 +22,7 @@ add_filter('option_url', 'adjust2ssl');
 add_filter('option_wpurl', 'adjust2ssl');
 add_filter('option_stylesheet_url', 'adjust2ssl');
 add_filter('option_template_url', 'adjust2ssl');
+add_filter('show_admin_bar', '__return_false');
 
 if(!isset($_SERVER['HTTPS'])){$_SERVER['HTTPS'] = NULL;}	
 if(!isset($_SERVER['SSL'])){$_SERVER['SSL'] = NULL;}		
@@ -51,6 +53,7 @@ require_once(WPSHOP_LIB . 'engine/nws-sell-questions.php');
 require_once(WPSHOP_LIB . 'engine/class.rhinosupport.php');
 require_once(WPSHOP_LIB . 'engine/class.channel.advisor.php');
 require_once(WPSHOP_LIB . 'engine/class.emarsys.php');
+require_once(WPSHOP_LIB . 'engine/alerts.php');
 require_once(WPSHOP_LIB . 'engine/layaway.php');
 require_once($_SERVER['DOCUMENT_ROOT'] . '/prelaunch/common.php');
 require_once(TEMPLATEPATH . '/geoplugin.class.php');
@@ -88,8 +91,8 @@ foreach($currency_codes as $cc => $cn) {
 register_sidebar( array(
 		'name' => __( 'Banner Area', 'twentyten' ),
 		'id' => 'banner-area',
-		'before_widget' => '<div id="%1$s" class="container promo-widget %2$s">',
-		'after_widget' => '</div>',
+		'before_widget' => '',
+		'after_widget' => '',
 		'before_title' => '<h3 class="widget-title">',
 		'after_title' => '</h3>',
 	) );
@@ -290,35 +293,54 @@ function NWS_theme_init(){
 	// ORDER ACTIONS
 	if ($_POST['proceed2Checkout'] == 'true') {
 		layaway_set_session();
-		wp_redirect(get_checkout_url().'?orderNow=1');
+		wp_redirect(get_checkout_url());
 		exit();
 	}
-	// order steps action
-	if ($_POST['order_step'] == 1) {
+	// order process action
+	if ($_POST['checkout_process'] == 'installments') {
 		if (!check_cart_items()) {
-			wp_redirect(get_cart_url());
+			echo 'empty-cart';
+			exit;
+		}
+		echo layaway_set_session();
+		exit;
+	}
+	if ($_POST['checkout_process'] == 'delivery') {
+		if (!check_cart_items()) {
+			echo 'empty-cart';
 			exit;
 		}
 		$feedback = check_address_form();
 		if($feedback['error'] == 0) {
 			process_order(1);
-			wp_redirect(get_checkout_url().'?orderNow=2');
-			exit;
+			echo 'success';
+		} else {
+			echo $feedback['e_message'];
 		}
-	} else if ($_POST['order_step'] == 2) {
+		exit;
+	}
+	if ($_POST['checkout_process'] == 'payment') {
 		if (!check_cart_items()) {
-			wp_redirect(get_cart_url());
+			echo 'empty-cart';
 			exit;
 		}
-		if(check_cod_available()) {
+		$cod_available = check_cod_available();
+		if($cod_available) {
 			process_order(2);
-			wp_redirect(get_checkout_url().'?orderNow=3');
-			exit;
+			ob_start();
+			include WP_CONTENT_DIR.'/themes/'.WPSHOP_THEME_NAME.'/lib/pages/shop_checkout_payment_form.php';
+			$form = ob_get_contents();
+			ob_end_clean();
+			echo $form;
+		} else {
+			echo 'error';
 		}
-	} else if ($_POST['order_step'] == 3 || isset($_GET['confirm'])) {
+		exit;
+	}
+	if ($_POST['order_complete'] == 'true' || isset($_GET['confirm'])) {
 		$error = '';
 		$iserror = false;
-		if ($_POST['order_step'] == 3) {
+		if ($_POST['order_complete'] == 'true') {
 			if (!check_cart_items()) {
 				wp_redirect(get_cart_url());
 				exit;
@@ -355,18 +377,15 @@ function NWS_theme_init(){
 			}
 		}
 		if ($iserror) {
-			$redirect = '/?orderNow=3&payerror='.urlencode($error);
+			$redirect = '/?payerror='.urlencode($error);
 		} else {
 			$oid = $payment_feedback['oid'];
-			if ($payment_feedback['layaway_order'] > 0) { $oid = $payment_feedback['layaway_order']; }
+			//if ($payment_feedback['layaway_order'] > 0) { $oid = $payment_feedback['layaway_order']; }
 			$_SESSION['order_payment_data'] = $payment_feedback;
-			$redirect = '/?orderNow=confirm&oid='.$oid;
+			$redirect = '/?confirmation=true&oid='.$oid;
 		}
 		wp_redirect(get_checkout_url().$redirect);
 		exit;
-	}
-	if ($_GET['orderNow'] == '3' && $_POST['order_review'] == 'update') {
-		order_review_update();
 	}
 	// PayPal Pro
 	if ($_POST['paypal-pro'] == 'ok') {		
@@ -425,8 +444,11 @@ function NWS_theme_init(){
 			}
 			echo $total_item_num;
 		} else if ($_POST['FormAction'] == 'popup-subscribe') {
-			// subscribe user
+			// subscribe user (first popup)
 			nws_subscribe_action('popup', array('email' => $_POST['email'], 'gender' => $_POST['gender']));
+		} else if ($_POST['FormAction'] == 'footer-signup-form') {
+			// subscribe user (footer sign up form)
+			nws_subscribe_action('signup', array('email' => $_POST['email']));
 		} else if ($_POST['FormAction'] == 'check_voucher') {
 			// checkout check voucher
 			$vcode = trim($_POST['vcode']);
@@ -437,6 +459,18 @@ function NWS_theme_init(){
 				unset($_SESSION['checkout_voucher']);
 				echo 'fail';
 			}
+		} else if ($_POST['FormAction'] == 'get_user_order_info') {
+			$user_order_info = nws_get_user_order_info();
+			if ($user_order_info) {
+				echo json_encode($user_order_info);
+			}
+		} else if ($_POST['FormAction'] == 'checkout_get_states') {
+			$country = $_POST['country'];
+			if (strlen($country)) {
+				echo get_country_states($country);
+			}
+		} else if ($_POST['FormAction'] == 'checkout_reload_your_order') {
+			include (TEMPLATEPATH . '/lib/pages/shop_your_order.php');
 		}
 		exit;
 	}
@@ -864,11 +898,84 @@ function emarsys_get_order_email() {
 	return $order_email;
 }
 
+function thelux_get_google_posts() {
+	global $wpdb, $OPTION;
+
+	$feed_posts = $wpdb->get_results(sprintf("SELECT * FROM %sposts WHERE post_type = 'post' AND post_status = 'publish' AND inventory = 1 ORDER BY post_date DESC LIMIT 0, 10000", $wpdb->prefix));
+	if ($feed_posts) {
+		$google_categoeies = array();
+		$google_cats = $wpdb->get_results(sprintf("SELECT * FROM %sccf_Value WHERE field_name = 'Google Category'", $wpdb->prefix));
+		if ($google_cats) {
+			foreach($google_cats as $google_cat) {
+				$google_categoeies[$google_cat->term_id] = $google_cat->field_value;
+			}
+		}
+		$google_types = array();
+		$google_tps = $wpdb->get_results(sprintf("SELECT * FROM %sccf_Value WHERE field_name = 'Google Type'", $wpdb->prefix));
+		if ($google_tps) {
+			foreach($google_tps as $google_tp) {
+				$google_types[$google_tp->term_id] = $google_tp->field_value;
+			}
+		}
+		$post_taxonomies = array();
+		$custom_taxes = $wpdb->get_results(sprintf("SELECT t.* FROM %sterms t LEFT JOIN %sterm_taxonomy tt ON tt.term_id = t.term_id WHERE tt.taxonomy = 'category'", $wpdb->prefix, $wpdb->prefix));
+		if ($custom_taxes) {
+			foreach($custom_taxes as $custom_tax) {
+				$post_taxonomies[$custom_tax->term_id] = $custom_tax->name;
+			}
+		}
+		header('Content-type: text/csv');
+		header('Content-disposition: attachment;filename=GooglePosts.csv');
+		$csv_titles = array('ID', 'ID_item', 'Title', 'Category', 'Google Category', 'Google Type', 'Link');
+		str_putcsv($csv_titles);
+		foreach($feed_posts as $feed_post) {
+			$ID = $feed_post->ID;
+			$ID_item = $feed_post->id_item;
+
+			$post_categories = xl_feed_products_categories($feed_post);
+
+			$item_cats = array();
+			$google_cat = '';
+			foreach ($post_categories as $cat_id) {
+				$item_cats[] = $post_taxonomies[$cat_id];
+				$ncat = trim($google_categoeies[$cat_id]);
+				if ($ncat) {
+				   if (strlen($ncat) > strlen($google_cat)) { $google_cat = $ncat; }
+				}
+			}
+
+			$google_type = '';
+			foreach($post_categories as $cat_id) {
+				$ncat = trim($google_types[$cat_id]);
+				if ($ncat) {
+				   if (strlen($ncat)) { $google_type = $ncat; }
+				}
+			}
+			if (empty($google_cat) || empty($google_type)) {
+				$data = array();
+				$data['id'] = $ID;
+				$data['item_id'] = $ID_item;
+				$data['title'] = $feed_post->post_title;
+				$data['category'] = implode(', ', $item_cats);
+				$data['google_category'] = $google_cat;
+				$data['google_type'] = $google_type;
+				$data['link'] = get_permalink($ID);
+				foreach($data as $dk => $dv) { $data[$dk] = str_replace(array(chr(10), chr(13)), '', $dv); }
+				str_putcsv($data);
+			}
+		}
+	}
+}
+
 
 /* Hivista Actions */
 add_action('init', 'init_hivista');
 function init_hivista() {
 	global $wpdb, $OPTION;
+	if ($_GET['google'] == 'posts') {
+		thelux_get_google_posts();
+		exit;
+	}
 	if ($_GET['hivista'] == 'price') {
 		$nmb = 1;
 		$sale_posts = $wpdb->get_results("SELECT * FROM wp_posts WHERE post_type = 'post' AND upd = 0 ORDER BY ID DESC LIMIT 1000");

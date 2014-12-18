@@ -129,21 +129,6 @@ wps_shop_process_steps(1); ?>
 							$chd1 = ''; $chd2 = ' CHECKED'; $clstyle = ' style="display:none;"'; $clpr = 0;
 							if ($_GET['installments'] == 1 || $_SESSION['layaway_process'] == 1) { $chd1 = ' CHECKED'; $chd2 = ''; $clstyle = ''; $clpr = 1; }
 
-							// Purchase popup text
-							$layaway_popup_heading = $OPTION['wps_layaway_popup_heading'];
-							$layaway_popup_text = $OPTION['wps_layaway_popup_text'];
-							$usd_amount = format_price(layaway_get_amount($CART['total_price']));
-							$aed_amount = format_price(layaway_get_amount($CART['total_price'], true));
-							$cartcontent = explode('|', $CART["content"][0]);
-
-							$layaway_popup_heading = str_replace('{PRODUCT_NAME}', $cartcontent[2], $layaway_popup_heading);
-							$layaway_popup_heading = str_replace('{USD_AMOUNT}', $usd_amount, $layaway_popup_heading);
-							$layaway_popup_heading = str_replace('{AED_AMOUNT}', $aed_amount, $layaway_popup_heading);
-
-							$layaway_popup_text = str_replace('{PRODUCT_NAME}', $cartcontent[2], $layaway_popup_text);
-							$layaway_popup_text = str_replace('{USD_AMOUNT}', $usd_amount, $layaway_popup_text);
-							$layaway_popup_text = str_replace('{AED_AMOUNT}', $aed_amount, $layaway_popup_text);
-
 							$payment_amount = format_price(sprintf("%01.2f", $layaway_amount * $_SESSION['currency-rate']));
 							$payment_amount = str_replace(',', '', $payment_amount);
 							if ($_GET['minerror'] == 1) {
@@ -157,7 +142,7 @@ wps_shop_process_steps(1); ?>
 									<div class="cl-tit">'.__('Purchase on installments','wpShop').':</div>
 									<div class="cl-radio"><input type="radio" name="layaway_process" value="1" class="clopt"'.$chd1.'>&nbsp;'.__('Yes','wpShop').'</div>
 									<div class="cl-radio"><input type="radio" name="layaway_process" value="0" class="clopt"'.$chd2.'>&nbsp;'.__('No','wpShop').'</div>
-									<div class="cl-question"><a href="#layaway-purchase" class="layaway-purchase-q"><img src="'.get_bloginfo('template_url').'/images/question-icon.gif"></a></div>
+									<div class="cl-question"><a href="#layaway-purchase" class="installments-popup-link"><img src="'.get_bloginfo('template_url').'/images/question-icon.gif"></a></div>
 								</div>
 								<div class="cart-layaway-body"'.$clstyle.'>
 									<div class="cart-layaway-opt">
@@ -174,11 +159,6 @@ wps_shop_process_steps(1); ?>
 									</div>
 								</div>
 							</div>
-							<div style="display:none;">
-								<div id="cart-layaway-terms" class="cl-popup">'.wpautop($OPTION['wps_layaway_terms_text']).'</div>
-								<div id="cart-layaway-purchase-question" class="installments-popup"><div class="i-head">'.$layaway_popup_heading.'</div><div class="i-text">'.wpautop($layaway_popup_text).'</div></div>
-								<div id="cart-layaway-payment-question" class="cl-payment-popup">'.wpautop($OPTION['wps_layaway_payment_popup_text']).'</div>
-							</div>
 						</td>
 					</tr>';
 						}
@@ -189,6 +169,7 @@ wps_shop_process_steps(1); ?>
 			</form>
 			<form id="proceed2Checkout" style="margin-top: 0px;" method="POST">
 				<input type="hidden" name="proceed2Checkout" value="true">
+				<input type="hidden" name="frompage" value="cart">
 				<input type="hidden" name="layaway_process" id="layaway-process" value="'.$clpr.'">
 				<input type="hidden" name="layaway_amount" id="layaway-amount" value="'.$layaway_amount.'">
 				<input type="hidden" name="layaway_def_amount" value="'.$layaway_def_amount.'">

@@ -62,11 +62,18 @@ if (strlen($search_date_end)) {
 if (strlen($iscat)) {
 	$scat_tt_id = $wpdb->get_var(sprintf("SELECT term_taxonomy_id FROM %sterm_taxonomy WHERE taxonomy = 'seller-category' AND term_id = %s", $wpdb->prefix, $iscat));
 	if ($scat_tt_id) {
-		$iseller_where = " AND tr.term_taxonomy_id = ".$scat_tt_id;
+		$scat_tt_ids = array($scat_tt_id);
+		$subcat_tt_ids = $wpdb->get_results(sprintf("SELECT term_taxonomy_id FROM %sterm_taxonomy WHERE taxonomy = 'seller-category' AND parent = %s", $wpdb->prefix, $iscat));
+		if ($subcat_tt_ids) {
+			foreach($subcat_tt_ids as $subcat_tt_id) {
+				$scat_tt_ids[] = $subcat_tt_id->term_taxonomy_id;
+			}
+		}
+		$iseller_where = " AND tr.term_taxonomy_id IN (".implode(',', $scat_tt_ids).")";
 	}
 }
 if (strlen($pscat)) {
-	$term_taxonomies = $wpdb->get_results(sprintf("SELECT term_taxonomy_id FROM %sterm_taxonomy WHERE taxonomy = 'seller-category' AND term_id IN (%s)", $wpdb->prefix, implode(",", $split_categories[$pscat])));
+	$term_taxonomies = $wpdb->get_results(sprintf("SELECT term_taxonomy_id FROM %sterm_taxonomy WHERE taxonomy = 'category' AND term_id IN (%s)", $wpdb->prefix, implode(",", $split_categories[$pscat])));
 	if ($term_taxonomies) {
 		$tt_ids = array();
 		foreach($term_taxonomies as $term_taxonomy) {
@@ -101,7 +108,11 @@ foreach($split_categories as $spcat => $spcats) {
 	$psellers_cat_nums[$spcat] = 0;
 }
 foreach($seller_categories as $seller_category) {
-	$isellers_cat_nums[$seller_category->term_id] = 0;
+	if ($seller_category->parent && $seller_category->slug != 'fashion-silver-jewelry') {
+		$isellers_cat_nums[$seller_category->parent] = 0;
+	} else {
+		$isellers_cat_nums[$seller_category->term_id] = 0;
+	}
 }
 
 // individual sellers draft posts
@@ -112,7 +123,11 @@ if ($all_draft_posts) {
 		if (!$item_tlc_viwed) {
 			foreach($seller_categories as $seller_category) {
 				if (has_term($seller_category->term_id, 'seller-category', $spost->ID)) {
-					$isellers_cat_nums[$seller_category->term_id]++;
+					if ($seller_category->parent && $seller_category->slug != 'fashion-silver-jewelry') {
+						$isellers_cat_nums[$seller_category->parent]++;
+					} else {
+						$isellers_cat_nums[$seller_category->term_id]++;
+					}
 				}
 			}
 		}
@@ -132,9 +147,10 @@ if ($all_draft_posts) {
 			<ul class="category-items inner">
 				<li<?php if ($iscat == '') { echo ' class="active"'; } ?>><a href="<?php the_permalink(); ?>" rel="is">All Categories</a></li>
 				<?php if ($seller_categories) { ?>
-					<?php foreach($seller_categories as $seller_category) { ?>
-					<li<?php if ($iscat == $seller_category->term_id) { echo ' class="active"'; } ?>><a href="<?php the_permalink(); ?>?iscat=<?php echo $seller_category->term_id; ?>"><?php echo $seller_category->name; ?><?php if ($isellers_cat_nums[$seller_category->term_id] > 0) { ?> <span class="num"><?php echo $isellers_cat_nums[$seller_category->term_id]; ?></span><?php } ?></a></li>
-					<?php } ?>
+					<?php foreach($seller_categories as $seller_category) {
+						if ($seller_category->parent == 0 || $seller_category->slug == 'fashion-silver-jewelry') { ?>
+							<li<?php if ($iscat == $seller_category->term_id) { echo ' class="active"'; } ?>><a href="<?php the_permalink(); ?>?iscat=<?php echo $seller_category->term_id; ?>"><?php echo $seller_category->name; ?><?php if ($isellers_cat_nums[$seller_category->term_id] > 0) { ?> <span class="num"><?php echo $isellers_cat_nums[$seller_category->term_id]; ?></span><?php } ?></a></li>
+					<?php }} ?>
 				<?php } ?>
 			</ul>
 			<ul class="tabset inner" style="padding-left:5px;">
@@ -663,7 +679,7 @@ if ($all_draft_posts) {
 					$pg = $_GET['isoipg']; if (!$pg) { $pg = 1; }
 					$limit = ' LIMIT '.(($pg - 1) * $admin_items_per_page).', '.$admin_items_per_page;
 
-					$on_sale_user_posts = $wpdb->get_results(sprintf("SELECT SQL_CALC_FOUND_ROWS p.*, u.user_login FROM %sposts p LEFT JOIN %spostmeta pmi ON pmi.post_id = p.ID LEFT JOIN %susers u ON u.ID = p.post_author LEFT JOIN %sterm_relationships tr ON tr.object_id = p.ID LEFT JOIN %spostmeta pm ON pm.post_id = p.ID AND pm.meta_key = 'ID_item' WHERE p.post_type = 'post' AND p.post_status = 'publish' AND p.inventory > 0 AND pmi.meta_key = 'item_seller' AND pmi.meta_value = 'i' %s %s GROUP BY p.ID ORDER BY p.ID DESC %s", $wpdb->prefix, $wpdb->prefix, $wpdb->prefix, $wpdb->prefix, $wpdb->prefix, $sWhere, $iseller_where, $limit));
+					$on_sale_user_posts = $wpdb->get_results(sprintf("SELECT SQL_CALC_FOUND_ROWS p.*, u.user_login FROM %sposts p LEFT JOIN %spostmeta pmi ON pmi.post_id = p.ID LEFT JOIN %susers u ON u.ID = p.post_author LEFT JOIN %sterm_relationships tr ON tr.object_id = p.ID LEFT JOIN %spostmeta pm ON pm.post_id = p.ID AND pm.meta_key = 'ID_item' WHERE p.post_type = 'post' AND p.post_status = 'publish' AND p.inventory > 0 AND pmi.meta_key = 'item_seller' AND pmi.meta_value = 'i' %s %s GROUP BY p.ID ORDER BY p.ID DESC %s", $wpdb->prefix, $wpdb->prefix, $wpdb->prefix, $wpdb->prefix, $wpdb->prefix, $sWhere, $iseller_where.$title_where, $limit));
 					$total_posts = $wpdb->get_var("SELECT FOUND_ROWS()");
 					if ($on_sale_user_posts) {
 						foreach($on_sale_user_posts as $spost) { $spost_picture = nws_get_item_thumb($spost->ID);
@@ -786,9 +802,11 @@ if ($all_draft_posts) {
 				<li<?php if ($pscat == '') { echo ' class="active"'; } ?>><a href="<?php the_permalink(); ?>?mtab=ps">All Categories</a></li>
 				<li<?php if ($pscat == 'bags') { echo ' class="active"'; } ?>><a href="<?php the_permalink(); ?>?pscat=bags&mtab=ps" rel="ps">Handbags<?php if ($psellers_cat_nums['bags'] > 0) { ?> <span class="num"><?php echo $psellers_cat_nums['bags']; ?></span><?php } ?></a></li>
 				<li<?php if ($pscat == 'shoes') { echo ' class="active"'; } ?>><a href="<?php the_permalink(); ?>?pscat=shoes&mtab=ps" rel="ps">Shoes<?php if ($psellers_cat_nums['shoes'] > 0) { ?> <span class="num"><?php echo $psellers_cat_nums['shoes']; ?></span><?php } ?></a></li>
+				<li<?php if ($pscat == 'clothing') { echo ' class="active"'; } ?>><a href="<?php the_permalink(); ?>?pscat=clothing&mtab=ps" rel="ps">Clothing<?php if ($psellers_cat_nums['clothing'] > 0) { ?> <span class="num"><?php echo $psellers_cat_nums['clothing']; ?></span><?php } ?></a></li>
 				<li<?php if ($pscat == 'watches') { echo ' class="active"'; } ?>><a href="<?php the_permalink(); ?>?pscat=watches&mtab=ps" rel="ps">Watches<?php if ($psellers_cat_nums['watches'] > 0) { ?> <span class="num"><?php echo $psellers_cat_nums['watches']; ?></span><?php } ?></a></li>
 				<li<?php if ($pscat == 'sunglasses') { echo ' class="active"'; } ?>><a href="<?php the_permalink(); ?>?pscat=sunglasses&mtab=ps" rel="ps">Sunglasses<?php if ($psellers_cat_nums['sunglasses'] > 0) { ?> <span class="num"><?php echo $psellers_cat_nums['sunglasses']; ?></span><?php } ?></a></li>
 				<li<?php if ($pscat == 'jewelry') { echo ' class="active"'; } ?>><a href="<?php the_permalink(); ?>?pscat=jewelry&mtab=ps" rel="ps">Jewelry<?php if ($psellers_cat_nums['jewelry'] > 0) { ?> <span class="num"><?php echo $psellers_cat_nums['jewelry']; ?></span><?php } ?></a></li>
+				<li<?php if ($pscat == 'fsjewelry') { echo ' class="active"'; } ?>><a href="<?php the_permalink(); ?>?pscat=fsjewelry&mtab=ps" rel="ps">Fashion & Silver Jewelry<?php if ($psellers_cat_nums['fsjewelry'] > 0) { ?> <span class="num"><?php echo $psellers_cat_nums['fsjewelry']; ?></span><?php } ?></a></li>
 			</ul>
 			<ul class="tabset inner" style="padding-left:5px;">
 				<li><a href="#tab-submitted-items-ps" class="active">Submitted</a></li>
@@ -898,7 +916,7 @@ if ($all_draft_posts) {
 					$pg = $_GET['psoipg']; if (!$pg) { $pg = 1; }
 					$limit = ' LIMIT '.(($pg - 1) * $admin_items_per_page).', '.$admin_items_per_page;
 
-					$on_sale_user_posts = $wpdb->get_results(sprintf("SELECT SQL_CALC_FOUND_ROWS p.*, pm.meta_value, u.user_login FROM %sposts p LEFT JOIN %spostmeta pm ON pm.post_id = p.ID AND pm.meta_key = 'ID_item' LEFT JOIN %spostmeta pm2 ON pm2.post_id = p.ID LEFT JOIN %susers u ON u.ID = p.post_author LEFT JOIN %sterm_relationships tr ON tr.object_id = p.ID WHERE p.post_type = 'post' AND p.post_status = 'publish' AND p.inventory > 0 AND pm2.meta_key = 'item_seller' AND pm2.meta_value = 'p' %s %s GROUP BY p.ID ORDER BY p.ID DESC %s", $wpdb->prefix, $wpdb->prefix, $wpdb->prefix, $wpdb->prefix, $wpdb->prefix, $sWhere, $pseller_where, $limit));
+					$on_sale_user_posts = $wpdb->get_results(sprintf("SELECT SQL_CALC_FOUND_ROWS p.*, pm.meta_value, u.user_login FROM %sposts p LEFT JOIN %spostmeta pm ON pm.post_id = p.ID AND pm.meta_key = 'ID_item' LEFT JOIN %spostmeta pm2 ON pm2.post_id = p.ID LEFT JOIN %susers u ON u.ID = p.post_author LEFT JOIN %sterm_relationships tr ON tr.object_id = p.ID WHERE p.post_type = 'post' AND p.post_status = 'publish' AND p.inventory > 0 AND pm2.meta_key = 'item_seller' AND pm2.meta_value = 'p' %s %s GROUP BY p.ID ORDER BY p.ID DESC %s", $wpdb->prefix, $wpdb->prefix, $wpdb->prefix, $wpdb->prefix, $wpdb->prefix, $sWhere, $pseller_where.$title_where, $limit));
 					$total_posts = $wpdb->get_var("SELECT FOUND_ROWS()");
 					if ($on_sale_user_posts) {
 						foreach($on_sale_user_posts as $spost) { $spost_picture = nws_get_item_thumb($spost->ID);

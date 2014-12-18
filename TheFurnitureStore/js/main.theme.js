@@ -1,5 +1,23 @@
+var cartpopup = false;
 var mcepopup = false;
 jQuery(document).ready(function(){
+	// header live chat
+	jQuery('.header-live-chat').click(function(){
+		$zopim.livechat.window.show();
+		return false;
+	});
+	jQuery('#my-account').click(function(){
+		return false;
+	});
+	jQuery('.logged-menu li.my-account-link').hover(
+		function(){
+			jQuery('.logged-menu').addClass('open');
+		},
+		function(){
+			jQuery('.logged-menu').removeClass('open');
+		}
+	);
+
 	// cart shipping costs
 	jQuery('.cart-ship-costs').click(function(){
 		jQuery.colorbox({inline:true, href:'#cart-shipping-costs'});
@@ -156,6 +174,12 @@ jQuery(document).ready(function(){
 		var remme = 0;
 		if (remf) { remme = 1; }
 
+		// google analitics event
+		var gatype = 'login_button';
+		if (trel == '#first-login-popup') { gatype = 'VIP popup'; }
+		if (callpg.indexOf('alertslogin') > 0) { gatype = 'notify_button'; }
+		if (callpg.indexOf('wishlist') > 0) { gatype = 'wishlist_button'; }
+
 		jQuery(trel+' .popup-login-login .action-loading').show();
 		jQuery.post(siteurl, 
 			{
@@ -168,7 +192,7 @@ jQuery(document).ready(function(){
 			function(data){
 				jQuery(trel+' .popup-login-login .action-loading').hide();
 				if (data == 'success') {
-					ga_send_event('login_button');
+					ga_send_event('login', gatype, 'email');
 					hide_login_popup();
 					mcEvilPopupCookie();
 					if (callpg.indexOf('%26alertslogin') > 0) {
@@ -185,6 +209,20 @@ jQuery(document).ready(function(){
 			}
 		);
 	});
+	if (jQuery('#basic-login-popup').size()) {
+		jQuery.post(siteurl, 
+			{
+				ajax_login_popup: 'get_remember_creds'
+			},
+			function(data){
+				if (data != '') {
+					var lpdata = data.split('(;)');
+					jQuery('.popup-login-login .user-email').val(lpdata[0]);
+					jQuery('.popup-login-login .user-pwd').val(lpdata[1]);
+				}
+			}
+		);
+	}
 	// register
 	jQuery('.popup-login .join-btn').click(function(){
 		var trel = jQuery(this).attr('rel');
@@ -214,7 +252,7 @@ jQuery(document).ready(function(){
 			function(data){
 				jQuery(trel+' .popup-login-register .action-loading').hide();
 				if (data == 'success') {
-					ga_send_event(gatype);
+					ga_send_event('registration', gatype, 'email');
 					hide_login_popup();
 					mcEvilPopupCookie();
 					if (callpg.indexOf('%26alertslogin') > 0) {
@@ -269,102 +307,17 @@ jQuery(document).ready(function(){
 		jQuery('.product-socials .pinit span').css('left', '0px');
 	}, 1000);
 
-
-	// checkout login
-	jQuery('.checkout-login-form').submit(function(){
-		var log = jQuery('.checkout-login-form #ch-login-email').val();
-		var pwd = jQuery('.checkout-login-form #ch-login-pwd').val();
-
-		jQuery('.checkout-login-form .action-loading').show();
-		jQuery.post(siteurl, 
-			{
-				ajax_login_popup: 'login',
-				log: log,
-				pwd: pwd,
-				remme: 0
-			},
-			function(data){
-				jQuery('.checkout-login-form .action-loading').hide();
-				if (data == 'success') {
-					window.location.reload();
-				} else {
-					alert(data);
-				}
-			}
-		);
-		return false;
-	});
-	// checkout register
-	jQuery('.checkout-register-form').submit(function(){
-		var email = jQuery('.checkout-register-form #ch-register-email').val();
-		var pwd = jQuery('.checkout-register-form #ch-register-pwd').val();
-		var gender = jQuery('.checkout-register-form #ch-register-gender input:checked').val();
-
-		// google analitics event
-		ga_send_event('register_button');
-
-		jQuery('.checkout-register-form .action-loading').show();
-		jQuery.post(siteurl, 
-			{
-				ajax_login_popup: 'register',
-				email: email,
-				pwd: pwd,
-				gender: gender
-			},
-			function(data){
-				jQuery('.checkout-register-form .action-loading').hide();
-				if (data == 'success') {
-					window.location.reload();
-				} else {
-					alert(data);
-				}
-			}
-		);
-		return false;
-	});
-	// checkout forgot password
-	jQuery('.checkout-login-form .ch-forgot-link').click(function(){
-		jQuery('.ch-login-block').hide();
-		jQuery('.ch-forgot-block').animate({height: 'show'}, 200);
-		return false;
-	});
-	jQuery('.checkout-forgot-form .ch-login-back').click(function(){
-		jQuery('.ch-forgot-block').hide();
-		jQuery('.ch-login-block').animate({height: 'show'}, 200);
-		return false;
-	});
-	
-	jQuery('.checkout-forgot-form').submit(function(){
-		var email = jQuery('.checkout-forgot-form #ch-forgot-email').val();
-		jQuery('.checkout-forgot-form .action-loading').show();
-		jQuery.post(siteurl, 
-			{
-				ajax_login_popup: 'forgot',
-				user_login: email
-			},
-			function(data){
-				jQuery('.checkout-forgot-form .action-loading').hide();
-				if (data == 'success') {
-					jQuery('.ch-forgot-block .success').animate({height: 'show'}, 300);
-					setTimeout(function(){
-						jQuery('.ch-forgot-block .success').hide();
-					}, 5000);
-				} else {
-					alert(data);
-				}
-			}
-		);
-		return false;
-	});
-
 	// first login popup
 	//jQuery('*').click(function(){
 	jQuery(document).click(function(){
 		if (check_first_popup()) {
 			popup_top_position('first-login-popup');
-			jQuery('.bg-popup-login, #first-login-popup').fadeIn();
+			jQuery('.window-mask, #first-login-popup').fadeIn();
 			mcepopup = true;
 			return false;
+		}
+		if (cartpopup) {
+			close_cart_popup();
 		}
 	});
 	jQuery('#first-login-popup .close').click(function(){
@@ -387,7 +340,37 @@ jQuery(document).ready(function(){
 		jQuery.colorbox({inline:true, href:href});
 		return false;
 	});
+
+	// footer sign up form
+	jQuery('.footer-signup-form form').submit(function(){
+		var error = '';
+		var yemail = jQuery('.footer-signup-form .your-email').val();
+
+		jQuery('.footer-signup-form .error').hide();
+
+		if (yemail == '') {
+			error = 'Please enter your email.';
+		} else if (!/^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,4})+$/.test(yemail)) {
+			error = 'Email address is incorrect.';
+		}
+
+		if (error == '') {
+			jQuery('#basic-login-popup .popup-login-register .user-email').val(yemail);
+			jQuery('.log-buttons a.register-lnk').trigger('click');
+			jQuery('#basic-login-popup .popup-login-register .register-btn').trigger('click');
+		} else {
+			jQuery('.footer-signup-form .error').html(error);
+			jQuery('.footer-signup-form .error').animate({height: 'show'}, 300);
+		}
+		
+		return false;
+	});
 });
+
+function show_zopim_chat() {
+	$zopim.livechat.window.show();
+	return false;
+}
 
 function check_first_popup() {
 	var fpopup = false;
@@ -414,12 +397,12 @@ function show_login_popup(c, ahref) {
 		jQuery('#basic-login-popup .buttons li a.register-tab-link').trigger('click');
 
 		popup_top_position('basic-login-popup');
-		jQuery('.bg-popup-login, #basic-login-popup').show();
+		jQuery('.window-mask, #basic-login-popup').show();
 	}
 }
 
 function hide_login_popup() {
-	jQuery('.bg-popup-login, .popup-login').hide();
+	jQuery('.window-mask, .popup-login').hide();
 }
 
 function check_reload_action(callpg) {
@@ -454,8 +437,9 @@ function mcEvilPopupClickCookie(clnmb) {
 	document.cookie = 'MCEvilPopupClick='+clnmb+';expires=' + expires_date.toGMTString()+';path=/';  
 }
 
-function ga_send_event(type) {
-	ga('send', 'event', {eventCategory: 'registration', eventAction: type});
+function ga_send_event(ecategory, eaction, elabel) {
+	//ga('send', 'event', {eventCategory: ecategory, eventAction: eaction, eventLabel: elabel});
+	ga('send', 'event', ecategory, eaction, elabel);
 }
 
 function fb_login(redirurl) {
@@ -473,7 +457,12 @@ function fb_login(redirurl) {
 						gender: rows[0].sex
 					},
 					function(data){
-						if (data == 'success') {
+						if (data == 'success-login' || data == 'success-register') {
+							if (data == 'success-login') {
+								ga_send_event('login', 'login_button', 'fb_connect');
+							} else {
+								ga_send_event('registration', 'register_button', 'fb_connect');
+							}
 							window.location.href = redirurl;
 						} else {
 							alert(data);
@@ -496,3 +485,11 @@ window.fbAsyncInit = function() {
         xfbml   : true
     });
 };
+
+function clear_chrome_auto_fill() {
+    if (navigator.userAgent.toLowerCase().indexOf('chrome') >= 0) {
+        jQuery('input[autocomplete="off"]').each( function(){
+            jQuery(this).val('');
+        });
+    }
+}

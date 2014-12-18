@@ -7,11 +7,7 @@ Template Name: Reserved Bags
 
 check_logged_in();
 
-get_header();
-
-$DEFAULT = show_default_view();
-
-if($DEFAULT) { ?>
+get_header(); ?>
 	<div class="alignright" id="main_col">
 		<?php
 		product_sort_select();
@@ -41,11 +37,8 @@ if($DEFAULT) { ?>
 			<?php echo $html.$pagination->getHTML(); ?>
 		</div>
 	</div>
-	<?php
-}  ?>
-<div class="sidebar page_sidebar noprint alignleft" data-ttttt="">
-	<?php dynamic_sidebar('category_widget_area'); ?>
-</div>
-<div class="whats-new-pg" style="display:none;">true</div>
+	<div class="sidebar page_sidebar noprint alignleft" data-ttttt="">
+		<?php dynamic_sidebar('category_widget_area'); ?>
+	</div>
+	<div class="whats-new-pg" style="display:none;">true</div>
 <?php get_footer(); ?>
-		

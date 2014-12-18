@@ -115,6 +115,10 @@ class Wishlist{
 				//get the inserted ID from table 
 				$row['cid'] = $wid;
 				save_personalization($row);
+
+				// remove from shopping cart
+				$sctable = is_dbtable_there('shopping_cart');
+				$wpdb->query(sprintf("DELETE FROM %s WHERE who = '%s' AND postID = %s", $sctable, $_SESSION['cust_id'], $post_id));
 			}
 		}
 
@@ -123,7 +127,7 @@ class Wishlist{
 		if ($_GET['fpg'] == 'cart') {
 			$url = get_cart_url().'?';
 		} else if ($_GET['fpg'] == 'checkout') {
-			$url = get_checkout_url().'?orderNow='.$_GET['ostep'].'&';
+			$url = get_checkout_url().'?';
 		}
 
 		$url .= 'wishlist=success';

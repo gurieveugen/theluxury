@@ -4,50 +4,30 @@
  */
 $all_cats 		= array(
 	'all-handbags' => array(
-		'cats' => array('tax_cat_2' => '1,421')
+		'cats' => array('tax_cat_2' => $OPTION["wps_women_bags_category"].','.$OPTION["wps_men_bags_category"])
 	),	
 	'all-clothes'  => array(
-		'cats' => array('tax_cat_2' => '828,880'),
+		'cats' => array('tax_cat_2' => $OPTION["wps_women_clothes_category"].','.$OPTION["wps_men_clothes_category"])
 	),
 	'all-jewelry'  => array(
-		'cats' => array('tax_cat_2' => '605,559'),
+		'cats' => array('tax_cat_2' => $OPTION["wps_women_jewelry_category"].','.$OPTION["wps_men_jewelry_category"])
 	),
 	'all-shoes'    => array(
-		'cats' => array('tax_cat_2' => '228,248'),
+		'cats' => array('tax_cat_2' => $OPTION["wps_women_shoes_category"].','.$OPTION["wps_men_shoes_category"])
 	),
 	'all-watches'  => array(
-		'cats' => array('tax_cat_2' => '262,419'),
+		'cats' => array('tax_cat_2' => $OPTION["wps_women_watches_category"].','.$OPTION["wps_men_watches_category"])
 	),
 	'all-accessories' => array(
-		'cats' => array('tax_cat_2' => '411,420'),
+		'cats' => array('tax_cat_2' => $OPTION["wps_women_accessories_category"].','.$OPTION["wps_men_accessories_category"])
 	)
 );
 if(isset($all_cats[$post->post_name]))
 {
 	$_GET = array_merge($_GET, $all_cats[$post->post_name]);
 }
-get_header();
-$DEFAULT = show_default_view();
 
- if($DEFAULT){
-	$WPS_sidebar		= $OPTION['wps_sidebar_option'];
-	switch($WPS_sidebar){
-		case 'alignRight':
-			$the_float_class 	= 'alignleft';
-		break;
-		case 'alignLeft':
-			$the_float_class 	= 'alignright';
-		break;
-	}
-
-	$the_div_class 	= 'sidebar tag_sidebar category_sidebar noprint alignleft ';
-	if (is_sidebar_active('category_widget_area')) 
-	{
-		printf('<div class="%s">', $the_div_class );
-		dynamic_sidebar('category_widget_area');	
-		printf('</div><!-- category_sidebar -->');
-	} 
-	?>
+get_header(); ?>
 	<div class="alignright" id="main_col">
 		<?php
 		product_sort_select();
@@ -77,6 +57,7 @@ $DEFAULT = show_default_view();
 			<?php echo $html.$pagination->getHTML(); ?>
 		</div>
 	</div>
-	<?php
-} 
-get_footer(); ?>
+	<div class="sidebar page_sidebar noprint alignleft" data-ttttt="">
+		<?php dynamic_sidebar('category_widget_area'); ?>
+	</div>
+<?php get_footer(); ?>

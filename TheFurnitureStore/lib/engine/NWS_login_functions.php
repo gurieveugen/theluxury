@@ -377,6 +377,32 @@ function wps_get_wp_errors($wperrors) {
 	return $errors;
 }
 
+function nws_login_hash($val) {
+	$repl = array(
+		'=' => '_',
+		'+' => '!',
+		'&' => '|'
+	);
+	$val = base64_encode($val);
+	foreach($repl as $rw => $rv) {
+		$val = str_replace($rw, $rv, $val);
+	}
+	return $val;
+}
+
+function nws_login_unhash($val) {
+	$repl = array(
+		'_' => '=',
+		'!' => '+',
+		'|' => '&'
+	);
+	foreach($repl as $rw => $rv) {
+		$val = str_replace($rw, $rv, $val);
+	}
+	$val = base64_decode($val);
+	return $val;
+}
+
 add_action('init', 'ajax_login_init');
 function ajax_login_init() {
 	if (strlen($_POST['ajax_login_popup'])) {
@@ -431,9 +457,11 @@ function ajax_login_init() {
 						$error = implode(chr(10), $errors);
 					} else {
 						if ($remme == 1) {
-							setcookie('theluxury_log', $rem_log, time() + ((60 * 60 * 24) * 300));
+							setcookie('theluxury_log', nws_login_hash($rem_log), time() + ((60 * 60 * 24) * 300));
+							setcookie('theluxury_pwd', nws_login_hash($pwd), time() + ((60 * 60 * 24) * 300));
 						} else {
 							setcookie('theluxury_log', '', time() - 3600);
+							setcookie('theluxury_pwd', '', time() - 3600);
 						}
 						echo 'success';
 					}
@@ -473,6 +501,13 @@ function ajax_login_init() {
 				}
 				echo $error;
 			break;
+			case 'get_remember_creds':
+				if (strlen($_COOKIE['theluxury_log'])) {
+					$log = nws_login_unhash($_COOKIE['theluxury_log']);
+					$pwd = nws_login_unhash($_COOKIE['theluxury_pwd']);
+					echo $log.'(;)'.$pwd;
+				}
+			break;
 			case 'fblogin':
 				$user_login = $_POST['email'];
 				$user_name = $_POST['name'];
@@ -483,7 +518,7 @@ function ajax_login_init() {
 					wp_set_auth_cookie($user->ID);
 					do_action('wp_login', $user_login);
 					wps_user_login_params($user->ID);
-					echo 'success';
+					echo 'success-login';
 				} else { // register
 					$user_pwd = wp_generate_password();
 					$uname = explode(' ', $user_name);
@@ -511,7 +546,7 @@ function ajax_login_init() {
 							$error = implode(chr(10), $errors);
 							echo $error;
 						} else {
-							echo 'success';
+							echo 'success-register';
 						}
 					}
 				}

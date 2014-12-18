@@ -1,4 +1,4 @@
-<?php global $OPTION;
+<?php
 $otable = is_dbtable_there('orders');
 $sctable = is_dbtable_there('shopping_cart');
 $oid = $_GET['oid'];
@@ -12,8 +12,6 @@ if (!$order_payment_data) {
 }
 $order = mysql_fetch_assoc(mysql_query("SELECT * FROM $otable WHERE oid = '$oid' LIMIT 1"));
 ?>
-	<?php wishlist_success(); ?>
-
 	<div class="payment-content">
 		<div class="payment_steps">
 			<div class="payment-step">
@@ -24,11 +22,6 @@ $order = mysql_fetch_assoc(mysql_query("SELECT * FROM $otable WHERE oid = '$oid'
 			<div class="payment-step">
 				<div class="payment-step-title cf">
 					<h3>Payment</h3>
-				</div>
-			</div>
-			<div class="payment-step">
-				<div class="payment-step-title cf">
-					<h3>Order Review</h3>
 				</div>
 			</div>
 			<div class="payment-step open">
@@ -57,7 +50,7 @@ $order = mysql_fetch_assoc(mysql_query("SELECT * FROM $otable WHERE oid = '$oid'
 						<?php } ?>
 						<p>If you have any further questions or concerns, kindly send us an e-mail on <a href="mailto:<?php echo $OPTION['wps_shop_email']; ?>" class="mark"><?php echo $OPTION['wps_shop_email']; ?></a> or call us on <span class="mark"><?php echo $OPTION['wps_shop_questions_phone']; ?></span></p>
 					</div>
-					<input type="submit" value="Continue Shopping" class="btn-orange right" onclick="widnow.location.href='<?php echo home_url('/'); ?>';">
+					<input type="button" value="Continue Shopping" class="btn-orange right" onclick="window.location.href='<?php echo home_url('/'); ?>';">
 				</div>
 			</div>
 		</div>
@@ -94,48 +87,47 @@ $order = mysql_fetch_assoc(mysql_query("SELECT * FROM $otable WHERE oid = '$oid'
 				$shipping = $order['shipping_fee'];
 				$tax_amount = $order['tax'];
 				$TOTAL_AM = $order['amount'];
-				$total_amnt = ($subtotal - $voucher_amount) + $shipping + $tax_amount;
-
-				if ($order['layaway_process'] == 1) {
-					$last_layaway_order = mysql_fetch_assoc(mysql_query("SELECT * FROM $otable WHERE layaway_order = '$oid' ORDER BY oid DESC LIMIT 1"));
-					if ($last_layaway_order) {
-						$TOTAL_AM = $last_layaway_order['amount'];
-					}
-				}
 				?>
 				<table class="table-order">
 					<tr>
 						<th>Subtotal:</th>
 						<td><?php echo format_price($subtotal * $_SESSION['currency-rate'], true); ?></td>
 					</tr>
-					<?php // VOUCHER amount ?>
-					<?php if ($voucher_amount) { ?>
-						<tr>
-							<th>- Voucher:</th>
-							<td><?php echo format_price($voucher_amount * $_SESSION['currency-rate'], true); ?></td>
-						</tr>
-					<?php } ?>
-					<?php // SHIPPING amount ?>
-					<tr>
-						<th>Shipping:</th>
-						<?php if (is_flat_limit_shipping_free($CART['total_price'])) { ?>
-							<td style="color:#FF0000">FREE</td>
-						<?php } else { ?>
-							<td><?php echo format_price($shipping * $_SESSION['currency-rate'], true); ?></td>
+					<?php if ($order['layaway_order'] > 0) { ?>
+						<?php if (!$order['layaway_process']) { ?>
+							<tr>
+								<th><strong>Order Total:</strong></th>
+								<td><strong><?php echo format_price($TOTAL_AM * $_SESSION['currency-rate'], true); ?></strong></td>
+							</tr>
 						<?php } ?>
-					</tr>
-					<?php // TAX amount ?>
-					<?php if($OPTION['wps_tax_enable'] && $tax_amount > 0) { // TAX ?>
+					<?php } else { ?>
+						<?php if ($voucher_amount) { // VOUCHER amount ?>
+							<tr>
+								<th>- Voucher:</th>
+								<td><?php echo format_price($voucher_amount * $_SESSION['currency-rate'], true); ?></td>
+							</tr>
+						<?php } ?>
 						<tr>
-							<th>Custom Duties/Taxes:</th>
-							<td colspan="2"><?php echo format_price($tax_amount * $_SESSION['currency-rate'], true); ?></td>
+							<th>Shipping:</th>
+							<?php if (is_flat_limit_shipping_free($CART['total_price'])) { ?>
+								<td style="color:#FF0000">FREE</td>
+							<?php } else { ?>
+								<td><?php echo format_price($shipping * $_SESSION['currency-rate'], true); ?></td>
+							<?php } ?>
+						</tr>
+						<?php // TAX amount ?>
+						<?php if($OPTION['wps_tax_enable'] && $tax_amount > 0) { // TAX ?>
+							<tr>
+								<th>Custom Duties/Taxes:</th>
+								<td><?php echo format_price($tax_amount * $_SESSION['currency-rate'], true); ?></td>
+							</tr>
+						<?php } ?>
+						<tr>
+							<th><strong>Total:</strong></th>
+							<td><strong><?php echo format_price($TOTAL_AM * $_SESSION['currency-rate'], true); ?></strong></td>
 						</tr>
 					<?php } ?>
-					<tr>
-						<th><strong>Total:</strong></th>
-						<td><strong><?php echo format_price($total_amnt * $_SESSION['currency-rate'], true); ?></strong></td>
-					</tr>
-					<?php if (layaway_is_enabled() && $order['layaway_process'] == 1) { ?>
+					<?php if ($order['layaway_process'] == 1) { ?>
 						<tr>
 							<th>Installment Payment:</th>
 							<td><?php echo format_price($TOTAL_AM * $_SESSION['currency-rate'], true); ?></td>
@@ -151,28 +143,28 @@ $order = mysql_fetch_assoc(mysql_query("SELECT * FROM $otable WHERE oid = '$oid'
 		</div>
 	</div>
 <?php
-$custom_tracking = $OPTION['wps_custom_tracking'];
-if($custom_tracking !=''){	echo $custom_tracking;}
+if(strlen($OPTION['wps_custom_tracking'])) { echo $OPTION['wps_custom_tracking']; }
 
-ga_ecommerce_tracking_code($order_payment_data['who']);
-?>
-<script type="text/javascript">
-document.write(unescape("%3Cscript id=%27pap_x2s6df8d%27 src=%27" + (("https:" == document.location.protocol) ? "https://" : "http://") + "perf.clickmena.com/scripts/trackjs.js%27 type=%27text/javascript%27%3E%3C/script%3E"));
-</script>
-<script data-cfasync="false" type="text/javascript">
-PostAffTracker.setAccountId('66acecfb'); 
-var sale = PostAffTracker.createSale();
-price = '<?php echo $order_payment_data['amount']; ?>';
-sale.setTotalCost(price);
-if(price <= 2000){    sale.setCustomCommission('%8');}
-else if(price > 2000 && price <= 3000) { sale.setCustomCommission('%6');}
-else if(price > 3000 && price <= 10000) { sale.setCustomCommission('%4'); }
-else{sale.setCustomCommission('%2');}
-sale.setCurrency('<?php echo ($OPTION['wps_currency_code'] == '')? 'USD':$OPTION['wps_currency_code']; ?>');
-sale.setOrderID('<?php echo $order_payment_data['tracking_id']; ?>');
-sale.setProductID('<?php echo $order_payment_data['itemname']; ?>');
-PostAffTracker.register();
-</script>
-<?php
-//unset($_SESSION['order_payment_data']);
+if ($order['layaway_order'] == 0) {
+	ga_ecommerce_tracking_code($order_payment_data['who']);
+	?>
+	<script type="text/javascript">
+	document.write(unescape("%3Cscript id=%27pap_x2s6df8d%27 src=%27" + (("https:" == document.location.protocol) ? "https://" : "http://") + "perf.clickmena.com/scripts/trackjs.js%27 type=%27text/javascript%27%3E%3C/script%3E"));
+	</script>
+	<script data-cfasync="false" type="text/javascript">
+	PostAffTracker.setAccountId('66acecfb'); 
+	var sale = PostAffTracker.createSale();
+	price = '<?php echo $order_payment_data['amount']; ?>';
+	sale.setTotalCost(price);
+	if(price <= 2000){    sale.setCustomCommission('%8');}
+	else if(price > 2000 && price <= 3000) { sale.setCustomCommission('%6');}
+	else if(price > 3000 && price <= 10000) { sale.setCustomCommission('%4'); }
+	else{sale.setCustomCommission('%2');}
+	sale.setCurrency('<?php echo ($OPTION['wps_currency_code'] == '')? 'USD':$OPTION['wps_currency_code']; ?>');
+	sale.setOrderID('<?php echo $order_payment_data['tracking_id']; ?>');
+	sale.setProductID('<?php echo $order_payment_data['itemname']; ?>');
+	PostAffTracker.register();
+	</script>
+	<?php
+}
 ?>

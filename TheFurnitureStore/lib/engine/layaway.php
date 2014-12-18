@@ -3,12 +3,13 @@
 // Layaway Functions
 // ---------------------------------------------------------
 function layaway_set_session() {
+	$frompage = $_POST['frompage'];
 	$layaway_amount = (float)$_POST['layaway_amount'];
+	$layaway_def_amount = (float)$_POST['layaway_def_amount'];
+	$layaway_cart_total = (float)$_POST['layaway_cart_total'];
 	$minerror = false;
 
 	if ($_POST['layaway_process'] == 1) {
-		$layaway_def_amount = (float)$_POST['layaway_def_amount'];
-		$layaway_cart_total = (float)$_POST['layaway_cart_total'];
 		$layaway_amount = round($layaway_amount);
 
 		if ($_SESSION['currency-rate']) {
@@ -28,10 +29,21 @@ function layaway_set_session() {
 	$_SESSION['layaway_process'] = $_POST['layaway_process'];
 	$_SESSION['layaway_amount'] = $layaway_amount;
 	$_SESSION['layaway_currency_code'] = $_SESSION['currency-code'];
-	if ($minerror) {
-		$basket_url = get_cart_url().'?minerror=1';
-		wp_redirect($basket_url);
-		exit();
+
+	$balance_total = $layaway_cart_total - $layaway_amount;
+
+	if ($frompage == 'cart') {
+		if ($minerror) {
+			$basket_url = get_cart_url().'?minerror=1';
+			wp_redirect($basket_url);
+			exit();
+		}
+	} else if ($frompage == 'checkout') {
+		if ($minerror) {
+			return 'error';
+		} else {
+			return format_price($balance_total * $_SESSION['currency-rate'], true);
+		}
 	}
 }
 

@@ -3738,6 +3738,13 @@ array ( 	"name" 	=> __('Shop','wpShop'),
 								"vals" 	=> $shop_wp_cats,
 								"std" 	=> "Select a Category"), 
 
+					array(    	"name" 	=> __('Women Fashion & Silver Jewelry Category','wpShop'),
+								"desc" 	=> '',
+								"id" 	=> $CONFIG_WPS['shortname']."_women_fashion_silver_jewelry_category",
+								"type" 	=> "category-select",
+								"vals" 	=> $shop_wp_cats,
+								"std" 	=> "Select a Category"), 
+
 					array(    	"name" 	=> __('Women Accessories Category','wpShop'),
 								"desc" 	=> '',
 								"id" 	=> $CONFIG_WPS['shortname']."_women_accessories_category",
@@ -4908,7 +4915,7 @@ function NWS_theme_admin()
 			if (strlen($voucher_search)) {
 				$where = " WHERE code LIKE '".$voucher_search."%'";
 			}
-			$vouchers = $wpdb->get_results(sprintf("SELECT SQL_CALC_FOUND_ROWS * FROM %swps_vouchers %s ORDER BY code LIMIT %s, %s", $wpdb->prefix, $where, $vstart, $vper_page));
+			$vouchers = $wpdb->get_results(sprintf("SELECT SQL_CALC_FOUND_ROWS * FROM %swps_vouchers %s ORDER BY vid DESC LIMIT %s, %s", $wpdb->prefix, $where, $vstart, $vper_page));
 			$vouchers_total = $wpdb->get_var("SELECT FOUND_ROWS()");
 			$vouchers_total_pages = ceil($vouchers_total / $vper_page);
 			?>
@@ -4932,6 +4939,7 @@ function NWS_theme_admin()
 					<th style="border-bottom:1px solid #E4E5E5;">Expired</th>
 					<th style="border-bottom:1px solid #E4E5E5;">Zone</th>
 					<th style="border-bottom:1px solid #E4E5E5;text-align:center;">Used</th>
+					<th style="border-bottom:1px solid #E4E5E5;width:100px;">Created</th>
 					<th style="border-bottom:1px solid #E4E5E5;width:50px;">Remove</th>
 				</tr>
 				<?php if ($vouchers) {
@@ -4946,11 +4954,12 @@ function NWS_theme_admin()
 							<td><?php echo $voucher_expired; ?></td>
 							<td><?php if ($voucher->zone > 0) { echo 'Zone '.$voucher->zone; } else { echo '&nbsp;'; } ?></td>
 							<td align="center"><?php echo $voucher->used; ?></td>
+							<td><?php echo date("d.m.Y H:i", strtotime($voucher->created)); ?></td>
 							<td><a href="admin.php?page=functions.php&section=vouchers&voucher_action=remove&vid=<?php echo $voucher->vid; ?>">remove</a></td>
 						</tr>
 					<?php } ?>
 				<?php } else { ?>
-					<tr><td colspan="8">No found vouchers.</td></tr>
+					<tr><td colspan="9">No found vouchers.</td></tr>
 				<?php } ?>
 			</table>
 			<?php if ($vouchers_total_pages > 1) { ?>

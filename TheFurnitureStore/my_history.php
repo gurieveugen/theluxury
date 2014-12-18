@@ -14,7 +14,6 @@ else $credit = false;
 get_currentuserinfo(); // grabs the user info and puts into vars
 $user_ID = $current_user->ID;
 // check to see if the form has been posted. If so, validate the fields
-include (TEMPLATEPATH . '/lib/pages/index_body.php'); 
 // this is a "fake cronjob" = whenever default index page is called - the age of dlinks is checked - and removed if necessary
 $DIGITALGOODS = load_what_is_needed('digitalgoods');	//change.9.10
 $DIGITALGOODS->delete_dlink();							//change.9.10

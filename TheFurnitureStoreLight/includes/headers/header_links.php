@@ -97,7 +97,7 @@ if($OPTION['wps_search_link_enable']){
 // do we want the eCommerce engine?  
 if($OPTION['wps_shoppingCartEngine_yes']) { ?>
 	<li class="bag" id="header-bag-info">
-		<a href="<?php echo get_cart_url(); ?>?showCart=1" class="cti">0</a>
+		<a href="<?php echo get_cart_url(); ?>" class="cti">0</a>
 	</li>
 <?php } ?>	
 

@@ -86,7 +86,7 @@ if (strlen($sellers_error)) {
 	<div class="row" id="item-category">
 		<div class="column width-532">
 			<label>Category *</label>
-			<div class="select">
+			<div class="custom-select">
 				<?php echo sellers_get_categories_dropdown('item_category', $item_category, 2); ?>
 			</div>
 		</div>
@@ -94,14 +94,14 @@ if (strlen($sellers_error)) {
 	<div class="row">
 		<div class="column width-260" id="item-style">
 			<label>Subcategory</label>
-			<div class="select">
+			<div class="custom-select">
 				<?php $all_sellers_categories = sellers_get_categories();
 				if ($all_sellers_categories) { ?>
 				<select name="item_style" onchange="seller_subcategory_change();">
 					<option value="">-- Select Subcategory --</option>
 					<?php foreach($all_sellers_categories as $sc_id => $sc_data) { ?>
 					<?php if (count($sc_data['parents']) == 2) { ?>
-					<option class="{<?php echo implode('}{', $sc_data['parents']); ?>}" value="<?php echo $sc_id; ?>"<?php if ($item_style == $sc_id) { echo ' SELECTED'; } ?>><?php echo $sc_data['name']; ?></option>
+					<option class="sc sc-<?php echo implode(' sc-', $sc_data['parents']); ?>" value="<?php echo $sc_id; ?>"<?php if ($item_style == $sc_id) { echo ' SELECTED'; } ?>><?php echo $sc_data['name']; ?></option>
 					<?php }} ?>
 				</select>
 				<?php } ?>
@@ -109,7 +109,7 @@ if (strlen($sellers_error)) {
 		</div>
 		<div class="column width-260" id="item-colour">
 			<label>Colour *</label>
-			<div class="select">
+			<div class="custom-select">
 				<?php $tax_colours = get_terms('colour', 'hide_empty=0');
 				if ($tax_colours) { ?>
 				<select name="item_colour">
@@ -187,20 +187,20 @@ if (strlen($sellers_error)) {
 	<div class="row item-dimensions" id="bags-dimensions" style="display:none;">
 		<div class="column width-342">
 			<label class="full-width">Dimensions (CM): * <a href="#dimensions-desc" class="help" rel="dimensions-desc">&nbsp;</a><div class="help-desc dimensions-desc" style="background:#FFF;margin-left:130px;"><p>Handle Drop is measured from high point of the strap to bag opening.</p><div class="center"><img src="<?php bloginfo('template_url') ?>/images/product/img-10.jpg" width="249" height="201" alt="" /></div></div></label>
-			<div class="column first width-114" id="item-length">
+			<div class="column first width-114" id="item-length" style="width:110px;">
 				<label>Length:</label>
 				<input type="text" name="item_length" value="<?php echo $item_length; ?>">
 			</div>
-			<div class="column width-114" id="item-height">
+			<div class="column width-114" id="item-height" style="width:110px;">
 				<label>Height:</label>
 				<input type="text" name="item_height" value="<?php echo $item_height; ?>">
 			</div>
-			<div class="column right width-114" id="item-width">
+			<div class="column right width-114" id="item-width" style="width:110px;">
 				<label>Width:</label>
 				<input type="text" name="item_width" value="<?php echo $item_width; ?>">
 			</div>
 		</div>
-		<div class="column width-177" id="item-handle-drop" style="padding-top:9px;">
+		<div class="column width-177" id="item-handle-drop" style="padding-top:30px;">
 			<label class="full-width">Handle Drop (CM)</label>
 			<input type="text" name="item_handle_drop" value="<?php echo $item_handle_drop; ?>">
 		</div>
@@ -241,13 +241,13 @@ if (strlen($sellers_error)) {
 			</div>
 		</div>
 		<div class="row">
-			<div class="column width-114" id="item-ring-width">
+			<div class="column width-114" id="item-ring-width" style="width:125px;">
 				<label>Ring Width (mm): *</label>
 				<input type="text" name="item_ring_width" value="<?php echo $item_ring_width; ?>">
 			</div>
 			<div class="question-icon" style="float:left; margin:5px 5px 0 5px;"><a href="#question-diagram-rings" title="Rings diagram" onclick="question_colorbox('question-diagram-rings');"><img src="<?php echo TEMPLURL; ?>/images/question-icon.gif"></a></div>
 			<div style="float:left; margin-left:20px;">
-				<div class="column width-114" id="item-ring-height">
+				<div class="column width-114" id="item-ring-height" style="width:120px;">
 					<label>Ring Height (mm):</label>
 					<input type="text" name="item_ring_height" value="<?php echo $item_ring_height; ?>">
 				</div>
@@ -256,20 +256,20 @@ if (strlen($sellers_error)) {
 		</div>
 	</div>
 	<div class="row" id="necklaces-dimensions" style="display:none;">
-		<div class="column width-114" id="item-necklace-length">
+		<div class="column width-114" id="item-necklace-length" style="width:155px;">
 			<label>Necklaces Length (CM): *</label>
 			<input type="text" name="item_necklace_length" value="<?php echo $item_necklace_length; ?>">
 		</div>
 		<div class="question-icon" style="float:left; margin:5px 5px 0 5px;"><a href="#question-diagram-necklaces" title="Necklaces diagram" onclick="question_colorbox('question-diagram-necklaces');"><img src="<?php echo TEMPLURL; ?>/images/question-icon.gif"></a></div>
 	</div>
 	<div class="row" id="earrings-dimensions" style="display:none;">
-		<div class="column width-114" id="item-earring-width">
+		<div class="column width-114" id="item-earring-width" style="width:130px;">
 			<label>Earring Width (mm):</label>
 			<input type="text" name="item_earring_width" value="<?php echo $item_earring_width; ?>">
 		</div>
 		<div class="question-icon" style="float:left; margin:5px 5px 0 5px;"><a href="#question-diagram-earrings" title="Earrings diagram" onclick="question_colorbox('question-diagram-earrings');"><img src="<?php echo TEMPLURL; ?>/images/question-icon.gif"></a></div>
 		<div style="float:left; margin-left:20px;">
-			<div class="column width-114" id="item-earring-height">
+			<div class="column width-114" id="item-earring-height" style="width:135px;">
 				<label>Earring Height (mm):</label>
 				<input type="text" name="item_earring_height" value="<?php echo $item_earring_height; ?>">
 			</div>
@@ -283,7 +283,7 @@ if (strlen($sellers_error)) {
 		</div>
 		<div class="question-icon" style="float:left; margin:5px 5px 0 5px;"><a href="#question-diagram-bracelets" title="Bracelets size description" onclick="question_colorbox('question-diagram-bracelets');"><img src="<?php echo TEMPLURL; ?>/images/question-icon.gif"></a></div>
 		<div style="float:left; margin-left:20px;">
-			<div class="column width-114" id="item-bracelet-length">
+			<div class="column width-114" id="item-bracelet-length" style="width:135px;">
 				<label>Bracelet Length (CM):</label>
 				<input type="text" name="item_bracelet_length" value="<?php echo $item_bracelet_length; ?>">
 			</div>
@@ -301,7 +301,7 @@ if (strlen($sellers_error)) {
 				<input type="text" name="item_watch_bracelet_size" value="<?php echo $item_watch_bracelet_size; ?>">
 			</div>
 		</div>
-		<div class="column width-177" id="item-movement-type">
+		<div class="column width-177" id="item-movement-type" style="padding-top:21px;">
 			<label class="full-width">Movement Type: *</label>
 			<input type="text" name="item_movement_type" value="<?php echo $item_movement_type; ?>">
 		</div>

@@ -7,7 +7,7 @@ add_action('wp_head', 'childtheme_head');
 function childtheme_queue_js() {
 	global $OPTION;
 	// GW START
-	wp_enqueue_script( 'mjs',get_stylesheet_directory_uri().'/js/mjs.js', '1', true );
+	//wp_enqueue_script( 'mjs',get_stylesheet_directory_uri().'/js/mjs.js', '1', true );
 	// GW END
 	if (!is_admin())
 	{

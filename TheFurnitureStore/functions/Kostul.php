@@ -402,6 +402,11 @@ class Kostul{
 	 */
 	public function getPostImages($post_id, $args = array())
 	{
+		$images = array();
+		$post_featured = get_post_thumbnail_id($post_id);
+		if ($post_featured) {
+			$images[] = $post_featured;
+		}
 		$defaults = array(
 			'post_parent'    => $post_id,
 			'post_type'      => 'attachment',
@@ -411,7 +416,14 @@ class Kostul{
 			'post_mime_type' => 'image',
 			'fields'         => 'ids'
 		);
-		$images = get_posts(array_merge($defaults, $args));
+		$post_attaches = get_posts(array_merge($defaults, $args));
+		if ($post_attaches) {
+			foreach($post_attaches as $post_attach) {
+				if ($post_attach != $post_featured) {
+					$images[] = $post_attach;
+				}
+			}
+		}
 		if(count($images)) return $images;
 		return false;
 	}

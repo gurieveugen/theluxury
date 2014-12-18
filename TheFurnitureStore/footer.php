@@ -1,57 +1,86 @@
 <?php global $OPTION, $current_user, $wp_query; ?>
 
-			<!--</div>--><!-- container -->
-			<!--</div><!-- floatswrap-->
-		</div><!-- .center-content -->
-	</div><!-- #pg_wrap -->
-	<?php if(!is_cart_page() && !is_checkout_page()): ?>
-		<?php dynamic_sidebar('footer-area'); ?>
-	<?php endif; ?>
-	<div class="footer-wrap">
-		<div class="holder">
-			<div id="footer" class="bigft clearfix noprint">
-				<div class="footer_box">
-					<div class="footer_inner_box clearfix">
-						<div class="fb-like" data-href="https://www.facebook.com/theluxurycloset" data-width="250" data-show-faces="true" data-send="true"></div>
-					</div>
-					<?php if (is_sidebar_active('social-widget-area')) : dynamic_sidebar('social-widget-area'); endif;?>
+			</div><!-- .center-content -->
+		</div><!-- #pg_wrap -->
+		<?php if (!is_checkout_page()) { ?>
+			<?php if (is_front_page() && !is_user_logged_in()) { ?>
+				<div class="b-section-signup bdbox footer-signup-form">
+					<h3>Sign up now</h3>
+					<p>Exclusive access to sales, discounts, notifications &amp; the latest trends!</p>
+					<p class="error"></p>
+					<form class="form-signup cf" method="POST">
+						<input type="text" name="your_email" value="" placeholder="Enter your email" class="your-email">
+						<input type="submit" value="Sign up" class="btn-orange">
+					</form>
 				</div>
-					
-				<div class="footer_box middle">
-					<div class="footer_inner_box clearfix">
-						<?php if ( is_sidebar_active('footer_middle_widget_area') ) : dynamic_sidebar('footer_middle_widget_area'); endif;?>	
+			<?php } ?>
+			<div id="footer" class="footer-main center-wrap bdbox">
+				<div class="footer-blocks cf">
+					<div class="footer-block footer-block_socials">
+						<div class="facebook-block">
+							<div class="fb-like" data-href="https://www.facebook.com/theluxurycloset" data-width="250" data-show-faces="true" data-send="true"></div>
+						</div>
+						<?php dynamic_sidebar('footer_social_widget_area'); ?>
 					</div>
-				</div>
-				
-				<div class="footer_box secure">
-					<div class="footer_inner_box clearfix">
-						<?php if (is_checkout_page()) { ?>
-							<?php if ( is_sidebar_active('footer_right_checkout_widget_area') ) : dynamic_sidebar('footer_right_checkout_widget_area'); endif;?>
-						<?php } else { ?>
-							<?php if ( is_sidebar_active('footer_right_widget_area') ) : dynamic_sidebar('footer_right_widget_area'); endif;?>
-						<?php } ?>
+					<div class="footer-block footer-block_menu">
+						<?php dynamic_sidebar('footer_middle_widget_area'); ?>
+					</div>
+					<div class="footer-block footer-block_shop">
+						<?php dynamic_sidebar('footer_right_widget_area'); ?>
 					</div>
 				</div>
-			</div><!-- end footer -->
-		</div>
-		<div class="footer-bottom">
-			<p><?php if (is_sidebar_active('footer_copyright_text_widget_area')) : dynamic_sidebar('footer_copyright_text_widget_area'); endif;?></p>
-		</div>
+				<div class="footer-copy">
+					<?php dynamic_sidebar('footer_copyright_text_widget_area'); ?>
+				</div>
+			</div>
+		<?php } else { ?>
+			<div class="footer-wrap checkout-footer">
+				<div class="holder">
+					<div id="footer" class="bigft clearfix noprint">
+						<div class="footer_box">
+							<div class="footer_inner_box clearfix">
+								<div class="fb-like" data-href="https://www.facebook.com/theluxurycloset" data-width="250" data-show-faces="true" data-send="true"></div>
+							</div>
+							<?php dynamic_sidebar('social-widget-area'); ?>
+						</div>
+							
+						<div class="footer_box middle">
+							<div class="footer_inner_box clearfix">
+								<?php dynamic_sidebar('footer_middle_widget_area'); ?>	
+							</div>
+						</div>
+						
+						<div class="footer_box secure">
+							<div class="footer_inner_box clearfix">
+								<?php dynamic_sidebar('footer_right_checkout_widget_area'); ?>
+							</div>
+						</div>
+					</div><!-- end footer -->
+				</div>
+				<div class="footer-bottom">
+					<?php dynamic_sidebar('footer_copyright_text_widget_area'); ?>
+				</div>
+			</div>
+		<?php } ?>
 	</div>
-</div> <!-- #wrapper -->
+	<!-- #wrapper -->
 <?php
 remove_action( 'wp_footer', 'grofiles_attach_cards'); 
 remove_action( 'wp_footer', 'grofiles_extra_data'); 
 wp_footer(); 
-include('footer-popups.php');
-if ($_GET['slp'] == 'true') { ?><script type="text/javascript">jQuery(document).ready(function(){ show_login_popup('def', '<?php echo $_GET['r']; ?>'); });</script><?php } ?>
+include('footer-popups.php'); ?>
 </div> <!-- #wrapper -->
-<div class="bg-popup-login" style="display:none;"></div>
 <div class="window-mask" style="display:none;"></div>
+
+<?php if ($_GET['slp'] == 'true') { ?><script type="text/javascript">jQuery(document).ready(function(){ show_login_popup('def', '<?php echo $_GET['r']; ?>'); });</script><?php } ?>
 <?php if (is_category($OPTION['wps_sale_category'])) { ?><div class="sale-category-pg" style="display:none;"><?php echo $OPTION['wps_sale_category'].';'.get_cat_name($OPTION['wps_sale_category']); ?></div><?php } ?>
 <?php if (is_tag()) { $ctag_id = $wp_query->get_queried_object_id(); $tag_data = get_tag($ctag_id); ?><div class="tag-pg" style="display:none;"><?php echo $ctag_id.';'.$tag_data->name; ?></div><?php } ?>
 
-<script type="text/javascript">jQuery.post('<?php echo get_cart_url(); ?>', { FormAction: 'get-total-cart-items' }, function(data){ jQuery('span.bag a').html(data); });</script>
+<script type="text/javascript">
+// clear autocomplete off fields
+setTimeout(clear_chrome_auto_fill, 500);
+jQuery.post('<?php echo get_cart_url(); ?>', { FormAction: 'get-total-cart-items' }, function(data){ jQuery('span.bag a').html(data); });
+</script>
 <script type="text/javascript">
 document.write(unescape("%3Cscript id=%27pap_x2s6df8d%27 src=%27" + (("https:" == document.location.protocol) ? "https://" : "http://") + "perf.clickmena.com/scripts/trackjs.js%27 type=%27text/javascript%27%3E%3C/script%3E"));
 </script>
@@ -149,7 +178,7 @@ $.src='//v2.zopim.com/?U8dQigYM4gzeUChrgZU4PoO3vopV0jG0';z.t=+new Date;$.
 type='text/javascript';e.parentNode.insertBefore($,e)})(document,'script');
 </script>
 <!--End of Zopim Live Chat Script-->
-<!-- start utm params -->
+<!-- start utm params and track logged/not logged in user -->
 <script type="text/javascript">
 	if (jQuery('#utm_source').size()) {
 		jQuery('#utm_source').val(get_utm_param('utm_source'));
@@ -158,8 +187,9 @@ type='text/javascript';e.parentNode.insertBefore($,e)})(document,'script');
 		jQuery('#utm_content').val(get_utm_param('utm_content'));
 		jQuery('#utm_term').val(get_utm_param('utm_term'));
 	}
+	ga('set', 'dimension1', '<?php if (is_user_logged_in()) { echo 'Logged_In'; } else { echo 'Not_Logged_In'; } ?>');
 </script>
-<!-- end utm params -->
+<!-- end utm params and track logged/not logged in user -->
 <script>
 	(function() {
 	var _fbq = window._fbq || (window._fbq = []);
