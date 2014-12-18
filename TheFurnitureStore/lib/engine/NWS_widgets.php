@@ -4655,7 +4655,7 @@ class ShopSearchFilterWidget extends WP_Widget {
 				$rel            = (strpos($cat->slug, 'rings') !== false) ? 'rings' : $rel;
 				
 				$input          = ($depth > 0) ? '<input '.$disabled.' class="'.$frozen.'" data-block="shop-by-category" autocomplete="off" onchange="filter.filter(event, this)" type="checkbox" name="filter-category[]" data-depth="'.$depth.'" value="'.$cat->slug.'" id="category-'.$cat->term_id.'" rel="'.$rel.'" '.$checked.' />' : '';
-				$search_replace = array('Women\'s ', 'Men\'s ');
+				$search_replace = array('Women\'s ', 'Men\'s ', 'Womens');
 				$name           = str_replace($search_replace, '', $cat->name);
 				$parent_ids     = getParentsIDs($queried_object->term_id, $queried_object->taxonomy);
 				$display_block  = ($queried_object->term_id == $cat->term_id) ? 'display: block;' : 'display: none;';				
