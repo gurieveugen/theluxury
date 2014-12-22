@@ -1,10 +1,21 @@
 <?php 
-$qo = get_queried_object();
+$qo              = get_queried_object();
+$term_sex        = Kostul::getTermSex($qo->term_id);
 
-if($qo->taxonomy == 'category') {
-	$cat_parents = KostulQuery::countParents($qo)+1; 
-	$tax = 'tax_cat_'.$cat_parents;
-} else {
+if($qo->taxonomy == 'category') 
+{
+	if($qo->slug != 'sale')
+	{
+		$cat_parents = KostulQuery::countParents($qo)+1; 
+		$tax = sprintf('cat_%s_%s', $term_sex, $cat_parents);	
+	}
+	else
+	{
+		$tax = 'tax_sale';
+	}
+} 
+else 
+{
 	$taxonomies = array(
 		'colour'          => 'tax_colours',
 		'size'            => 'tax_sizes',

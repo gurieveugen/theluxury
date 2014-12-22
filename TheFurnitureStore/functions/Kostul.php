@@ -99,14 +99,18 @@ class Kostul{
 	public function savePost($post_id)
 	{
 		$mcats = get_categories('child_of=156&hide_empty=0');
-		if ($mcats) {
-			foreach($mcats as $mcat) {
+		if ($mcats) 
+		{
+			foreach($mcats as $mcat) 
+			{
 				$this->mens_category_ids[] = $mcat->term_id;
 			}
 		}
 		$wcats = get_categories('child_of=418&hide_empty=0');
-		if ($wcats) {
-			foreach($wcats as $wcat) {
+		if ($wcats) 
+		{
+			foreach($wcats as $wcat) 
+			{
 				$this->womens_category_ids[] = $wcat->term_id;
 			}
 		}
@@ -122,11 +126,16 @@ class Kostul{
 	public function getRow($post_id)
 	{
 		$row = array(
-			'tax_cat_1'         => 0,
-			'tax_cat_2'         => 0,	
-			'tax_cat_3'         => 0,	
-			'tax_cat_4'         => 0,	
-			'tax_cat_5'         => 0,
+			'cat_men_1'         => 0,
+			'cat_men_2'         => 0,	
+			'cat_men_3'         => 0,	
+			'cat_men_4'         => 0,	
+			'cat_men_5'         => 0,
+			'cat_women_1'       => 0,
+			'cat_women_2'       => 0,	
+			'cat_women_3'       => 0,	
+			'cat_women_4'       => 0,	
+			'cat_women_5'       => 0,
 			'tax_sale'          => 0,
 			'tax_colours'       => 0,
 			'tax_sizes'         => 0,
@@ -169,11 +178,16 @@ class Kostul{
 		$cats = $this->getCats($post_id);
 		
 		$row['tax_sale']            = $cats['sale'];
-		$row['tax_cat_1']           = $cats[0];
-		$row['tax_cat_2']           = $cats[1];
-		$row['tax_cat_3']           = $cats[2];
-		$row['tax_cat_4']           = $cats[3];
-		$row['tax_cat_5']           = $cats[4];
+		$row['cat_men_1']           = $cats['men'][1];
+		$row['cat_men_2']           = $cats['men'][2];
+		$row['cat_men_3']           = $cats['men'][3];
+		$row['cat_men_4']           = $cats['men'][4];
+		$row['cat_men_5']           = $cats['men'][5];
+		$row['cat_women_1']         = $cats['women'][1];
+		$row['cat_women_2']         = $cats['women'][2];
+		$row['cat_women_3']         = $cats['women'][3];
+		$row['cat_women_4']         = $cats['women'][4];
+		$row['cat_women_5']         = $cats['women'][5];
 		$row['tax_colours']         = $terms['colour'];
 		$row['tax_sizes']           = $terms['size'];
 		$row['tax_ring_sizes']      = $terms['ring-size'];
@@ -283,6 +297,25 @@ class Kostul{
 	}
 
 	/**
+	 * Get branch with depths
+	 * @param  object $cat --- term
+	 * @return array --- branch
+	 */
+	public function getBranch($cat)
+	{
+		$cats   = $this->getParents($cat);
+		$count  = array_unshift($cats, $cat);
+		$branch = array();
+
+		foreach ($cats as $cat) 
+		{
+			$branch[$count] = $cat->term_id;
+			$count--;
+		}
+		return $branch;
+	}
+
+	/**
 	 * Get all parents terms
 	 * @param  object $term --- child term
 	 * @param  array  $arr --- recursive paretns array
@@ -307,12 +340,23 @@ class Kostul{
 	{
 		$result = array(
 			'sale' => 0,
-			0      => 0,
-			1      => 0,
-			2      => 0,
-			3      => 0,
-			4      => 0
+			'men' => array(
+				1 => 0,
+				2 => 0,
+				3 => 0,
+				4 => 0,
+				5 => 0
+			),
+			'women' => array(
+				1 => 0,
+				2 => 0,
+				3 => 0,
+				4 => 0,
+				5 => 0
+			)
 		);
+		$men   = array();
+		$women = array();
 
 		$cats = wp_get_post_terms($post_id, 'category');
 		if(is_array($cats) AND count($cats))
@@ -325,18 +369,28 @@ class Kostul{
 				} 
 				else
 				{
-					if (in_array($cat->term_id, $this->womens_category_ids) || in_array($cat->term_id, $this->mens_category_ids)) {
-						$depth = count($this->getParents($cat));
-						if ($result[$depth] > 0) {
-							$depth++;
-							if ($result[$depth] > 0) {
-								$depth++;
-							}
+					$branch = $this->getBranch($cat);
+					if (in_array($cat->term_id, $this->womens_category_ids)) {
+						if(count($branch) > count($women))
+						{
+							$women = $branch;
 						}
-						$result[$depth] = $cat->term_id;
+					}
+					else if(in_array($cat->term_id, $this->mens_category_ids))
+					{
+						if(count($branch) > count($men))
+						{
+							$men = $branch;
+						}
 					}
 				}
 			}
+			
+			$result['men']   = $men + $result['men'];
+			$result['women'] = $women + $result['women'];
+
+			ksort($result['men']);
+			ksort($result['women']);
 		}
 		return $result;
 	}
@@ -429,13 +483,34 @@ class Kostul{
 	}
 
 	/**
-	 * Send debug information to email
-	 * @param  mixed $args --- debug info
-	 * @return boolean     --- return mail function result
+	 * Get term sex by ID
+	 * @param  integer $id --- term id
+	 * @return string --- term sex
 	 */
-	public function mailDebug($args)
+	public static function getTermSex($id)
 	{
-		return mail('tatarinfamily@gmail.com', 'debug', print_r($args, true));
+		$mens_category_ids = array(156);
+		$womens_category_ids = array(418);
+		$mcats = get_categories('child_of=156&hide_empty=0');
+		if ($mcats) 
+		{
+			foreach($mcats as $mcat) 
+			{
+				$mens_category_ids[] = (int) $mcat->term_id;
+			}
+		}
+		if(in_array($id, $mens_category_ids)) return 'men';
+
+		$wcats = get_categories('child_of=418&hide_empty=0');
+		if ($wcats) 
+		{
+			foreach($wcats as $wcat) 
+			{
+				$womens_category_ids[] = (int) $wcat->term_id;
+			}
+		}
+		if(in_array($id, $womens_category_ids)) return 'women';
+		return '';
 	}
 }
 

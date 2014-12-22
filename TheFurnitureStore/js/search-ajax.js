@@ -224,11 +224,16 @@ filter.setLocation = function(args){
 filter.getCheckedData = function(){
 
 	var tax_cat = {
-		tax_cat_1:           [],
-		tax_cat_2:           [],
-		tax_cat_3:           [],
-		tax_cat_4:           [],
-		tax_cat_5:           [],
+		cat_men_1:           [],
+		cat_men_2:           [],
+		cat_men_3:           [],
+		cat_men_4:           [],
+		cat_men_5:           [],
+		cat_women_1:         [],
+		cat_women_2:         [],
+		cat_women_3:         [],
+		cat_women_4:         [],
+		cat_women_5:         [],
 		tax_sale:            [],
 		tax_colours:         [], 
 		tax_sizes:           [],
@@ -267,6 +272,7 @@ filter.getCheckedData = function(){
 
 		if(typeof(last_args.cats.tax_cat_1) != 'undefined')
 		{
+			tax_cat['tax_cat_1'] = [];
 			tax_cat['tax_cat_1'].push(last_args.cats.tax_cat_1);
 		}
 	}
@@ -274,7 +280,7 @@ filter.getCheckedData = function(){
 	// Categories
 	// ==============================================================
 	jQuery('.shop-by-category input:checked').each(function(){
-		tax_key = 'tax_cat_' + (1 + parseInt(jQuery(this).data('depth')));
+		tax_key = 'cat_' + jQuery(this).data('sex') + '_' + (1 + parseInt(jQuery(this).data('depth')));
 		tax_cat[tax_key].push(jQuery(this).attr('id').replace('category-', ''));
 	});
 	if (jQuery('.sale-category-pg').size()) {
@@ -582,11 +588,14 @@ jQuery(document).ready(function(){
 	jQuery('.shop-by-brand h4').click(function(){
 		jQuery('.shop-by-brand .checkbox-list-search').toggle();
 	});
-
 	// ==============================================================
-	// 
+	// Click to filter check rectangle
 	// ==============================================================
-	jQuery('.search-filter-form .jqTransformCheckbox').click(function(e){
-		e.preventDefault();
+	jQuery('.f-row .jqTransformCheckboxWrapper .jqTransformCheckbox').click(function(e){
+		var sub_category = jQuery(this).parent().parent().children('.sub-category');
+		sub_category.slideToggle(300, function(){
+			jQuery(this).parent().toggleClass('open');
+			jQuery(this).parents('.shop-by-category').mCustomScrollbar('update');
+		}); 
 	});
 });

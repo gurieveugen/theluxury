@@ -56,7 +56,7 @@ class Updater{
 			}
 		}
 
-		$posts = $wpdb->get_results(sprintf("SELECT * FROM %sposts WHERE post_type = 'post' AND upd = 0 ORDER BY ID DESC LIMIT 0, 1000", $wpdb->prefix));
+		$posts = $wpdb->get_results(sprintf("SELECT * FROM %sposts WHERE post_type = 'post' AND upd = 0 ORDER BY ID DESC LIMIT 0, 10", $wpdb->prefix));
 		printf('<h1>%s</h1>%s', 'Hi its Updater! :D');
 		if ($posts) {
 			$nmb = 1;
@@ -134,7 +134,7 @@ class Updater{
 			)
 		);
 		$cats = $this->getCats($post_id);
-
+		
 		$row['tax_sale']            = $cats['sale'];
 		$row['cat_men_1']           = $cats['men'][1];
 		$row['cat_men_2']           = $cats['men'][2];
@@ -155,6 +155,10 @@ class Updater{
 		$row['tax_styles']          = $terms['style'];
 		$row['tax_prices']          = $terms['price'];
 		$row['tax_seller_category'] = $terms['seller-category'];
+
+		echo '<pre>';
+		var_dump($cats);
+		echo '</pre>';
 
 		// ==============================================================
 		// Images
@@ -329,26 +333,43 @@ class Updater{
 				{
 					$branch = $this->getBranch($cat);
 					if (in_array($cat->term_id, $this->womens_category_ids)) {
-						if(count($branch) > count($women))
+						if(count($branch) > count((array) $result['debug']['women']))
 						{
 							$women = $branch;
 						}
+						// $depth = count($this->getParents($cat))+1;
+						// if ($result['women'][$depth] > 0) {
+						// 	$depth++;
+						// 	if ($result['women'][$depth] > 0) {
+						// 		$depth++;
+						// 	}
+						// }
+						// $result['women'][$depth] = $cat->term_id;
 					}
 					else if(in_array($cat->term_id, $this->mens_category_ids))
 					{
-						if(count($branch) > count($men))
+						if(count($branch) > count((array) $result['debug']['men']))
 						{
 							$men = $branch;
 						}
+						
+						// $depth = count($this->getParents($cat))+1;
+						// if ($result['men'][$depth] > 0) {
+						// 	$depth++;
+						// 	if ($result['men'][$depth] > 0) {
+						// 		$depth++;
+						// 	}
+						// }
+						// $result['men'][$depth] = $cat->term_id;
 					}
 				}
 			}
-			
-			$result['men']   = $men + $result['men'];
-			$result['women'] = $women + $result['women'];
-
-			ksort($result['men']);
-			ksort($result['women']);
+			$result = array(
+				'men'    => ksort($men + $result['men']),
+				'women'  => ksort($women+$result['women']),
+				'_men'   => $men,
+				'_women' => $women,
+			);
 		}
 		return $result;
 	}

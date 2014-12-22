@@ -42,11 +42,16 @@ class KostulQuery{
 	private function getDefaultTaxValues()
 	{
 		return array(
-			'tax_cat_1'           => '',
-			'tax_cat_2'           => '',	
-			'tax_cat_3'           => '',	
-			'tax_cat_4'           => '',	
-			'tax_cat_5'           => '',
+			'cat_men_1'           => '',
+			'cat_men_2'           => '',
+			'cat_men_3'           => '',
+			'cat_men_4'           => '',
+			'cat_men_5'           => '',
+			'cat_women_1'         => '',
+			'cat_women_2'         => '',
+			'cat_women_3'         => '',
+			'cat_women_4'         => '',
+			'cat_women_5'         => '',
 			'tax_sale'            => '',
 			'tax_colours'         => '',
 			'tax_sizes'           => '',
@@ -68,11 +73,16 @@ class KostulQuery{
 	private function getAllowedTaxonomies()
 	{
 		return array(
-			'tax_cat_1',          
-			'tax_cat_2',          	
-			'tax_cat_3',          	
-			'tax_cat_4',          	
-			'tax_cat_5',          
+			'cat_men_1',
+			'cat_men_2',
+			'cat_men_3',
+			'cat_men_4',
+			'cat_men_5',
+			'cat_women_1',
+			'cat_women_2',
+			'cat_women_3',
+			'cat_women_4',
+			'cat_women_5',
 			'tax_sale',           
 			'tax_colours',        
 			'tax_sizes',          
@@ -104,7 +114,7 @@ class KostulQuery{
 		$args  = array_merge($defaults, $args);
 		$posts = $this->getProducts($args);
 		$count = $this->getCount();
-		
+	
 		return array(
 			'posts'         => $posts,
 			'visible_terms' => $this->getVisibleTerms($args['cats']),
@@ -233,6 +243,27 @@ class KostulQuery{
 			}
 			unset($args['s']);
 		}
+
+		$args = $this->clearUnnecessaryCategory(
+			$args, array(
+				'cat_men_5',
+				'cat_men_4',
+				'cat_men_3',
+				'cat_men_2',
+				'cat_men_1',
+			)
+		);
+
+		$args = $this->clearUnnecessaryCategory(
+			$args, array(
+				'cat_women_5',
+				'cat_women_4',
+				'cat_women_3',
+				'cat_women_2',
+				'cat_women_1',
+			)
+		);
+
 		foreach ($args as $key => $values) 
 		{
 			if(!empty($values))
@@ -254,6 +285,30 @@ class KostulQuery{
 			}
 		}
 		return $where;
+	}
+
+	/**
+	 * Clear unnecessary category
+	 * @param array $args --- arguments to clear
+	 * @param array $keys --- keys to check 
+	 * @return array --- cleared arguments
+	 */
+	private function clearUnnecessaryCategory($args = array(), $keys = array())
+	{
+		for ($i=0; $i < count($keys); $i++) 
+		{ 
+			$key = $keys[$i];
+			if(isset($args[$key]) && !empty($args[$key]))
+			{
+				$keys_to_delete = array_slice($keys, $i+1);
+				foreach ($keys_to_delete as $delete_key) 
+				{
+					if(isset($args[$delete_key])) unset($args[$delete_key]);
+				}
+				break;
+			}
+		}
+		return $args;
 	}
 
 	/**

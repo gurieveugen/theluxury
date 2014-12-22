@@ -4630,6 +4630,23 @@ class ShopSearchFilterWidget extends WP_Widget {
 		$arr            = array();
 		$parent_id      = $parent_id === NULL ? "NULL" : $parent_id;
 
+		$mcats = get_categories('child_of=156&hide_empty=0');
+		if ($mcats) 
+		{
+			foreach($mcats as $mcat) 
+			{
+				$mens_category_ids[] = $mcat->term_id;
+			}
+		}
+		$wcats = get_categories('child_of=418&hide_empty=0');
+		if ($wcats) 
+		{
+			foreach($wcats as $wcat) 
+			{
+				$womens_category_ids[] = $wcat->term_id;
+			}
+		}
+
 		if (isset($child_nodes[$parent_id])) 
 		{
 		    foreach ($child_nodes[$parent_id] as $id) 
@@ -4653,8 +4670,13 @@ class ShopSearchFilterWidget extends WP_Widget {
 				$rel            = (strpos($cat->slug, 'shoes') !== false) ? 'shoes' : $cat->slug;
 				$rel            = (strpos($cat->slug, 'clothes') !== false) ? 'clothes' : $rel;
 				$rel            = (strpos($cat->slug, 'rings') !== false) ? 'rings' : $rel;
+
+				$sex = in_array($cat->term_id, $mens_category_ids) ? 'men' : '';
+				$sex = in_array($cat->term_id, $womens_category_ids) ? 'women' : $sex;
+
 				
-				$input          = ($depth > 0) ? '<input '.$disabled.' class="'.$frozen.'" data-block="shop-by-category" autocomplete="off" onchange="filter.filter(event, this)" type="checkbox" name="filter-category[]" data-depth="'.$depth.'" value="'.$cat->slug.'" id="category-'.$cat->term_id.'" rel="'.$rel.'" '.$checked.' />' : '';
+				
+				$input          = ($depth > 0) ? '<input '.$disabled.' class="'.$frozen.'" data-block="shop-by-category" autocomplete="off" onchange="filter.filter(event, this)" type="checkbox" name="filter-category[]" data-sex="'.$sex.'" data-depth="'.$depth.'" value="'.$cat->slug.'" id="category-'.$cat->term_id.'" rel="'.$rel.'" '.$checked.' />' : '';
 				$search_replace = array('Women\'s ', 'Men\'s ', 'Womens');
 				$name           = str_replace($search_replace, '', $cat->name);
 				$parent_ids     = getParentsIDs($queried_object->term_id, $queried_object->taxonomy);
